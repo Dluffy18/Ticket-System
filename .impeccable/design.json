@@ -1,0 +1,198 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-25T20:40:00Z",
+  "title": "Design System: Violation Ticketing",
+  "extensions": {
+    "colorMeta": {
+      "ink": { "role": "primary", "displayName": "Printer's Navy", "canonical": "#1C2B4A", "tonalRamp": ["#152038", "#243860", "#345089", "#4367B2", "#6786C6", "#90A6D5", "#BCCAE6", "#ECF0F8"] },
+      "ink-hover": { "role": "primary", "displayName": "Lifted Navy", "canonical": "#2A3D66" },
+      "serial": { "role": "secondary", "displayName": "Numbering-Machine Red", "canonical": "#B3162B", "tonalRamp": ["#440810", "#760F1C", "#A81528", "#DA1B34", "#E8455B", "#EE7787", "#F5ADB7", "#FCE8EB"] },
+      "void-bg": { "role": "secondary", "displayName": "Void Wash", "canonical": "#FBE9EB" },
+      "canary": { "role": "tertiary", "displayName": "Canary Copy", "canonical": "#F8EBA9", "tonalRamp": ["#473C06", "#7B680A", "#AE940E", "#E2C012", "#EFD23E", "#F3DE72", "#F8EBAA", "#FDFAE7"] },
+      "canary-line": { "role": "tertiary", "displayName": "Canary Rule", "canonical": "#D9C25A" },
+      "canary-ink": { "role": "tertiary", "displayName": "Canary Ink", "canonical": "#4F3F00" },
+      "done": { "role": "tertiary", "displayName": "Ledger Green", "canonical": "#1E6A43", "tonalRamp": ["#113C26", "#1D6741", "#2A935D", "#36BF79", "#5CD195", "#88DDB1", "#B7EBD0", "#EBF9F2"] },
+      "done-bg": { "role": "tertiary", "displayName": "Ledger Green Wash", "canonical": "#E2F0E7" },
+      "cancel": { "role": "tertiary", "displayName": "Slate Grey", "canonical": "#555D6E", "tonalRamp": ["#21242B", "#3A3F4B", "#525A6A", "#6B758A", "#8992A4", "#A9AFBC", "#CBCFD7", "#F1F2F4"] },
+      "cancel-bg": { "role": "tertiary", "displayName": "Slate Wash", "canonical": "#ECEDF1" },
+      "paid": { "role": "tertiary", "displayName": "Treasury Violet", "canonical": "#5A3DA8", "tonalRamp": ["#1E1438", "#342361", "#4A328A", "#6041B4", "#8066C7", "#A28FD6", "#C7BCE7", "#F0ECF8"] },
+      "paid-bg": { "role": "tertiary", "displayName": "Treasury Wash", "canonical": "#EFEAFA" },
+      "pending": { "role": "tertiary", "displayName": "Amber Pending", "canonical": "#7A5200", "tonalRamp": ["#473106", "#7B560A", "#AF7A0E", "#E29E12", "#EFB53E", "#F4C971", "#F8DFAA", "#FDF6E7"] },
+      "pending-bg": { "role": "tertiary", "displayName": "Amber Wash", "canonical": "#FBF0D6" },
+      "ground": { "role": "neutral", "displayName": "Pink Copy Ground", "canonical": "#F3E3E6", "tonalRamp": ["#36171D", "#5D2832", "#843947", "#AB495C", "#C06D7C", "#D1949F", "#E3BFC6", "#F7EDEF"] },
+      "ground-2": { "role": "neutral", "displayName": "Pressed Pink", "canonical": "#EDD6DA" },
+      "sheet": { "role": "neutral", "displayName": "Top-Copy White", "canonical": "#FFFFFF", "tonalRamp": ["#262626", "#424242", "#5E5E5E", "#7A7A7A", "#969696", "#B2B2B2", "#D1D1D1", "#F2F2F2"] },
+      "sheet-2": { "role": "neutral", "displayName": "Faint Sheet", "canonical": "#FAF6F7" },
+      "pink-copy": { "role": "neutral", "displayName": "Pink Copy Edge", "canonical": "#E7B4BF", "tonalRamp": ["#3A131B", "#64202F", "#8F2E43", "#B93B57", "#CC6178", "#DA8B9C", "#E9B9C4", "#F9ECEF"] },
+      "ink-2": { "role": "neutral", "displayName": "Secondary Ink", "canonical": "#44506B" },
+      "ink-3": { "role": "neutral", "displayName": "Muted Ink", "canonical": "#5A6480" },
+      "field-stroke": { "role": "neutral", "displayName": "Field Stroke", "canonical": "#7A849B" },
+      "rule-2": { "role": "neutral", "displayName": "Light Rule", "canonical": "#C9CEDA", "tonalRamp": ["#1F232D", "#363D4F", "#4D5770", "#647191", "#838EAA", "#A4ADC1", "#C9CEDA", "#F0F1F5"] },
+      "rule-3": { "role": "neutral", "displayName": "Faint Rule", "canonical": "#E5E8EF" },
+      "band-sub": { "role": "neutral", "displayName": "Band Subtext", "canonical": "#C3CADD" },
+      "night-ground": { "role": "neutral", "displayName": "Night Asphalt", "canonical": "#0E1320" },
+      "night-sheet": { "role": "neutral", "displayName": "Night Sheet", "canonical": "#161D2E" },
+      "night-sheet-2": { "role": "neutral", "displayName": "Night Sheet Raised", "canonical": "#1B2336" },
+      "night-ink": { "role": "primary", "displayName": "Night Ink", "canonical": "#E9ECF4" },
+      "night-ink-2": { "role": "neutral", "displayName": "Night Secondary Ink", "canonical": "#BAC2D6" },
+      "night-rule": { "role": "neutral", "displayName": "Night Rule", "canonical": "#9AA4BC" },
+      "night-rule-2": { "role": "neutral", "displayName": "Night Light Rule", "canonical": "#2F3A53" },
+      "night-serial": { "role": "secondary", "displayName": "Night Serial", "canonical": "#FF8590" },
+      "night-pink-copy": { "role": "neutral", "displayName": "Night Pink Copy Edge", "canonical": "#4A2A33" },
+      "night-canary": { "role": "tertiary", "displayName": "Night Canary", "canonical": "#3A3316" },
+      "night-canary-ink": { "role": "tertiary", "displayName": "Night Canary Ink", "canonical": "#F5DF80" },
+      "night-done": { "role": "tertiary", "displayName": "Night Ledger Green", "canonical": "#74D7A1" },
+      "night-paid": { "role": "tertiary", "displayName": "Night Treasury Violet", "canonical": "#BBA6FF" },
+      "night-pending": { "role": "tertiary", "displayName": "Night Amber", "canonical": "#F2C463" }
+    },
+    "typographyMeta": {
+      "serial-display": { "displayName": "Serial Display", "purpose": "The current Control Number on the Home sheet; steps to 2.25rem, 1.375rem, 1.0625rem. Always red, tabular." },
+      "serial": { "displayName": "Serial", "purpose": "Control Numbers in rows, tables and links; serial inputs at 1.25rem/0.04em." },
+      "headline": { "displayName": "Headline", "purpose": "Page titles; sheet and dialog titles at 1.25rem in the same face." },
+      "title": { "displayName": "Title", "purpose": "Section headings inside sheets." },
+      "figure": { "displayName": "Figure", "purpose": "Counts in box rows and stat grids." },
+      "body": { "displayName": "Body", "purpose": "All running text; leads in ink-2 at 65ch max." },
+      "label": { "displayName": "Label", "purpose": "Field labels above inputs." },
+      "box-label": { "displayName": "Box Label", "purpose": "Uppercase printed captions inside ruled boxes, directly over their value. Never above headings." },
+      "stamp": { "displayName": "Stamp", "purpose": "Outcome stamps; 1rem in the large size." }
+    },
+    "shadows": [
+      { "name": "paper", "value": "0 1px 2px rgba(28,43,74,.10), 0 6px 18px rgba(28,43,74,.07)", "purpose": "Sheets, citation cards, checklists, ledger tables and peeking copies resting on the pink ground." },
+      { "name": "lifted", "value": "0 10px 30px rgba(14,19,32,.22)", "purpose": "Toasts and dialogs floating above the page." },
+      { "name": "paper-night", "value": "0 1px 2px rgba(0,0,0,.4), 0 6px 18px rgba(0,0,0,.25)", "purpose": "Paper shadow in the Night theme." },
+      { "name": "lifted-night", "value": "0 10px 30px rgba(0,0,0,.5)", "purpose": "Lifted shadow in the Night theme." },
+      { "name": "focus", "value": "outline: 3px solid var(--ink); outline-offset: 2px; box-shadow: 0 0 0 6px var(--canary)", "purpose": "Global focus ring: ink outline with a canary halo." },
+      { "name": "scrim", "value": "rgba(14,19,32,.55)", "purpose": "Dialog backdrop (Night: rgba(0,0,0,.65))." }
+    ],
+    "motion": [
+      { "name": "ease", "value": "cubic-bezier(.16, 1, .3, 1)", "purpose": "House easing for every entrance and the switch knob." },
+      { "name": "stamp-land", "value": "0.5s: scale(1.8) rotate(-8deg), opacity 0 → none", "purpose": "An outcome stamp landing when a Citation is marked Done." },
+      { "name": "serial-roll", "value": "0.6s: translateY(-55%) with clip-path inset(55% 0 0 0) → none", "purpose": "The next Control Number rolling in like a numbering machine advancing." },
+      { "name": "dialog-in", "value": "0.22s: translateY(12px), opacity 0 → none", "purpose": "Dialog entrance." },
+      { "name": "toast-in", "value": "opacity .2s, transform .25s ease from translateY(8px)", "purpose": "Toast entrance." },
+      { "name": "control", "value": ".15s background-color, border-color, color; .1s transform", "purpose": "Button state changes; buttons press down 1px." },
+      { "name": "reduced-motion", "value": "durations .01ms", "purpose": "All animation and transition collapses under prefers-reduced-motion." }
+    ],
+    "breakpoints": [
+      { "name": "narrow", "value": "360px", "purpose": "Step numbers hide." },
+      { "name": "phone", "value": "480px", "purpose": "Step labels tighten." },
+      { "name": "form-2col", "value": "560px", "purpose": "Two-column field grids; wider auth padding." },
+      { "name": "brand-name", "value": "600px", "purpose": "Brand name appears in the header band." },
+      { "name": "stacked-tables", "value": "760px", "purpose": "Below this, ledger tables stack into labelled records and filters fold." },
+      { "name": "rail", "value": "900px", "purpose": "Bottom tab bar becomes the 232px left rail; desktop page padding." },
+      { "name": "filter-wide", "value": "1100px", "purpose": "Filter grid becomes a fixed six-column row." }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Navy ink action; the xl size (60px, full width) is Start citation.",
+      "html": "<button class=\"ds-btn ds-btn-primary\">Start citation</button>",
+      "css": ".ds-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 0 18px; border-radius: 4px; border: 1.5px solid transparent; font-family: Archivo, system-ui, sans-serif; font-weight: 650; font-size: 1rem; line-height: 1.2; cursor: pointer; transition: background-color .15s, border-color .15s, color .15s, transform .1s; } .ds-btn-primary { background: var(--ink, #1C2B4A); color: var(--on-ink, #FFFFFF); } .ds-btn-primary:hover { background: var(--ink-hover, #2A3D66); } .ds-btn:active { transform: translateY(1px); } .ds-btn:focus-visible { outline: 3px solid var(--ink, #1C2B4A); outline-offset: 2px; box-shadow: 0 0 0 6px var(--canary, #F8EBA9); }"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Secondary action outlined in field-stroke; cancel in dialogs, pager prev/next.",
+      "html": "<button class=\"ds-btn-ghost\">Back</button>",
+      "css": ".ds-btn-ghost { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 0 18px; border-radius: 4px; border: 1.5px solid var(--field, #7A849B); background: transparent; color: var(--ink, #1C2B4A); font-family: Archivo, system-ui, sans-serif; font-weight: 650; font-size: 1rem; cursor: pointer; transition: background-color .15s, border-color .15s; } .ds-btn-ghost:hover { background: var(--sheet-2, #FAF6F7); border-color: var(--ink, #1C2B4A); } .ds-btn-ghost:active { transform: translateY(1px); } .ds-btn-ghost:focus-visible { outline: 3px solid var(--ink, #1C2B4A); outline-offset: 2px; box-shadow: 0 0 0 6px var(--canary, #F8EBA9); }"
+    },
+    {
+      "name": "Danger Button",
+      "kind": "button",
+      "refersTo": "button-danger",
+      "description": "Red fill reserved for Void and destructive confirmations.",
+      "html": "<button class=\"ds-btn-danger\">Void this Citation</button>",
+      "css": ".ds-btn-danger { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 0 18px; border-radius: 4px; border: 1.5px solid transparent; background: var(--void, #B3162B); color: #fff; font-family: Archivo, system-ui, sans-serif; font-weight: 650; font-size: 1rem; cursor: pointer; } .ds-btn-danger:hover { filter: brightness(.92); } .ds-btn-danger:active { transform: translateY(1px); } .ds-btn-danger:focus-visible { outline: 3px solid var(--ink, #1C2B4A); outline-offset: 2px; box-shadow: 0 0 0 6px var(--canary, #F8EBA9); }"
+    },
+    {
+      "name": "Field and Serial Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Square white field ruled in 1px ink; the serial variant types Control Numbers in red Courier Prime.",
+      "html": "<label class=\"ds-field\"><span class=\"ds-lbl\">From</span><input class=\"ds-input ds-input-serial\" inputmode=\"numeric\" value=\"18104550\"></label><label class=\"ds-field\"><span class=\"ds-lbl\">Last name</span><input class=\"ds-input\" placeholder=\"As on the ID\"></label>",
+      "css": ".ds-field { display: grid; gap: 6px; margin-bottom: 14px; font-family: Archivo, system-ui, sans-serif; } .ds-lbl { font-size: .875rem; font-weight: 650; color: var(--ink-2, #44506B); } .ds-input { width: 100%; min-height: 48px; padding: 10px 12px; background: var(--sheet, #FFFFFF); color: var(--ink, #1C2B4A); border: 1px solid var(--rule, #1C2B4A); border-radius: 0; font: 400 1.0625rem Archivo, system-ui, sans-serif; transition: box-shadow .15s; box-sizing: border-box; } .ds-input:hover { box-shadow: inset 0 0 0 1px var(--rule, #1C2B4A); } .ds-input:focus-visible { outline: 3px solid var(--ink, #1C2B4A); outline-offset: 2px; box-shadow: 0 0 0 6px var(--canary, #F8EBA9); } .ds-input-serial { font-family: 'Courier Prime', 'Courier New', monospace; font-weight: 700; font-size: 1.25rem; letter-spacing: .04em; color: var(--serial, #B3162B); }"
+    },
+    {
+      "name": "Filter Chips",
+      "kind": "chip",
+      "refersTo": "chip",
+      "description": "Square ink-ruled filter chips with tabular counts; selected fills navy.",
+      "html": "<div class=\"ds-chips\"><button class=\"ds-chip ds-chip-on\">All <span class=\"ds-chip-n\">26</span></button><button class=\"ds-chip\">Done <span class=\"ds-chip-n\">20</span></button><button class=\"ds-chip\">Voided <span class=\"ds-chip-n\">2</span></button></div>",
+      "css": ".ds-chips { display: flex; gap: 6px; flex-wrap: wrap; } .ds-chip { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 12px; border: 1px solid var(--rule, #1C2B4A); border-radius: 0; background: var(--sheet, #FFFFFF); color: var(--ink-2, #44506B); font: 600 .9375rem Archivo, system-ui, sans-serif; cursor: pointer; } .ds-chip:hover { border-color: var(--field, #7A849B); color: var(--ink, #1C2B4A); } .ds-chip-on, .ds-chip-on:hover { background: var(--ink, #1C2B4A); border-color: var(--ink, #1C2B4A); color: var(--on-ink, #FFFFFF); } .ds-chip:focus-visible { outline: 3px solid var(--ink, #1C2B4A); outline-offset: 2px; box-shadow: 0 0 0 6px var(--canary, #F8EBA9); } .ds-chip-n { font-size: .8125rem; font-weight: 700; opacity: .8; font-variant-numeric: tabular-nums; }"
+    },
+    {
+      "name": "Desktop Rail",
+      "kind": "nav",
+      "refersTo": "header-band",
+      "description": "Left rail at 900px+: the active item fills with pink ground and a 1px inset ink rule.",
+      "html": "<nav class=\"ds-rail\"><a class=\"ds-rail-a ds-on\" href=\"#\"><svg viewBox=\"0 0 24 24\" width=\"20\" height=\"20\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\"><path d=\"M9 6h12M9 12h12M9 18h12\"/><path d=\"M4 6h.01M4 12h.01M4 18h.01\" stroke-width=\"3\"/></svg>Citations</a><a class=\"ds-rail-a\" href=\"#\"><svg viewBox=\"0 0 24 24\" width=\"20\" height=\"20\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M21.2 15.9A10 10 0 1 1 8 2.8\"/><path d=\"M22 12A10 10 0 0 0 12 2v10z\"/></svg>Summary</a></nav>",
+      "css": ".ds-rail { display: flex; flex-direction: column; gap: 2px; width: 232px; padding: 16px 12px; background: var(--sheet, #FFFFFF); border-right: 1px solid var(--rule-2, #C9CEDA); box-sizing: border-box; } .ds-rail-a { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 4px; color: var(--ink-2, #44506B); text-decoration: none; font: 600 .9375rem Archivo, system-ui, sans-serif; } .ds-rail-a:hover { background: var(--sheet-2, #FAF6F7); color: var(--ink, #1C2B4A); } .ds-rail-a.ds-on { background: var(--ground, #F3E3E6); color: var(--ink, #1C2B4A); font-weight: 700; box-shadow: inset 0 0 0 1px var(--rule, #1C2B4A); } .ds-rail-a:focus-visible { outline: 3px solid var(--ink, #1C2B4A); outline-offset: 2px; box-shadow: 0 0 0 6px var(--canary, #F8EBA9); }"
+    },
+    {
+      "name": "Outcome Stamps and Account Marks",
+      "kind": "custom",
+      "refersTo": "stamp",
+      "description": "3px double-ruled uppercase outcome stamps (Done/Issued, Cancelled, Voided, Paid); account statuses as 1px single-rule marks.",
+      "html": "<div class=\"ds-row\"><span class=\"ds-stamp\" style=\"color:var(--done,#1E6A43)\">Issued</span><span class=\"ds-stamp\" style=\"color:var(--cancel,#555D6E)\">Cancelled</span><span class=\"ds-stamp\" style=\"color:var(--void,#B3162B)\">Voided</span><span class=\"ds-stamp\" style=\"color:var(--paid,#5A3DA8)\">Paid</span></div><div class=\"ds-row\"><span class=\"ds-acct\" style=\"color:var(--done,#1E6A43)\">Active</span><span class=\"ds-acct\" style=\"color:var(--pending,#7A5200)\">Pending</span><span class=\"ds-acct\" style=\"color:var(--cancel,#555D6E)\">Inactive</span></div>",
+      "css": ".ds-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; } .ds-stamp { display: inline-flex; align-items: center; border: 3px double currentColor; border-radius: 3px; padding: 0 7px; font: 700 .75rem/1.55 Archivo, system-ui, sans-serif; font-stretch: 92%; letter-spacing: .09em; text-transform: uppercase; } .ds-acct { display: inline-block; font: 700 .8125rem Archivo, system-ui, sans-serif; padding: 1px 8px; border: 1px solid currentColor; letter-spacing: .02em; }"
+    },
+    {
+      "name": "Booklet Sheet",
+      "kind": "card",
+      "refersTo": "sheet",
+      "description": "The Home top copy: ink top rule, red serial, perforation, tally strip, ruled box row, with pink and canary copies peeking beneath.",
+      "html": "<div class=\"ds-wrap\"><section class=\"ds-sheet\"><div class=\"ds-head\"><div><div class=\"ds-type\">Traffic</div><div class=\"ds-muted\">Booklet 18104550–18104600</div></div><div class=\"ds-no\"><span class=\"ds-boxlbl\">Control No.</span><span class=\"ds-serial\">18104558</span></div></div><div class=\"ds-perf\"></div><div class=\"ds-body\"><div class=\"ds-tally\"><i class=\"d\"></i><i class=\"d\"></i><i class=\"d\"></i><i class=\"c\"></i><i class=\"d\"></i><i class=\"v\"></i><i class=\"cur\"></i><i></i><i></i><i></i><i></i><i></i></div><div class=\"ds-boxrow\"><div class=\"ds-box\"><span class=\"ds-boxlbl\">Used</span><span class=\"ds-fig\">8</span></div><div class=\"ds-box\"><span class=\"ds-boxlbl\">Forms left</span><span class=\"ds-fig\">43</span></div></div></div></section></div>",
+      "css": ".ds-wrap { padding: 16px 16px 32px; background: var(--ground, #F3E3E6); font-family: Archivo, system-ui, sans-serif; color: var(--ink, #1C2B4A); } .ds-sheet { position: relative; z-index: 0; background: var(--sheet, #FFFFFF); border-top: 4px solid var(--ink, #1C2B4A); box-shadow: 0 1px 2px rgba(28,43,74,.10), 0 6px 18px rgba(28,43,74,.07); } .ds-sheet::before, .ds-sheet::after { content: ''; position: absolute; z-index: -1; left: 6px; right: 6px; bottom: -7px; height: 40px; background: var(--pink, #E7B4BF); border: 1px solid var(--rule-2, #C9CEDA); } .ds-sheet::after { z-index: -2; left: 12px; right: 12px; bottom: -14px; background: var(--canary, #F8EBA9); } .ds-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 16px; padding: 14px 16px 12px; } .ds-type { font-size: 1.25rem; font-weight: 750; font-stretch: 88%; } .ds-muted { color: var(--ink-3, #5A6480); font-size: .875rem; } .ds-no { display: grid; justify-items: end; gap: 4px; margin-left: auto; } .ds-boxlbl { font-size: .6875rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-2, #44506B); } .ds-serial { font: 700 3.25rem/1 'Courier Prime', 'Courier New', monospace; color: var(--serial, #B3162B); font-variant-numeric: tabular-nums; } .ds-perf { height: 2px; margin: 0 10px; background: repeating-linear-gradient(90deg, var(--rule-2, #C9CEDA) 0 6px, transparent 6px 11px); } .ds-body { padding: 16px; display: grid; gap: 14px; } .ds-tally { display: grid; grid-template-columns: repeat(12, 1fr); gap: 2px; height: 18px; } .ds-tally i { background: var(--rule-3, #E5E8EF); border-radius: 1px; } .ds-tally i.d { background: var(--ink, #1C2B4A); } .ds-tally i.c { background: repeating-linear-gradient(135deg, var(--cancel, #555D6E) 0 2px, var(--rule-3, #E5E8EF) 2px 4px); } .ds-tally i.v { background: var(--void, #B3162B); } .ds-tally i.cur { background: var(--sheet, #FFFFFF); box-shadow: inset 0 0 0 2px var(--serial, #B3162B); } .ds-boxrow { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--rule, #1C2B4A); } .ds-box { display: grid; gap: 2px; padding: 8px 12px; } .ds-box + .ds-box { border-left: 1px solid var(--rule, #1C2B4A); } .ds-fig { font-size: 1.75rem; font-weight: 750; font-stretch: 88%; line-height: 1.1; font-variant-numeric: tabular-nums; }"
+    },
+    {
+      "name": "Not Synced Tag",
+      "kind": "chip",
+      "refersTo": "tag-sync",
+      "description": "Canary copy tag marking a Citation recorded offline.",
+      "html": "<span class=\"ds-tag-sync\"><svg viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m2 2 20 20\"/><path d=\"M5.8 5.8A7 7 0 0 0 9 19h8.5a4.5 4.5 0 0 0 1.3-.2M21.5 16.5A4.5 4.5 0 0 0 17.5 9h-1.8a7 7 0 0 0-5.5-3.9\"/></svg>Not synced yet</span>",
+      "css": ".ds-tag-sync { display: inline-flex; align-items: center; gap: 5px; font: 600 .8125rem/1.3 Archivo, system-ui, sans-serif; padding: 2px 8px; border-radius: 3px; background: var(--canary, #F8EBA9); color: var(--canary-ink, #4F3F00); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Carbonless Booklet",
+    "overview": "The screen is the top copy of a pre-numbered paper form. White sheets sit on the pink copy beneath them; text, rules and the header band are printer's navy ink; the Control Number is the red figure of a numbering machine. The app is the ledger that accounts for every serial, so the most legible thing on any Enforcer screen is the current number, and outcomes arrive as rubber-stamp marks rather than coloured pills.\n\nDensity follows the role. The Enforcer's phone view is one column, 640px wide at most, with 44 to 60px targets for one hand and gloves, readable in sunlight. Office Admin and Verifier work at a desk in a 1240px ledger of ruled tables and filter boxes beside a left rail. Both share the same paper, ink and rules. A Night theme swaps the paper for dark asphalt while the serials stay bright.\n\nThe world turns down the default government app: no bright app-blue bar, no rounded white cards, no pill badges. Forms are boxed with 1px ink rules and square corners, like a printed form.",
+    "keyCharacteristics": [
+      "Navy ink on white sheets over a pink-copy ground; canary copy for Not synced and warnings.",
+      "Red is scarce. It marks Control Numbers, the current tally cell and Void/danger, and nothing else.",
+      "Courier Prime Bold for serials only; Archivo, slightly condensed, for everything else.",
+      "Square sheets and inputs drawn with 1px ink rules; a 4px ink rule across the top of every sheet.",
+      "Outcomes are 3px double-ruled uppercase stamps. Account statuses are single-rule marks.",
+      "Light and Night themes share one token set."
+    ],
+    "rules": [
+      { "name": "The Numbering-Machine Rule", "body": "Red belongs to Control Numbers, the current tally cell and Void/danger. Navigation, steps, badges, selected states and primary actions are ink. If red shows up anywhere else, it is a defect.", "section": "colors" },
+      { "name": "The Three Copies Rule", "body": "White is the working surface, pink is the ground under it, canary means the record isn't synced or needs attention. Don't use canary for decoration.", "section": "colors" },
+      { "name": "The Night Ink Rule", "body": "Night is a full token swap (`prefers-color-scheme: dark` or `data-theme=\"dark\"`), not a filter. Stamps and serials take their lifted Night inks; ink becomes the light text colour and on-ink becomes dark.", "section": "colors" },
+      { "name": "The Typewriter-Only-For-Numbers Rule", "body": "Courier Prime is used for serials, serial inputs and file/violation codes, and nowhere else. Headings and UI stay in Archivo.", "section": "typography" },
+      { "name": "The Tabular Figures Rule", "body": "Every number that can sit in a column (serials, counts, times, pager numbers, table numbers) uses `tabular-nums`.", "section": "typography" },
+      { "name": "The Stacked Copies Rule", "body": "The Home sheet carries the pink copy edge and the canary copy edge peeking 7px and 14px below it, each inset 6px further. This is the world's signature, and it belongs only on the sheet showing the current Booklet.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do make the current Control Number the largest, reddest thing on the Enforcer's screen (Courier Prime Bold, up to 3.25rem).",
+      "Do use navy ink for every selected, active or primary state: tabs, chips, segments, steps, nav, badges, primary buttons.",
+      "Do keep sheets, inputs, chips, tables and dialogs square, drawn with 1px ink rules and capped with an ink top rule.",
+      "Do show Citation outcomes as 3px double-ruled uppercase stamps, and account statuses as 1px single-rule marks.",
+      "Do use canary only for Not synced, offline and warnings, always with canary-ink text.",
+      "Do keep touch targets at 44px or more (60px for the main field action) and keep WCAG AA contrast in both Light and Night.",
+      "Do put box labels (uppercase 0.6875rem, 0.1em tracking) only inside ruled boxes, directly over the value they caption."
+    ],
+    "donts": [
+      "Don't use red on navigation, steps, badges, headings or decoration. It is reserved for Control Numbers, the current tally cell and Void/danger.",
+      "Don't use a bright app-blue header, rounded white cards or pill badges. The band is printer's navy ink and badges are square.",
+      "Don't set any text other than serials and codes in Courier Prime.",
+      "Don't give outcome stamps a fill, or turn account marks into double-ruled stamps.",
+      "Don't put a fine amount, price or total in any component.",
+      "Don't invent logos, seals or official insignia; the brand mark is a plain ruled square with a file icon.",
+      "Don't use uppercase tracked labels as eyebrows above headings. They only caption values in ruled boxes."
+    ]
+  }
+}

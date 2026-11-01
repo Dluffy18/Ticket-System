@@ -1,0 +1,7 @@
+[
+  { "id": "VL-0001", "first": "Jose", "middle": "Mercado", "last": "Reyes", "suffix": "Jr.", "birthday": "1988-03-14", "sex": "M" },
+  { "id": "VL-0002", "first": "Liza", "middle": "Soriano", "last": "Bautista", "suffix": "", "birthday": "1995-11-02", "sex": "F" },
+  { "id": "VL-0003", "first": "Ramon", "middle": "", "last": "Garcia", "suffix": "", "birthday": "1979-07-21", "sex": "M" },
+  { "id": "VL-0004", "first": "Kristine", "middle": "Abad", "last": "Mendoza", "suffix": "", "birthday": "2001-01-30", "sex": "F" },
+  { "id": "VL-0005", "first": "Eduardo", "middle": "Lim", "last": "Tan", "suffix": "III", "birthday": "1966-05-09", "sex": "M" }
+]

@@ -1,0 +1,71 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "cramped-padding",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/assigned.html"
+        ],
+        "createdAt": "2026-10-25T12:21:01.353Z",
+        "reason": "Claude: throwaway decision-round sketch, not shipped"
+      },
+      {
+        "rule": "cream-palette",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/assigned.html"
+        ],
+        "createdAt": "2026-10-25T12:21:01.550Z",
+        "reason": "Claude: throwaway decision-round sketch, not shipped"
+      },
+      {
+        "rule": "border-accent-on-rounded",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/model-pick.html"
+        ],
+        "createdAt": "2026-10-25T12:21:01.742Z",
+        "reason": "Claude: throwaway decision-round sketch, not shipped"
+      },
+      {
+        "rule": "undersized-ui-text",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/model-pick.html"
+        ],
+        "createdAt": "2026-10-25T12:21:01.930Z",
+        "reason": "Claude: throwaway decision-round sketch, not shipped"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/assigned.html"
+        ],
+        "createdAt": "2026-10-25T12:33:55.389Z",
+        "reason": "Claude: unchosen decision-round sketch (License Plate world), not shipped"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/canon.html"
+        ],
+        "createdAt": "2026-10-25T12:33:55.612Z",
+        "reason": "Claude: unchosen decision-round sketch (category standard), not shipped"
+      },
+      {
+        "rule": "side-tab",
+        "value": "*",
+        "files": [
+          "css/app.css"
+        ],
+        "createdAt": "2026-11-01T12:10:49.180Z",
+        "reason": "user's Summary mockup shows colored left borders on the Issued/Cancelled/Voided cards; user approved the build plan (Q4)"
+      }
+    ]
+  }
+}

@@ -1,0 +1,10 @@
+[
+  { "id": "E001", "first": "Maria", "middle": "Lopez", "last": "Santos", "suffix": "", "gender": "F", "agency": "POLICE",
+    "rank": "Patrolwoman", "badge": "PNP-04821", "address": "123 Rizal Street, Barangay San Roque, Sample City", "contact": "+639171234501" },
+  { "id": "E002", "first": "Juan", "middle": "Reyes", "last": "Dela Cruz", "suffix": "", "gender": "M", "agency": "TRAFFIC",
+    "rank": "Traffic Enforcer I", "badge": "TE-1187", "address": "45 Mabini Avenue, Barangay Poblacion, Sample City", "contact": "+639171234502" },
+  { "id": "E003", "first": "Ana", "middle": "Cruz", "last": "Reyes", "suffix": "", "gender": "F", "agency": "PSO",
+    "rank": "Public Safety Officer", "badge": "PSO-0332", "address": "8 Bonifacio Street, Barangay Lahug, Sample City", "contact": "+639171234503" },
+  { "id": "E004", "first": "Ben", "middle": "", "last": "Villanueva", "suffix": "Jr.", "gender": "M", "agency": "CSU",
+    "rank": "Civil Security Officer", "badge": "CSU-0518", "address": "77 Luna Street, Barangay Mabolo, Sample City", "contact": "+639171234504" }
+]

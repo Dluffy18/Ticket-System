@@ -1,0 +1,7 @@
+[
+  { "id": "A001", "first": "Carlos", "middle": "", "last": "Mendoza", "suffix": "", "gender": "M", "role": "office", "agency": "POLICE", "position": "Office Admin, Police", "contact": "+639181110001" },
+  { "id": "A002", "first": "Liza", "middle": "", "last": "Fernandez", "suffix": "", "gender": "F", "role": "office", "agency": "TRAFFIC", "position": "Office Admin, Traffic Enforcement", "contact": "+639181110002" },
+  { "id": "A003", "first": "Ramon", "middle": "", "last": "Bautista", "suffix": "", "gender": "M", "role": "office", "agency": "PSO", "position": "Office Admin, Public Safety Office", "contact": "+639181110003" },
+  { "id": "A004", "first": "Grace", "middle": "", "last": "Aquino", "suffix": "", "gender": "F", "role": "office", "agency": "CSU", "position": "Office Admin, Civil Security Unit", "contact": "+639181110004" },
+  { "id": "V001", "first": "Teresa", "middle": "", "last": "Garcia", "suffix": "", "gender": "F", "role": "verifier", "position": "Verifier, Treasury Office", "contact": "+639181110005" }
+]

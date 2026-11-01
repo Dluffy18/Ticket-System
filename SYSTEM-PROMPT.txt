@@ -1,0 +1,309 @@
+BUILD PROMPT: CITATION SYSTEM (City of Mati)
+=============================================
+
+Build a web app called "Citation System" for the City of Mati. Enforcers use it to record pre-numbered paper citation forms (tickets) for traffic, local ordinance and other violations. It must work well on a phone (Enforcers in the field) and on a PC (office staff).
+
+This prompt describes what the system does, who uses it, its rules and its screens. Visual design (colors, fonts, theme) is up to you.
+
+
+1. PURPOSE
+----------
+The paper form is the official Citation. The app is a ledger that proves no paper form went missing.
+
+Every paper form has a printed Control Number. Every Control Number must end up with exactly ONE recorded outcome:
+  - Done      (the Citation was issued to a Violator)
+  - Cancelled (the form was spoiled or not used)
+  - Voided    (the printed number on the paper didn't match what the app expected; explained in an Incident Report)
+
+A number is never skipped and never used twice. The app only ever offers the next number in the Booklet, in strict order, and the Enforcer matches it to the paper in hand.
+
+The app records NO fine amounts, prices or totals anywhere.
+
+
+2. USERS (ROLES)
+----------------
+a) Enforcer
+   - A field officer belonging to one Agency.
+   - Uses a mid-sized Android phone, one-handed, outdoors, often in strong sun or at night, often with a weak or no signal.
+   - Registers Booklets and records each paper form by its Control Number.
+   - Never sees payment details.
+
+b) Office Admin
+   - One per Agency, at a desk on a PC.
+   - Approves or rejects Enforcer sign-ups, sets Enforcers Inactive / Active again, and sees counts per Enforcer.
+   - NEVER sees Citation contents (no violators, violations or photos), only counts.
+
+c) Verifier
+   - One for the whole city, at the Treasury Office, on a PC.
+   - Sees every Citation in the city.
+   - Marks Issued Citations as Paid by entering the Official Receipt (OR) number.
+
+
+3. VOCABULARY (use these exact words in the UI)
+-----------------------------------------------
+- Agency: an enforcing office. Each Agency issues certain Citation Types and certain Violations.
+- Enforcer, Office Admin, Verifier: the roles above.
+- Citation: one paper form plus its record in the app.
+- Citation Type: the kind of paper form (e.g. Traffic, Ordinance).
+- Control Number: the number printed on each paper form.
+- Booklet: a consecutive range of Control Numbers for ONE Citation Type, handed to ONE Enforcer by the Treasury Office.
+- Violation: an offense ticked on a Citation (a Citation can have several).
+- Violator: the person cited.
+- Violator Details: first, middle, last name, suffix, birthday and sex of the Violator on one Citation.
+- Violator Record: one person across many Citations (matched by full name + birthday).
+- Status: the outcome of one Control Number: Done, Cancelled or Voided. Enforcer pages call it "Status". Office Admin and Verifier pages call it "Outcome" and show Done as "Issued".
+- Paid / Unpaid: payment state of a Done Citation. Not a Status. Cancelled and Voided forms are never Paid or Unpaid.
+- Not synced: a Citation recorded offline that hasn't reached the server yet (short label in lists: "Unsynced").
+- Discard: clear everything entered for the current number WITHOUT recording a Status. The number stays open.
+- Incident Report: the written explanation that Voids a number.
+- Registration: an Enforcer's sign-up request.
+- Official Receipt number (OR number): the Treasury receipt that proves payment.
+
+Words to avoid: "ticket" for counted Citations, "pending" for Not synced, "cancel" for Discard, "pad" for Booklet.
+
+
+4. REFERENCE DATA (sample)
+--------------------------
+Agencies, and what each can issue:
+  - Traffic Enforcement: Citation Types: Traffic. Violations: all Traffic violations.
+  - Police: Traffic, Ordinance, City Ordinance 667, City Ordinance 034, City Ordinance 553. All violations of those types.
+  - Public Safety Office: Ordinance, City Ordinance 667, 034, 553.
+  - Civil Security Unit: Ordinance only (a subset of Ordinance violations).
+
+Citation Types:
+  - Traffic (needs a plate number photo)
+  - Ordinance
+  - City Ordinance 667
+  - City Ordinance 034
+  - City Ordinance 553
+
+Violation examples:
+  - Traffic: No helmet; Driving without a driver's license; Unregistered vehicle; Disregarding traffic sign; Illegal parking; Reckless driving; No seatbelt; Overloading passengers; Using phone while driving.
+  - Ordinance: Smoking in a public place; Littering; Illegal vending on sidewalk; Spitting in public; Not wearing a shirt in public; Drinking liquor in public; Curfew violation.
+  - City Ordinance 667 (noise): Excessive noise at night; Videoke or sound system after 10 PM; Loud vehicle muffler in residential area; etc.
+  - City Ordinance 034 and 553: a few violations each.
+
+Each Violation belongs to exactly one Citation Type. An Enforcer only sees Violations that their Agency issues AND that match the Citation Type being recorded.
+
+Seed with several sample Enforcers across Agencies, one Office Admin per Agency, one Verifier, about five made-up Violator Records, some Booklets, and a set of Citations (some Done, some Cancelled, one Voided, some Paid). All personal data must be fictional (Philippine Data Privacy Act, RA 10173).
+
+
+5. SIGN IN AND ACCOUNTS
+-----------------------
+Sign in page
+  - Title "Citation System". City of Mati seal and name.
+  - Fields: Full name and Password. Hint under Full name: "As registered, e.g. Juan Dela Cruz".
+  - Sign in by FULL NAME, not a username. Match ignoring case and extra spaces. A name without the middle name also matches.
+  - If more than one account matches the typed name: "More than one account has this name. Type your middle name too."
+  - Wrong name or password: "Name or password is incorrect."
+  - Only AFTER the password checks out, reveal the account status:
+      Pending:  "Your account is still being verified. Please try again later."
+      Rejected: "Your registration was not approved: {reason}. Please contact your Agency." (no reason: leave that part out)
+      Inactive: "Your account is inactive. Please contact your Agency."
+  - Links: "Forgot password?" and "Create account".
+  - "Forgot password?" shows a note (no reset flow): "Enforcers: ask your Office Admin to reset your password. Office Admins and the Verifier: contact the City ICT Office."
+  - After sign in, each role lands on its own start page (Enforcer: Home, Office Admin: Enforcers, Verifier: Citations).
+
+Create account (Enforcers only)
+  - Text under the title: "For Enforcers. Your Office Admin approves the account before you can sign in."
+  - Fields: First name*, Middle name (optional), Last name*, Suffix (optional: None, Jr., Sr., II, III, IV...), Gender* (Male/Female), Agency*, Rank / Position (optional), Badge or ID number (optional), Contact number* (Philippine mobile: 09XX XXX XXXX or +639XX XXX XXXX), Address*, Password* (at least 8 characters), Confirm password*.
+  - Validate each field and show the message under it (e.g. "Enter your first name.", "Choose your Agency.", "Enter a Philippine mobile number, like 0917 123 4567.", "Use at least 8 characters.", "The passwords don't match.").
+  - The full name must be unique among non-rejected accounts: "An account with this name already exists. Add your middle name or suffix if you have one."
+  - Store passwords only as a salted hash (never plain text, never in data files).
+  - On success the form is replaced by: "Thank you for signing up! Your account is being verified. Please sign in again after 24 hours to check if it has been activated." with a "Back to sign in" button.
+  - A new Registration starts as Pending. Someone who was Rejected may register again with the same name; the newer Registration replaces the old one.
+
+Account status changes (done by the Office Admin of the Enforcer's Agency only)
+  - Pending -> Active (Approve)
+  - Pending -> Rejected (Reject, with an optional reason of up to 200 characters, shown to the person at sign-in)
+  - Rejected -> Active (Approve after all)
+  - Active -> Inactive (Set to Inactive; they can't sign in, their Citations stay)
+  - Inactive -> Active (Set Active again)
+  - Every change is kept in a history with who did it and when.
+
+
+6. ENFORCER: SCREENS AND FLOW
+-----------------------------
+Navigation: Home, Citation Type, Citations, Stats, Profile. Show an offline banner whenever there is no signal.
+
+6.1 Citation Type (and registering a Booklet)
+  - Lists the Citation Types the Enforcer's Agency issues, each marked "active" (has a Booklet with forms left) or "no Booklet".
+  - If the Agency issues only one type: "{Agency} issues {type} Citations only."
+  - Picking a type with an active Booklet makes it the type being recorded ("Now recording: {type} #{number}").
+  - Picking a type without a Booklet shows "Register your {type} Booklet": enter the From and To Control Numbers printed in the Booklet. Show "{n} forms in this Booklet" live as they type.
+  - Booklet rules (show these messages):
+      - Agency doesn't issue the type: "Your Agency doesn't issue this Citation Type."
+      - Already holds an active Booklet of this type: "You already hold an active {type} Booklet. Finish it first."
+      - Numbers only: "Enter the first and last Control Number, numbers only."
+      - To < From: "The last Control Number can't be smaller than the first. Check the Booklet again."
+      - More than 500 forms: "That's more than 500 forms. Check that both numbers are correct."
+      - Overlaps ANY Booklet already registered by anyone: "These Control Numbers are already registered ({from}–{to}). Check the Booklet, or ask the Treasury Office."
+  - Success: "{type} Booklet registered: {n} forms. Start with #{from}."
+  - An Enforcer can hold one active Booklet per Citation Type at the same time.
+
+6.2 Home
+  - The current Control Number is the most prominent thing on screen: "Control No. 18104558", with "Write this number on your {type} form. Match it to the number on the paper."
+  - Booklet progress: forms Used and Forms left.
+  - Low stock warning at 5 or fewer: "Only {n} forms left. Get your next Booklet from the Treasury Office soon."
+  - Button "Start citation", or "Continue citation" if a draft exists for this number (mark it "Draft kept").
+  - Hint: "Spoiled form or wrong number? Start, then Cancel or report it on Review."
+  - "Change type" link if the Enforcer has more than one type.
+  - No active Booklet: "No active Booklet. Get a Booklet from the Treasury Office, then register it under Citation Type." with "Register a Booklet".
+  - When a Booklet is used up: "Booklet {from}–{to} is finished. Every form is accounted for."
+  - Today's Citations list with "See all".
+
+6.3 Recording a Citation (3 steps for the current number)
+  Header: "Citation #{number}" with "Discard citation".
+
+  Step 1: Violations
+    - "Tick every Violation written on the form."
+    - Searchable checklist of the allowed Violations; show "{n} picked".
+
+  Step 2: Photos & ID
+    - Camera only (no gallery upload). Take them in order:
+        1. Ticket form (always)
+        2. Violator's ID (unless "No ID presented" is switched on)
+        3. Plate number (Traffic Citation Type only)
+    - Each photo can be retaken.
+    - Taking the ID photo starts ON-DEVICE ID reading ("Reading ID…") that fills in Violator Details. It must not use paid cloud services. A prototype may simulate it.
+      - Fields read from the ID are marked "Read from ID · check this".
+      - Fields it couldn't read are marked "Couldn't read · please type".
+      - Never overwrite anything the Enforcer already typed.
+      - Photos taken while reading is in progress must not be lost.
+    - "No ID presented" switch: clears the ID photo; the Enforcer types the details instead.
+    - Violator Details: First name*, Middle name, Last name*, Suffix, Birthday* (not in the future), Sex* (Male/Female).
+
+  Step 3: Review
+    - Shows Violations, Photos, and Violator ("Identified by: ID photo" or "No ID: typed by Enforcer"), each with Edit.
+    - "Still needed" list naming EXACTLY what is missing; tapping an item jumps to it:
+        "Pick at least one violation", "Photo of the ticket form", "Photo of the violator's ID, or turn on 'No ID'", "Photo of the plate number", "Violator's first name, last name, birthday, sex", "Violator's birthday can't be in the future".
+    - Notes: "Time is recorded automatically" and "Location is recorded if the phone allows it".
+    - Three ways to close the number:
+
+    a) Mark Done (only when nothing is missing)
+       - Records Status Done with time, GPS location (if allowed), Violations, photos and Violator Details.
+       - Links the Violator to a Violator Record: same full name + birthday = same record, otherwise create a new one (IDs like VL-0006).
+       - Message: "#{no} is Done. Next form: #{next}". Move to the next number.
+
+    b) Cancel form (spoiled or unused form; allowed anytime)
+       - Confirm dialog: "Cancel form {no}? Anything entered so far is kept with it. The number can never be used again." The Enforcer must TYPE the number to confirm.
+       - Message: "#{no} Cancelled. Next form: #{next}".
+
+    c) Write an Incident Report ("Number on the paper doesn't match?")
+       - "The app expects #{no}. Submitting Voids this number, keeps what you entered, and moves you to the next number."
+       - Fields: "Number printed on the paper form" (numbers only) and "What happened" (at least 15 characters).
+       - If the paper number equals the expected number: "That's the same number. If the form is spoiled, use Cancel instead."
+       - Show a helpful check about the paper number:
+           already recorded: "#{p} is already recorded ({status}, {time}). This looks like a duplicate printed number."
+           later in this Booklet: "#{p} is later in your Booklet. Forms may have been skipped or misprinted."
+           otherwise: "#{p} isn't in your Booklet."
+       - "Submit and Void #{no}": records Status Voided with the Incident Report.
+       - The NEXT number starts at Step 2 with the same Violations and Violator Details carried over, but NO photos (the photos must be retaken for the new form): "#{no} Voided. Retake the photos for #{next}."
+
+  Discard
+    - Asks first: "Discard citation #{no}? The violations, photos and details you entered will be cleared. The number stays open."
+    - Records nothing. The next Citation starts blank on the same number.
+
+  Drafts
+    - Never lose work: leaving the screen, switching tabs, going offline or being interrupted keeps the draft. Only the Enforcer's own Discard clears it.
+
+  Finality
+    - Done, Cancelled and Voided can never be edited. Done: "Done is final. This citation can't be changed." Cancelled/Voided: "This Control Number was {cancelled/voided} and can never be used again."
+    - When the last number of a Booklet is closed, the Booklet is finished: "{type} Booklet finished. Register your next Booklet."
+
+6.4 Offline
+  - The Enforcer can keep recording with no signal. Banner: "No signal. You can keep issuing citations; they're saved on this phone and sync when you're back online."
+  - Citations closed while offline are marked "Not synced" until the connection returns. Then: "Back online. {n} citations synced."
+
+6.5 Citations (the Enforcer's own)
+  - Filters: Status (All, Done, Cancelled, Voided, Not synced), Citation Type (if more than one), Day.
+  - Paged list: "Showing {a}–{b} of {n} Citations, newest first, Paid last." Reminder "{n} not synced yet".
+  - Each row: Control Number, type, Status, time, Violations or "Form cancelled" / "Cancelled: {names}", "Paper said #{p}" for Voided.
+  - Empty states: "Nothing here yet", "Everything is synced", "No citations on this day", "No citations match".
+  - Citation detail: Status, time marked Done, location (or "Not recorded"), Violations, photos, Violator Details, Incident Report for Voided (paper number, what happened, the check). No payment details for Enforcers.
+
+6.6 Stats
+  - Today and This month: Citations (count of Done only), Violations recorded, Cancelled forms, Voided forms. Forms used = Citations + Cancelled + Voided.
+  - "Not synced yet: {n}".
+  - By Citation Type (this month), if the Enforcer has more than one type.
+  - Booklets: each type's active Booklet range and forms left, or "No active Booklet".
+
+6.7 Profile
+  (Office Admins and the Verifier get the same page, without "Citation types you can issue".)
+  - Profile card: profile picture (or initials), full name, Rank (or Position), and one button: "Upload profile picture" when there is no picture, "Edit profile picture" when there is. Edit offers "Choose a new photo" or "Remove photo". The picture is center-cropped to a square and kept on the device.
+  - Read-only cards, in this order: Personal information (first, middle, last, suffix, gender), Contact details (contact number, address), Work information (Agency, Rank / Position, Badge or ID number; ends with "To correct your details, ask your Office Admin." — Office Admins and the Verifier see "ask the City ICT Office"), Citation types you can issue (one checked chip per type).
+  - Password card: "Last changed [date]" or "Never changed", and "Change password", which opens a dialog: Current password, New password (at least 8 characters), Confirm new password. On success the user stays signed in and sees "Password changed." The new password works at the next sign-in.
+  - Then Sign out (in the profile card on wide screens, at the bottom on phones).
+  - Only the profile picture and the password can be changed here.
+
+
+7. OFFICE ADMIN: SCREENS AND FLOW
+---------------------------------
+Navigation: Enforcers, Registrations (with a badge counting Pending), Profile. Only Enforcers of the admin's own Agency are visible.
+
+7.1 Enforcers
+  - Summary line: "{n} Enforcers registered under {Agency}: {a} Active · {p} Pending · {i} Inactive · {r} Rejected."
+  - Filter by status, search by name, badge or rank. Paged, A–Z by name.
+  - Columns: Name, Status, Today, This month (Issued counts, with "{c} cancelled · {v} voided" underneath), Total issued.
+  - Enforcer detail: Rank, Badge, Gender, Contact number, Address, Registered date (or "From agency records"), a "Citations issued" table (Today / This month × Issued / Cancelled / Voided), "History of decisions", and the allowed actions (Approve, Reject, Approve after all, Set to Inactive, Set Active again).
+  - "Set to Inactive" asks first: "Set {name} to Inactive? They can't sign in until you set them Active again. Their Citations stay."
+  - "Reject" asks for an optional reason (up to 200 characters, shown at sign-in).
+  - Never show Citation contents.
+
+7.2 Registrations
+  - "{n} waiting for a decision." Paged, newest first.
+  - Columns: Full name, Gender, Rank / Position, Badge or ID number, Contact number, Address, Registered, Decision (Approve / Reject).
+  - Empty: "No registrations waiting. New sign-ups for your Agency appear here."
+
+
+8. VERIFIER (TREASURY OFFICE): SCREENS AND FLOW
+-----------------------------------------------
+Navigation: Citations, Summary, Profile.
+
+8.1 Citations (every Citation in the city)
+  - Search by Control Number or Violator name.
+  - Filters: Agency, Citation Type, Outcome (Issued / Cancelled / Voided), Payment (Paid / Unpaid). "Clear filters".
+  - "Showing {a}–{b} of {m} matching ({n} Citations in all), newest first."
+  - Columns: Control No., Type, Enforcer, Violator, Outcome, Violations, Payment, Date and time.
+  - Citation detail: everything, including photos, Violator Record and Incident Report.
+  - "An Issued Citation is final. Only its Payment status can change."
+
+8.2 Payment
+  - Only Issued (Done) Citations can be paid: "Payment applies to Issued Citations only."
+  - "Mark Paid": enter the Official Receipt number and the Date paid.
+      - OR number required; letters, numbers and dashes only; stored uppercase.
+      - An OR number can be used on only ONE Citation: "OR {or} is already used on Citation #{no}."
+      - Date paid can't be in the future, and can't be before the Citation's date.
+  - Paid shows "OR {or} · paid {date}". "Set back to Unpaid" asks first, removes the OR, but keeps it in the history.
+  - "Payment history" lists every Paid / Unpaid change with who did it and when.
+
+8.3 Summary
+  - One Today / This month switch at the top controls the whole page.
+  - Three count cards: Issued (count, "% paid", a bar split Unpaid / Paid, and both counts), Cancelled, Voided.
+  - "Issued by agency": a donut of Issued per Agency with the total in the middle, and a list of each Agency's count and share (%).
+  - "Status by agency": grouped bars per Agency for Unpaid, Paid, Cancelled and Voided, with the number on each bar. On phones, Agencies show their short names (Traffic, Police, Public Safety, Civil Security).
+  - Each chart also has a text version for screen readers. Nothing issued yet: totals show 0 and "% paid" shows "—".
+  - Note: "Paid and Unpaid count Issued Citations by the date they were issued."
+
+
+9. GENERAL RULES AND CONSTRAINTS
+--------------------------------
+- Each role sees only what it must: Office Admins never see Citation contents; Enforcers never see payment details.
+- Final means final: closed Control Numbers can never be edited or reused.
+- Say exactly what's missing: every block names the item and jumps to it.
+- Never lose work in the field.
+- No fine amounts, prices or totals anywhere.
+- No passwords in any data file; registration passwords stored only as salted hashes.
+- Start-up checks: validate the reference data at start (agencies, types, violations, accounts). If anything is wrong, show a list of the problems instead of starting.
+- Keep every user-facing message in one place so a Filipino translation can be added later. UI is English for now.
+- Touch targets large enough for one-handed use, possibly with gloves. Readable in direct sunlight and at night. WCAG 2.1 AA contrast at minimum.
+- Must work on a phone and on a PC (responsive).
+- Real personal data must never be shipped in files the app serves (Data Privacy Act, RA 10173).
+
+
+10. PROTOTYPE EXTRAS (OPTIONAL)
+-------------------------------
+- It may run without a backend: Booklets and Citations in memory, Registrations and account status changes in browser storage.
+- A "Demo" panel (testing only, not a product feature) to switch between sample users and toggle online/offline.
+- On a PC without a camera, the camera window can offer a labelled sample photo.
+- ID reading may be simulated (e.g. about 1.5 seconds, sometimes leaving a field blank so "Couldn't read · please type" can be tested).

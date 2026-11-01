@@ -1,0 +1,7 @@
+[
+  { "id": "TRAFFIC", "name": "Traffic", "needsPlatePhoto": true },
+  { "id": "ORD", "name": "Ordinance", "needsPlatePhoto": false },
+  { "id": "CO667", "name": "City Ordinance 667", "needsPlatePhoto": false },
+  { "id": "CO034", "name": "City Ordinance 034", "needsPlatePhoto": false },
+  { "id": "CO553", "name": "City Ordinance 553", "needsPlatePhoto": false }
+]
