@@ -1,0 +1,19 @@
+# Design-tool workspace (cache, mockups, review screenshots); the app never loads it
+.impeccable/
+
+# Source images the app doesn't use
+img/enforcer login.png
+img/logo-mati_city.png
+
+# Original build prompt
+SYSTEM-PROMPT.txt
+
+# OS and editor files
+Thumbs.db
+desktop.ini
+.DS_Store
+.vscode/
+
+# Tooling
+node_modules/
+*.log

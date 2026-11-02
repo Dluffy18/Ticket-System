@@ -1,14 +1,14 @@
 import { t } from '../strings.js';
-import { esc, fullName, displayName, fDateTime, fDayKey, dayKey, todayKey, isToday, isThisMonth, normName } from '../util.js';
+import { esc, fullName, displayName, fDateTime, fDayKey, dayKey, monthKey, fMonthKey, todayKey, isToday, isThisMonth, normName } from '../util.js';
 import { S, me, enforcer, agencyOf, ctName, markPaid, setUnpaid, validatePayment, personName, subscribe } from '../store.js';
 import { icon, serial, stamp, toast, dialog, pager, paginate, emptyState, dateBox, bindDateBox } from '../ui.js';
 import { citationDetail, violatorShort } from './citation.js';
 
-const st = { q: '', agency: '', ctype: '', outcome: '', pay: '', day: '', page: 1 };
-const clearState = () => Object.assign(st, { q: '', agency: '', ctype: '', outcome: '', pay: '', day: '', page: 1 });
-const activeCount = () => ['agency', 'ctype', 'outcome', 'pay', 'day'].filter(k => st[k]).length;
+const st = { q: '', agency: '', ctype: '', outcome: '', pay: '', month: '', day: '', page: 1 };
+const clearState = () => Object.assign(st, { q: '', agency: '', ctype: '', outcome: '', pay: '', month: '', day: '', page: 1 });
+const activeCount = () => ['agency', 'ctype', 'outcome', 'pay', 'month', 'day'].filter(k => st[k]).length;
 let filtersOpen = false;
-const isFiltered = () => !!(st.q || st.agency || st.ctype || st.outcome || st.pay || st.day);
+const isFiltered = () => !!(st.q || st.agency || st.ctype || st.outcome || st.pay || st.month || st.day);
 
 function matches(c) {
   if (st.q) {
@@ -24,8 +24,16 @@ function matches(c) {
   if (st.outcome && c.status !== st.outcome) return false;
   if (st.pay === 'paid' && !(c.status === 'done' && c.payment)) return false;
   if (st.pay === 'unpaid' && !(c.status === 'done' && !c.payment)) return false;
+  if (st.month && monthKey(c.at) !== st.month) return false;
   if (st.day && dayKey(c.at) !== st.day) return false;
   return true;
+}
+
+// Months that have Citations, newest first; this month is always listed so the Summary can link to it.
+function monthsWithCitations() {
+  const set = new Set(S.citations.map(c => monthKey(c.at)));
+  set.add(monthKey(Date.now()));
+  return [...set].sort().reverse();
 }
 
 export function vCitationsView(root, ctx) {
@@ -41,6 +49,7 @@ export function vCitationsView(root, ctx) {
         <label class="field"><span class="lbl">${esc(t('citationType'))}</span><select class="input" name="ctype">${opt('', t('allTypes'), st.ctype)}${S.ref.citationTypes.map(c => opt(c.id, c.name, st.ctype)).join('')}</select></label>
         <label class="field"><span class="lbl">${esc(t('outcome'))}</span><select class="input" name="outcome">${opt('', t('allOutcomes'), st.outcome)}${opt('done', t('stIssued'), st.outcome)}${opt('cancelled', t('stCancelled'), st.outcome)}${opt('voided', t('stVoided'), st.outcome)}</select></label>
         <label class="field"><span class="lbl">${esc(t('payment'))}</span><select class="input" name="pay">${opt('', t('payBoth'), st.pay)}${opt('unpaid', t('stUnpaid'), st.pay)}${opt('paid', t('stPaid'), st.pay)}</select></label>
+        <label class="field"><span class="lbl">${esc(t('month'))}</span><select class="input" name="month">${opt('', t('allMonths'), st.month)}${monthsWithCitations().map(m => opt(m, fMonthKey(m), st.month)).join('')}</select></label>
         <div class="field"><label class="lbl" for="v-day">${esc(t('day'))}</label>${dateBox({ id: 'v-day', name: 'day', value: st.day, clearable: true, attrs: `max="${todayKey()}"` })}</div>
       </div>`;
     const box = root.querySelector('[data-filters]');
@@ -56,7 +65,9 @@ export function vCitationsView(root, ctx) {
     };
     f.querySelector('[name=q]').addEventListener('input', e => { st.q = e.target.value; st.page = 1; renderList(); f.querySelector('[data-clear]').disabled = !isFiltered(); });
     ['agency', 'ctype', 'outcome', 'pay'].forEach(k => f.querySelector(`[name=${k}]`).addEventListener('change', e => { st[k] = e.target.value; applied(); }));
-    f.querySelector('[name=day]').addEventListener('change', e => { const v = e.target.value; st.day = v && v <= todayKey() ? v : ''; applied(); });
+    // Month and Day narrow the same date, so picking one clears the other.
+    f.querySelector('[name=month]').addEventListener('change', e => { st.month = e.target.value; if (st.month) st.day = ''; applied(); });
+    f.querySelector('[name=day]').addEventListener('change', e => { const v = e.target.value; st.day = v && v <= todayKey() ? v : ''; if (st.day) st.month = ''; applied(); });
     f.querySelector('[data-toggle]').addEventListener('click', () => { filtersOpen = !filtersOpen; renderFilters(); });
     f.querySelector('[data-clear]').addEventListener('click', () => { clearState(); applied(); });
     bindDateBox(f.querySelector('[data-datebox]'), () => {
@@ -203,9 +214,10 @@ export function summaryView(root) {
         <div class="sm-seg" role="group" aria-label="${esc(t('period'))}">${seg('today', 'today')}${seg('month', 'thisMonth')}</div>
       </header>
       <div class="sm-cards">
-        ${issuedCard(tot)}
-        ${countCard('cancel', t('stCancelled'), tot.cancelled, 'fileX')}
-        ${countCard('void', t('stVoided'), tot.voided, 'ban')}
+        ${tile('unpaid', t('stUnpaid'), tot.unpaid, 'clock')}
+        ${tile('paid', t('stPaid'), tot.paid, 'check')}
+        ${tile('cancelled', t('stCancelled'), tot.cancelled, 'fileX')}
+        ${tile('voided', t('stVoided'), tot.voided, 'ban')}
       </div>
       <div class="sm-charts">
         ${donutCard(rows, tot.issued)}
@@ -213,6 +225,13 @@ export function summaryView(root) {
       </div>
     </div>`;
     root.querySelectorAll('[data-p]').forEach(b => b.addEventListener('click', () => { sumState.period = b.dataset.p; render(); }));
+    // "View citations": open the list showing exactly what the tile counted.
+    root.querySelectorAll('[data-go]').forEach(a => a.addEventListener('click', () => {
+      clearState();
+      const k = a.dataset.go;
+      if (k === 'unpaid' || k === 'paid') st.pay = k; else st.outcome = k;
+      if (p === 'today') st.day = todayKey(); else st.month = monthKey(Date.now());
+    }));
   };
   render();
 }
@@ -220,30 +239,15 @@ export function summaryView(root) {
 const agColor = a => `--c: var(--ag-${a.id}, var(--ink-3))`;
 const pct = (n, d) => d ? Math.round(n / d * 100) : null;
 
-function issuedCard(s) {
-  const pc = pct(s.paid, s.issued);
-  const w = s.issued ? s.paid / s.issued * 100 : 0;
+function tile(kind, label, n, ic) {
   return `
-  <section class="sm-card sm-k sm-k-issued">
-    <div class="sm-k-top">
-      <h2 class="sm-lbl">${esc(t('stIssued'))}</h2>
-      <p class="sm-pct"><span>${pc == null ? t('dash') : pc + '%'}</span> ${esc(t('pctPaid'))}</p>
+  <section class="sm-tile sm-tile-${kind}">
+    <div class="sm-tile-body">
+      <p class="sm-tile-n">${n}</p>
+      <h2 class="sm-tile-lbl">${esc(label)}</h2>
+      <span class="sm-tile-ic" aria-hidden="true">${icon(ic)}</span>
     </div>
-    <div class="sm-k-body">
-      <p class="sm-big">${s.issued}</p>
-      <div class="sm-k-meter">
-        <div class="sm-split ${s.issued ? '' : 'is-empty'}" aria-hidden="true"><i class="u" style="width:${100 - w}%"></i><i class="p" style="width:${w}%"></i></div>
-        <p class="sm-keys"><span><i class="sm-dot u"></i>${esc(t('stUnpaid'))} <b>${s.unpaid}</b></span><span><i class="sm-dot p"></i>${esc(t('stPaid'))} <b>${s.paid}</b></span></p>
-      </div>
-    </div>
-  </section>`;
-}
-
-function countCard(kind, label, n, ic) {
-  return `
-  <section class="sm-card sm-k sm-k-${kind}">
-    <h2 class="sm-lbl">${esc(label)}</h2>
-    <div class="sm-k-row"><p class="sm-big">${n}</p><span class="sm-ic">${icon(ic)}</span></div>
+    <a class="sm-tile-foot" href="#/v/citations" data-go="${kind}" aria-label="${esc(t('viewCitationsOf', { what: label }))}"><span>${esc(t('viewCitations'))}</span>${icon('chevR')}</a>
   </section>`;
 }
 

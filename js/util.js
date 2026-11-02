@@ -58,6 +58,8 @@ export function fDate(ts) { return fmtDate.format(new Date(ts)); }
 export function fTime(ts) { return fmtTime.format(new Date(ts)); }
 export function fDateTime(ts) { return `${fDate(ts)} · ${fTime(ts)}`; }
 export function fDayKey(k) { const d = parseDayKey(k); return d ? fDate(d) : k; }
+const fmtMonth = new Intl.DateTimeFormat('en-PH', { month: 'long', year: 'numeric' });
+export function fMonthKey(k) { const [y, m] = k.split('-').map(Number); return y && m ? fmtMonth.format(new Date(y, m - 1, 1)) : k; }
 
 // ---- Phone ----
 // Accepts 09XXXXXXXXX or +639XXXXXXXXX with spaces/dashes. Returns +639… or null.
