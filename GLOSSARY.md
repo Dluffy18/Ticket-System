@@ -13,7 +13,7 @@ The recorded outcome of one Control Number: Done, Cancelled or Voided. Enforcer 
 _Avoid_: Result, state
 
 **Paid**:
-The payment state of a Done Citation once the Treasury Office records its Official Receipt number. Not a Status; Cancelled and Voided forms are never Paid.
+The payment state of a Done Citation once the Treasury Office records its Official Receipt number. Not a Status; Cancelled and Voided forms are never Paid. Only the Treasury Office sees whether a Citation is Paid; Enforcers don't.
 _Avoid_: Settled, closed
 
 **Unpaid**:

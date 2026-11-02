@@ -263,7 +263,7 @@ const en = {
   allMonths: 'All months',
   clearDate: 'Clear date',
   pickDay: 'Pick a day',
-  showing: 'Showing {a}–{b} of {n} Citations, newest first, Paid last.',
+  showing: 'Showing {a}–{b} of {n} Citations, newest first.',
   showingNone: 'Showing 0 of 0 Citations.',
   unsyncedReminder: '{n} not synced yet',
   unsyncedReminder1: '1 not synced yet',

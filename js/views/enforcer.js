@@ -475,7 +475,7 @@ export function citationsView(root, ctx) {
     const count = { all: base.length, done: 0, cancelled: 0, voided: 0, unsynced: 0 };
     base.forEach(c => { count[c.status]++; if (!c.synced) count.unsynced++; });
     const filt = base.filter(c => listState.status === 'all' ? true : listState.status === 'unsynced' ? !c.synced : c.status === listState.status)
-      .sort((a, b) => (!!a.payment - !!b.payment) || (b.at - a.at)); // newest first, Paid last
+      .sort((a, b) => b.at - a.at); // newest first; Enforcers never see Paid
     const pg = paginate(filt, listState.page);
     listState.page = pg.page;
     const unsyncedAll = mine.filter(c => !c.synced).length;
@@ -511,7 +511,7 @@ export function citationsView(root, ctx) {
           <span class="row-top">${serial(c.no)}<span class="row-type">${esc(S.ct.get(c.ctype).name)}</span>${stamp(c.status)}</span>
           <span class="row-what">${rowSummary(c)}</span>
           <span class="row-bot" data-fit><span class="row-name" data-fit-cut>${violatorShort(c)}</span><span class="row-when">${esc(fDateTime(c.at))}</span></span>
-          ${(!c.synced || c.payment) ? `<span class="row-tags">${!c.synced ? unsyncedTag() : ''}${c.payment ? `<span class="stamp stamp-paid stamp-sm">${esc(t('stPaid'))}</span>` : ''}</span>` : ''}
+          ${!c.synced ? `<span class="row-tags">${unsyncedTag()}</span>` : ''}
         </a></li>`).join('')}</ul>
       <div class="table-wrap cit-table"><table class="tbl">
         <thead><tr><th scope="col">${esc(t('colNo'))}</th><th scope="col">${esc(t('colType'))}</th><th scope="col">${esc(t('colViolations'))}</th><th scope="col">${esc(t('colViolator'))}</th><th scope="col">${esc(t('colStatus'))}</th><th scope="col">${esc(t('colDate'))}</th></tr></thead>
@@ -520,7 +520,7 @@ export function citationsView(root, ctx) {
           <td>${esc(S.ct.get(c.ctype).name)}</td>
           <td>${rowSummary(c)}</td>
           <td class="nowrap">${violatorShort(c)}</td>
-          <td><span class="cell-status${(!c.synced) + (!!c.payment) ? ' two' : ''}${!c.synced ? ' has-sync' : ''}">${stamp(c.status)}${!c.synced ? unsyncedTag() : ''}${c.payment ? `<span class="stamp stamp-paid stamp-sm">${esc(t('stPaid'))}</span>` : ''}</span></td>
+          <td><span class="cell-status${!c.synced ? ' two has-sync' : ''}">${stamp(c.status)}${!c.synced ? unsyncedTag() : ''}</span></td>
           <td class="nowrap">${esc(fDateTime(c.at))}</td></tr>`).join('')}</tbody></table></div>` : empty}
       ${pager(pg.page, pg.pages)}`;
     root.querySelectorAll('.cit-table .tr-link').forEach(tr => tr.addEventListener('click', e => { if (!e.target.closest('a')) location.hash = tr.dataset.href; }));

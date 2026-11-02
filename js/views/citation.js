@@ -61,7 +61,7 @@ export function citationDetail(c, { role = 'enforcer', paymentHtml = '' } = {}) 
     <header class="sheet-head det-head">
       <div>
         <p class="det-type">${esc(ctName(c.ctype))}</p>
-        <div class="det-stamps">${stamp(c.status, { admin })}${c.payment ? `<span class="stamp stamp-paid">${esc(t('stPaid'))}</span>` : ''}${!c.synced ? `<span class="tag tag-sync">${icon('cloudOff')}${esc(t('notSyncedYet'))}</span>` : ''}</div>
+        <div class="det-stamps">${stamp(c.status, { admin })}${role === 'verifier' && c.payment ? `<span class="stamp stamp-paid">${esc(t('stPaid'))}</span>` : ''}${!c.synced ? `<span class="tag tag-sync">${icon('cloudOff')}${esc(t('notSyncedYet'))}</span>` : ''}</div>
       </div>
       <div class="det-no"><span class="lbl">${esc(t('currentNumber'))}</span>${serial(c.no, 'serial-lg')}</div>
     </header>`;
