@@ -824,6 +824,8 @@ a.cell-name:hover { text-decoration: underline; }
 .shot-name { font-weight: 700; font-size: .9375rem; line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 /* Phones: full names in Archivo's narrow width so each stays on one line. */
 @media (max-width: 599px) { .shot-name { font-size: .875rem; font-stretch: 75%; letter-spacing: 0; } }
+/* Four shots (Traffic with an ID) go 2×2 so each keeps half the width. */
+.shots-4 { grid-auto-flow: row; grid-template-columns: repeat(2, minmax(0, 1fr)); }
 @media (max-width: 359px) { .shots { gap: 6px; } .shot { padding: 6px; } .shot-name { font-stretch: 66%; } }
 .shot-meta .btn { width: 100%; margin-top: auto; padding: 0 6px; }
 .shot-meta .reading { align-self: flex-start; font-size: .8125rem; }

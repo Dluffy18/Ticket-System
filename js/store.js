@@ -279,7 +279,7 @@ export function getDraft(b) {
   if (!d || d.no !== no) {
     d = S.drafts[b.id] = {
       bookletId: b.id, ctype: b.ctype, no,
-      violations: [], photos: { form: null, id: null, plate: null }, noId: false,
+      violations: [], photos: { form: null, id: null, violator: null, plate: null }, noId: false,
       violator: emptyViolator(), marks: {}, typed: {}, reading: false, readToken: 0,
     };
   }
@@ -289,6 +289,7 @@ export function getDraft(b) {
 export function requiredPhotos(d) {
   const list = ['form'];
   if (!d.noId) list.push('id');
+  list.push('violator');
   if (S.ct.get(d.ctype)?.needsPlatePhoto) list.push('plate');
   return list;
 }
@@ -358,6 +359,7 @@ export function missingItems(d) {
   if (!d.violations.length) out.push({ step: 1, text: t('needViolation') });
   if (!d.photos.form) out.push({ step: 2, text: t('needFormPhoto') });
   if (!d.noId && !d.photos.id) out.push({ step: 2, text: t('needIdPhoto') });
+  if (!d.photos.violator) out.push({ step: 2, text: t('needViolatorPhoto') });
   if (S.ct.get(d.ctype)?.needsPlatePhoto && !d.photos.plate) out.push({ step: 2, text: t('needPlatePhoto') });
   const v = d.violator;
   const miss = [];
@@ -508,8 +510,8 @@ export function setUnpaid(verifierId, c) {
 
 // ------------------------------------------------------------------ sample data
 function samplePhoto(kind, no) {
-  const label = { form: 'Ticket form', id: 'Violator’s ID', plate: 'Plate number' }[kind];
-  const bg = { form: '#F3EEDF', id: '#DCE6EF', plate: '#E6E6E1' }[kind];
+  const label = { form: 'Ticket form', id: 'Violator’s ID', violator: 'Violator’s photo', plate: 'Plate number' }[kind];
+  const bg = { form: '#F3EEDF', id: '#DCE6EF', violator: '#E4ECE2', plate: '#E6E6E1' }[kind];
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300">
 <rect width="400" height="300" fill="${bg}"/>
 <rect x="24" y="24" width="352" height="252" fill="none" stroke="#1C2B4A" stroke-width="2" stroke-dasharray="6 6"/>
@@ -559,7 +561,7 @@ function seed() {
     const pool = ag.violationTypes.filter(id => S.vt.get(id).citationType === b.ctype);
     let rec = {
       no, owner: b.owner, ctype: b.ctype, bookletId: b.id, status, at, synced: true,
-      violations: [], photos: { form: null, id: null, plate: null }, noId: false,
+      violations: [], photos: { form: null, id: null, violator: null, plate: null }, noId: false,
       violator: { first: '', middle: '', last: '', suffix: '', birthday: '', sex: '' },
       violatorId: null, gps: null, incident: null, payment: null, payHistory: [],
     };
@@ -573,6 +575,7 @@ function seed() {
       rec.noId = i % 4 === 3;
       rec.photos.form = samplePhoto('form', no);
       if (!rec.noId) rec.photos.id = samplePhoto('id', no);
+      rec.photos.violator = samplePhoto('violator', no);
       if (S.ct.get(b.ctype).needsPlatePhoto) rec.photos.plate = samplePhoto('plate', no);
       rec.gps = gpsNear(i);
     }
@@ -612,7 +615,7 @@ function seed() {
   add(bPso, 30215204, 'voided', Math.round((ts[0] + ts[1]) / 2), {
     violations: ['O02'],
     violator: { first: k.first, middle: k.middle, last: k.last, suffix: k.suffix, birthday: k.birthday, sex: k.sex },
-    photos: { form: samplePhoto('form', 30215204), id: null, plate: null },
+    photos: { form: samplePhoto('form', 30215204), id: null, violator: null, plate: null },
     incident: {
       paperNo: '30215203',
       text: 'The next form in the Booklet is also printed 30215203. I wrote the ticket on it before noticing.',

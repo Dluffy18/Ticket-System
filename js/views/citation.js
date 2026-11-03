@@ -4,13 +4,15 @@ import { esc, fullName, fDateTime, fDayKey } from '../util.js';
 import { ctName, vtName, enforcer, agencyOf, statusWord } from '../store.js';
 import { icon, serial, stamp, kv } from '../ui.js';
 
-const PHOTO_LABEL = { form: 'photoForm', id: 'photoId', plate: 'photoPlate' };
+const PHOTO_LABEL = { form: 'photoForm', id: 'photoId', violator: 'photoViolator', plate: 'photoPlate' };
+// The photo's subject inside a sentence: "Take photo of the violator", not "of the violator’s photo".
+export const photoWhat = k => k === 'violator' ? t('photoViolatorWhat') : t(PHOTO_LABEL[k]).toLowerCase();
 
 export function photoGrid(photos, { empty = t('noPhotos') } = {}) {
-  const keys = ['form', 'id', 'plate'].filter(k => photos && photos[k]);
+  const keys = ['form', 'id', 'violator', 'plate'].filter(k => photos && photos[k]);
   if (!keys.length) return `<p class="muted">${esc(empty)}</p>`;
   return `<div class="photos">${keys.map(k => `
-    <figure class="photo"><a href="${esc(photos[k])}" target="_blank" rel="noopener"><img src="${esc(photos[k])}" alt="${esc(t('photoAlt', { what: t(PHOTO_LABEL[k]).toLowerCase() }))}" loading="lazy"></a>
+    <figure class="photo"><a href="${esc(photos[k])}" target="_blank" rel="noopener"><img src="${esc(photos[k])}" alt="${esc(t('photoAlt', { what: photoWhat(k) }))}" loading="lazy"></a>
     <figcaption>${esc(t(PHOTO_LABEL[k]))}</figcaption></figure>`).join('')}</div>`;
 }
 

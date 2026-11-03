@@ -7,9 +7,9 @@ import {
 } from '../store.js';
 import { icon, serial, stamp, toast, dialog, pager, paginate, emptyState, kv, unsyncedTag, menuMarkup, bindMenu, setMenuValue, dateBox, bindDateBox, fitLines } from '../ui.js';
 import { takePhoto } from '../camera.js';
-import { citationDetail, rowSummary, violatorShort, photoGrid, violationList } from './citation.js';
+import { citationDetail, rowSummary, violatorShort, photoGrid, violationList, photoWhat } from './citation.js';
 
-const PHOTO_LABEL = { form: 'photoForm', id: 'photoId', plate: 'photoPlate' };
+const PHOTO_LABEL = { form: 'photoForm', id: 'photoId', violator: 'photoViolator', plate: 'photoPlate' };
 const myCitations = id => S.citations.filter(c => c.owner === id);
 
 // ------------------------------------------------------------------ Home
@@ -262,16 +262,16 @@ export function recordView(root, ctx) {
     return `
       <h1 class="h1 rec-h">${esc(t('step2'))}</h1>
       <p class="muted">${esc(t('photosLead'))}</p>
-      <ol class="shots">
+      <ol class="shots${req.length === 4 ? ' shots-4' : ''}">
         ${req.map(k => `<li class="shot ${d.photos[k] ? 'has' : ''} ${k === nextKind ? 'next' : ''}">
-          <div class="shot-img">${d.photos[k] ? `<img src="${esc(d.photos[k])}" alt="${esc(t('photoAlt', { what: t(PHOTO_LABEL[k]).toLowerCase() }))}">` : icon('camera')}</div>
+          <div class="shot-img">${d.photos[k] ? `<img src="${esc(d.photos[k])}" alt="${esc(t('photoAlt', { what: photoWhat(k) }))}">` : icon('camera')}</div>
           <div class="shot-meta"><span class="shot-name" title="${esc(t(PHOTO_LABEL[k]))}">${esc(t(PHOTO_LABEL[k]))}</span>
             ${k === 'id' && d.reading ? `<span class="reading" role="status">${esc(t('readingId'))}</span>` : ''}
             ${d.photos[k] ? `<button type="button" class="btn btn-ghost btn-sm" data-shoot="${k}">${icon('retake')}<span>${esc(t('retake'))}</span></button>` : ''}</div>
         </li>`).join('')}
       </ol>
       ${nextKind
-        ? `<button type="button" class="btn btn-primary btn-block btn-xl" data-shoot="${nextKind}">${icon('camera')}<span>${esc(t('takePhoto', { what: t(PHOTO_LABEL[nextKind]).toLowerCase() }))}</span></button>`
+        ? `<button type="button" class="btn btn-primary btn-block btn-xl" data-shoot="${nextKind}">${icon('camera')}<span>${esc(t('takePhoto', { what: photoWhat(nextKind) }))}</span></button>`
         : `<p class="alert alert-ok">${icon('check')}<span>${esc(t('allPhotosTaken'))}</span></p>`}
       <label class="switch">
         <input type="checkbox" role="switch" name="noId" ${d.noId ? 'checked' : ''}>

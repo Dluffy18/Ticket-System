@@ -32,6 +32,10 @@ _Avoid_: Forms used, tickets
 Clearing everything entered for the current Control Number (violations, photos, Violator details) without recording a Status. The number stays open, and the next Citation starts blank on it. Only the Enforcer's own Discard clears a draft; interruptions keep it.
 _Avoid_: Cancel, restart, reset
 
+**Violator's photo**:
+A photo of the Violator themselves, taken when the Citation is issued, separate from the photo of their ID. Required on every Citation, including when the Violator has no ID; a refusal doesn't excuse it.
+_Avoid_: Face photo, selfie, mugshot
+
 **Booklet**:
 A consecutive range of Control Numbers for one Citation Type, handed to one Enforcer by the Treasury Office.
 _Avoid_: Pad, stack
