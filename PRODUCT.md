@@ -13,8 +13,8 @@ Static HTML/CSS/JS, no build step, no framework. One `index.html`, ES modules, r
 ## Users
 
 - **Enforcer**: a field officer in one Agency (Traffic Enforcement, Police, Public Safety Office, Civil Security Unit). Uses a mid-sized Android phone held in one hand, outdoors on the street, often in strong sunlight, sometimes at night, often with a weak or no signal. They are standing in front of a Violator, writing on a pre-numbered paper form, and use the app to record that form by its Control Number.
-- **Office Admin**: one per Agency, at a desk on a PC. Approves or rejects sign-ups, deactivates and reactivates Enforcers, sees counts per Enforcer. Never sees Citation contents.
-- **Verifier**: one, city-wide, at the Treasury Office, at a desk on a PC. Sees every Citation and marks Issued Citations Paid with an Official Receipt number.
+- **Office Admin**: one per Agency, at a desk on a PC. Approves or rejects sign-ups, deactivates and reactivates Enforcers, sees counts per Enforcer, an Overview with Needs-attention flags, Booklets in hand, and a This-month Heatmap of their Agency (area totals only, areas under 3 hidden). Never sees Citation contents.
+- **Verifier**: one, city-wide, at the Treasury Office, at a desk on a PC. Sees every Citation and marks Issued Citations Paid with an Official Receipt number. Also has the Booklets ledger, Unpaid by days since issued, Repeat Violators, a city-wide Heatmap, and CSV/Print for reports.
 
 ## Product Purpose
 

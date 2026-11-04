@@ -22,8 +22,12 @@ Accounts from `data/enforcers.json` and `data/admins.json` accept any password (
 | Juan Dela Cruz | Enforcer, Traffic Enforcement | Home |
 | Ana Reyes | Enforcer, Public Safety Office | Citation Type (Booklet used up) |
 | Ben Villanueva Jr. | Enforcer, Civil Security Unit | Citation Type (Booklet used up) |
-| Carlos Mendoza | Office Admin, Police | Enforcers |
-| Teresa Garcia | Verifier, Treasury Office | Citations |
+| Carlo Navarro, Grace Villamor | Enforcers, Police | Home (Grace has had no Citations for 2 weeks) |
+| Dennis Ramos, Joy Castillo | Enforcers, Traffic Enforcement | Home (a third of Dennis's forms this month are spoiled) |
+| Mark Flores / Rhea Lim | Enforcer, Public Safety Office / Civil Security Unit | Home |
+| Liza Fernandez | Office Admin, Traffic Enforcement | Overview |
+| Carlos Mendoza | Office Admin, Police | Overview |
+| Teresa Garcia | Verifier, Treasury Office | Summary |
 
 New sign-ups (“Create an account”) are stored in this browser with a salted SHA-256 password hash and must be approved by their Agency's Office Admin.
 

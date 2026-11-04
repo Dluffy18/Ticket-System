@@ -32,8 +32,8 @@ const NAV = {
     ['profile', '#/profile', 'navProfile', 'user'],
   ],
   verifier: [
-    ['v', '#/v/citations', 'navCitations', 'list'],
     ['summary', '#/summary', 'navSummary', 'summary'],
+    ['v', '#/v/citations', 'navCitations', 'list'],
     ['booklets', '#/booklets', 'navBooklets', 'book'],
     ['heatmap', '#/heatmap', 'navHeatmap', 'map'],
     ['profile', '#/profile', 'navProfile', 'user'],
@@ -48,8 +48,8 @@ const ROUTES = {
 
 function defaultRoute(u) {
   if (!u) return '#/signin';
-  if (u.kind === 'office') return '#/enforcers';
-  if (u.kind === 'verifier') return '#/v/citations';
+  if (u.kind === 'office') return '#/overview';
+  if (u.kind === 'verifier') return '#/summary';
   return activeBooklets(u.id).length ? '#/home' : '#/type';
 }
 

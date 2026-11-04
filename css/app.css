@@ -676,10 +676,10 @@ a.cell-name:hover { text-decoration: underline; }
 
 /* Tables become stacked records on narrow screens */
 @media (max-width: 760px) {
-  .tbl-enf thead, .tbl-cit thead, .tbl-reg thead, .tbl-sum thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
-  .tbl-enf tr, .tbl-cit tr, .tbl-reg tr, .tbl-sum tr { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; padding: 12px 14px; border-bottom: 1px solid var(--rule-2); }
-  .tbl-enf th, .tbl-enf td, .tbl-cit th, .tbl-cit td, .tbl-reg th, .tbl-reg td, .tbl-sum th, .tbl-sum td { display: block; padding: 0; border: 0; text-align: left; background: none; }
-  .tbl-enf tbody th, .tbl-cit tbody th, .tbl-reg tbody th, .tbl-sum th { grid-column: 1 / -1; font-size: 1rem; }
+  .tbl-enf thead, .tbl-cit thead, .tbl-reg thead, .tbl-sum thead, .tbl-bk thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .tbl-enf tr, .tbl-cit tr, .tbl-reg tr, .tbl-sum tr, .tbl-bk tr { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; padding: 12px 14px; border-bottom: 1px solid var(--rule-2); }
+  .tbl-enf th, .tbl-enf td, .tbl-cit th, .tbl-cit td, .tbl-reg th, .tbl-reg td, .tbl-sum th, .tbl-sum td, .tbl-bk th, .tbl-bk td { display: block; padding: 0; border: 0; text-align: left; background: none; }
+  .tbl-enf tbody th, .tbl-cit tbody th, .tbl-reg tbody th, .tbl-sum th, .tbl-bk tbody th { grid-column: 1 / -1; font-size: 1rem; }
   .tbl td[data-label]::before { content: attr(data-label); display: block; font-size: .75rem; font-weight: 600; color: var(--ink-3); margin-bottom: 2px; }
   .tbl .n { text-align: left; }
   .tbl tfoot tr { background: var(--sheet-2); }
@@ -687,6 +687,7 @@ a.cell-name:hover { text-decoration: underline; }
   .tbl-enf tr { grid-template-columns: 6.5em minmax(0, 1fr) minmax(0, 1fr); }
   .tbl-enf tfoot th { grid-column: 1; align-self: center; }
   .tbl-enf .n-sub { white-space: normal; }
+  .tbl-bk .bk-prog { grid-column: 1 / -1; min-width: 0; }
   .cell-actions { grid-column: 1 / -1; text-align: left; display: flex !important; gap: 8px; margin-top: 4px; }
   .cell-actions .btn { flex: 1; }
   .cell-actions .btn + .btn { margin-left: 0; }
@@ -1260,6 +1261,7 @@ body:has(.sm) { background: var(--ground-2); }
     --sm-track: #242C42; --s-issued: #A5B3DA; --s-open: #242C42;
   }
 }
+.sm > * { min-width: 0; }
 .sm-dot.s-issued, .sm-dot.s-done { background: var(--s-issued); }
 .sm-dot.s-open { background: var(--s-open); box-shadow: inset 0 0 0 1px var(--rule-2); }
 
