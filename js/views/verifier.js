@@ -6,8 +6,9 @@ import { citationDetail, violatorShort } from './citation.js';
 
 const st = { q: '', agency: '', ctype: '', outcome: '', pay: '', age: '', repeat: '', month: '', day: '', page: 1 };
 const clearState = () => Object.assign(st, { q: '', agency: '', ctype: '', outcome: '', pay: '', age: '', repeat: '', month: '', day: '', page: 1 });
-const activeCount = () => ['agency', 'ctype', 'outcome', 'pay', 'age', 'repeat', 'month', 'day'].filter(k => st[k]).length;
+const activeCount = () => ['agency', 'ctype', 'outcome', 'pay', 'month', 'day'].filter(k => st[k]).length;
 let filtersOpen = false;
+const payValue = () => (st.age ? 'age:' + st.age : st.pay);
 const isFiltered = () => !!(st.q || st.agency || st.ctype || st.outcome || st.pay || st.age || st.repeat || st.month || st.day);
 
 function matches(c) {
@@ -64,9 +65,7 @@ export function vCitationsView(root, ctx) {
         <label class="field"><span class="lbl">${esc(t('agency'))}</span><select class="input" name="agency">${opt('', t('allAgencies'), st.agency)}${S.ref.agencies.map(a => opt(a.id, a.name, st.agency)).join('')}</select></label>
         <label class="field"><span class="lbl">${esc(t('citationType'))}</span><select class="input" name="ctype">${opt('', t('allTypes'), st.ctype)}${S.ref.citationTypes.map(c => opt(c.id, c.name, st.ctype)).join('')}</select></label>
         <label class="field"><span class="lbl">${esc(t('outcome'))}</span><select class="input" name="outcome">${opt('', t('allOutcomes'), st.outcome)}${opt('done', t('stIssued'), st.outcome)}${opt('cancelled', t('stCancelled'), st.outcome)}${opt('voided', t('stVoided'), st.outcome)}</select></label>
-        <label class="field"><span class="lbl">${esc(t('payment'))}</span><select class="input" name="pay">${opt('', t('payBoth'), st.pay)}${opt('unpaid', t('stUnpaid'), st.pay)}${opt('paid', t('stPaid'), st.pay)}</select></label>
-        <label class="field"><span class="lbl">${esc(t('unpaidFor'))}</span><select class="input" name="age">${opt('', t('anyAge'), st.age)}${AGE_KEYS.map(k => opt(k, t('age_' + k), st.age)).join('')}</select></label>
-        <label class="field"><span class="lbl">${esc(t('colViolator'))}</span><select class="input" name="repeat">${opt('', t('allViolators'), st.repeat)}${opt('yes', t('repeatOnly'), st.repeat)}</select></label>
+        <label class="field"><span class="lbl">${esc(t('payment'))}</span><select class="input" name="pay">${opt('', t('payBoth'), payValue())}${opt('paid', t('stPaid'), payValue())}${opt('unpaid', t('stUnpaid'), payValue())}${AGE_KEYS.map(k => opt('age:' + k, t('unpaidAge_' + k), payValue())).join('')}</select></label>
         <label class="field"><span class="lbl">${esc(t('month'))}</span><select class="input" name="month">${opt('', t('allMonths'), st.month)}${monthsWithCitations().map(m => opt(m, fMonthKey(m), st.month)).join('')}</select></label>
         <div class="field"><label class="lbl" for="v-day">${esc(t('day'))}</label>${dateBox({ id: 'v-day', name: 'day', value: st.day, clearable: true, attrs: `max="${todayKey()}"` })}</div>
       </div>`;
@@ -74,6 +73,7 @@ export function vCitationsView(root, ctx) {
     box.classList.toggle('collapsed', !filtersOpen);
     const n = activeCount();
     box.querySelector('.search').outerHTML = `<div class="filter-top">${box.querySelector('.search').outerHTML}<button type="button" class="btn btn-ghost btn-sm filter-toggle" aria-expanded="${filtersOpen}" data-toggle>${icon('sliders')}<span>${esc(n ? t('filtersBtnN', { n }) : t('filtersBtn'))}</span></button>
+<label class="repeat-check"><input type="checkbox" name="repeat" ${st.repeat ? 'checked' : ''}><span>${esc(t('repeatOnly'))}</span></label>
 <button type="button" class="btn btn-ghost btn-sm" data-clear ${isFiltered() ? '' : 'disabled'}>${icon('x')}<span>${esc(t('clearFilters'))}</span></button></div>`;
     const f = root.querySelector('[data-filters]');
     // On phones the panel closes once a filter is picked or cleared; focus returns to the Filters button.
@@ -82,7 +82,17 @@ export function vCitationsView(root, ctx) {
       const tg = root.querySelector('[data-toggle]'); if (tg?.offsetParent) tg.focus();
     };
     f.querySelector('[name=q]').addEventListener('input', e => { st.q = e.target.value; st.page = 1; renderList(); f.querySelector('[data-clear]').disabled = !isFiltered(); });
-    ['agency', 'ctype', 'outcome', 'pay', 'age', 'repeat'].forEach(k => f.querySelector(`[name=${k}]`).addEventListener('change', e => { st[k] = e.target.value; applied(); }));
+    ['agency', 'ctype', 'outcome'].forEach(k => f.querySelector(`[name=${k}]`).addEventListener('change', e => { st[k] = e.target.value; applied(); }));
+    // Payment holds the Unpaid age ranges too: "age:0-7" means Unpaid for 0–7 days.
+    f.querySelector('[name=pay]').addEventListener('change', e => {
+      const v = e.target.value;
+      if (v.startsWith('age:')) { st.pay = 'unpaid'; st.age = v.slice(4); } else { st.pay = v; st.age = ''; }
+      applied();
+    });
+    f.querySelector('[name=repeat]').addEventListener('change', e => {
+      st.repeat = e.target.checked ? 'yes' : ''; st.page = 1; renderList();
+      f.querySelector('[data-clear]').disabled = !isFiltered();
+    });
     // Month and Day narrow the same date, so picking one clears the other.
     f.querySelector('[name=month]').addEventListener('change', e => { st.month = e.target.value; if (st.month) st.day = ''; applied(); });
     f.querySelector('[name=day]').addEventListener('change', e => { const v = e.target.value; st.day = v && v <= todayKey() ? v : ''; if (st.day) st.month = ''; applied(); });
@@ -284,7 +294,7 @@ export function summaryView(root) {
       if (p === 'today') st.day = todayKey(); else st.month = monthKey(Date.now());
     }));
     root.querySelector('[data-print]').addEventListener('click', () => window.print());
-    root.querySelectorAll('[data-age]').forEach(a => a.addEventListener('click', () => { clearState(); st.age = a.dataset.age; }));
+    root.querySelectorAll('[data-age]').forEach(a => a.addEventListener('click', () => { clearState(); st.pay = 'unpaid'; st.age = a.dataset.age; }));
   };
   render();
 }
