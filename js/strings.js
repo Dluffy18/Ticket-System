@@ -90,6 +90,7 @@ const en = {
   navStats: 'Stats',
   navProfile: 'Profile',
   navEnforcers: 'Enforcers',
+  navOverview: 'Overview',
   navRegistrations: 'Registrations',
   navSummary: 'Summary',
   signOut: 'Sign out',
@@ -471,6 +472,27 @@ const en = {
   skipToContent: 'Skip to content',
   samplePhoto: 'Sample photo',
   photoAlt: 'Photo of the {what}',
+
+  // Office Admin Overview
+  overviewTitle: 'Overview',
+  overviewLead: 'Counts for {agency} Enforcers. Citation contents stay with the Treasury Office.',
+  kpiIssuedToday: 'Issued today',
+  kpiIssuedMonth: 'Issued this month',
+  kpiCancelledMonth: 'Cancelled this month',
+  kpiVoidedMonth: 'Voided this month',
+  kpiWaiting: 'Registrations waiting',
+  openRegistrations: 'Review registrations',
+  perDay30: 'Citations per day, last 30 days',
+  topEnforcers: 'Top Enforcers this month',
+  topEnforcersLead: 'By Issued Citations.',
+  noIssuedMonth: 'No Citations issued this month yet.',
+  needsAttention: 'Needs attention',
+  allClear: 'Nothing needs attention.',
+  attWaiting: '{n} Registrations waiting for a decision',
+  attWaiting1: '1 Registration waiting for a decision',
+  attIdle: '{name}: no Citations in {d} days',
+  attSpoiled: '{name}: {k} of {n} forms Cancelled or Voided this month ({p}%)',
+  notUsedYet: 'Not used yet',
 };
 
 const tables = { en };

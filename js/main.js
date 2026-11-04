@@ -7,7 +7,7 @@ import { applyTheme, setTheme, currentTheme } from './views/common.js';
 import { signInView, registerView } from './views/auth.js';
 import { homeView, typeView, recordView, citationsView, statsView } from './views/enforcer.js';
 import { profilePage } from './views/profile.js';
-import { enforcersView, registrationsView, pendingCount } from './views/admin.js';
+import { overviewView, enforcersView, registrationsView, pendingCount } from './views/admin.js';
 import { vCitationsView, summaryView } from './views/verifier.js';
 
 const app = document.getElementById('app');
@@ -23,6 +23,7 @@ const NAV = {
     ['profile', '#/profile', 'navProfile', 'user'],
   ],
   office: [
+    ['overview', '#/overview', 'navOverview', 'chart'],
     ['enforcers', '#/enforcers', 'navEnforcers', 'users'],
     ['registrations', '#/registrations', 'navRegistrations', 'inbox'],
     ['profile', '#/profile', 'navProfile', 'user'],
@@ -36,7 +37,7 @@ const NAV = {
 
 const ROUTES = {
   enforcer: { home: homeView, type: typeView, record: recordView, citations: citationsView, stats: statsView, profile: profilePage },
-  office: { enforcers: enforcersView, registrations: registrationsView, profile: profilePage },
+  office: { overview: overviewView, enforcers: enforcersView, registrations: registrationsView, profile: profilePage },
   verifier: { v: (root, ctx) => vCitationsView(root, { ...ctx, params: ctx.params.slice(1) }), summary: summaryView, profile: profilePage },
 };
 

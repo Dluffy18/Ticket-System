@@ -2,6 +2,7 @@ import { t, tn } from '../strings.js';
 import { esc, fullName, displayName, fDate, fDateTime, isToday, isThisMonth, fPhone, normName } from '../util.js';
 import { S, me, allEnforcers, enforcer, changeStatus, personName, subscribe } from '../store.js';
 import { icon, toast, dialog, pager, paginate, emptyState, kv, menuMarkup, bindMenu } from '../ui.js';
+import { kpi, dailyChart } from './dash.js';
 
 const STATUS_LABEL = { active: 'acActive', pending: 'acPending', rejected: 'acRejected', inactive: 'acInactive' };
 const statusTag = s => `<span class="acct acct-${s}">${esc(t(STATUS_LABEL[s]))}</span>`;
@@ -24,6 +25,78 @@ const agencyEnforcers = () => {
   const u = me();
   return allEnforcers().filter(e => e.agency === u.agency);
 };
+
+// ------------------------------------------------------------------ Overview
+const DAY = 86400000;
+const IDLE_DAYS = 7;
+const SPOILED_SHARE = 0.2;
+const SPOILED_MIN_FORMS = 5;
+// Citations of this Agency's Enforcers. Office Admins only ever see counts of these.
+const agencyCitations = ids => S.citations.filter(c => ids.has(c.owner));
+
+export function overviewView(root, ctx) {
+  const render = () => {
+    const u = me();
+    const ag = S.ag.get(u.agency);
+    const enfs = agencyEnforcers();
+    const ids = new Set(enfs.map(e => e.id));
+    const mine = agencyCitations(ids);
+    const month = mine.filter(c => isThisMonth(c.at));
+    const n = (list, s) => list.filter(c => c.status === s).length;
+    const waiting = enfs.filter(e => e.status === 'pending').length;
+
+    // Top 5 Enforcers by Issued this month
+    const per = new Map(enfs.map(e => [e.id, { e, done: 0, cancelled: 0, voided: 0, last: 0 }]));
+    mine.forEach(c => { const r = per.get(c.owner); if (c.at > r.last) r.last = c.at; });
+    month.forEach(c => { per.get(c.owner)[c.status]++; });
+    const top = [...per.values()].filter(r => r.done).sort((a, b) => b.done - a.done || displayName(a.e).localeCompare(displayName(b.e))).slice(0, 5);
+    const topMax = top[0]?.done || 1;
+
+    // Needs attention
+    const att = [];
+    if (waiting) att.push({ kind: 'wait', icon: 'inbox', href: '#/registrations', text: tn('attWaiting', waiting) });
+    [...per.values()].filter(r => r.e.status === 'active').forEach(r => {
+      const days = r.last ? Math.floor((Date.now() - r.last) / DAY) : null;
+      if (days !== null && days >= IDLE_DAYS) att.push({ kind: 'idle', icon: 'clock', href: `#/enforcers/${r.e.id}`, text: t('attIdle', { name: displayName(r.e), d: days }) });
+      const used = r.done + r.cancelled + r.voided, bad = r.cancelled + r.voided;
+      if (used >= SPOILED_MIN_FORMS && bad / used > SPOILED_SHARE) att.push({ kind: 'spoiled', icon: 'fileX', href: `#/enforcers/${r.e.id}`, text: t('attSpoiled', { name: displayName(r.e), k: bad, n: used, p: Math.round(bad / used * 100) }) });
+    });
+
+    root.innerHTML = `
+    <div class="sm ov">
+      <header class="sm-head">
+        <div><h1 class="h1 sm-title">${esc(t('overviewTitle'))}</h1><p class="lead">${esc(t('overviewLead', { agency: ag.name }))}</p></div>
+      </header>
+      <div class="kpis">
+        ${kpi({ kind: 'issued', label: t('kpiIssuedToday'), n: n(mine.filter(c => isToday(c.at)), 'done') })}
+        ${kpi({ kind: 'issued', label: t('kpiIssuedMonth'), n: n(month, 'done') })}
+        ${kpi({ kind: 'cancelled', label: t('kpiCancelledMonth'), n: n(month, 'cancelled') })}
+        ${kpi({ kind: 'voided', label: t('kpiVoidedMonth'), n: n(month, 'voided') })}
+        ${kpi({ kind: 'waiting', label: t('kpiWaiting'), n: waiting, href: '#/registrations', linkText: t('openRegistrations') })}
+      </div>
+      <div class="ov-grid">
+        ${dailyChart(mine, { title: t('perDay30') })}
+        <section class="sm-card ov-att">
+          <h2 class="sm-h">${esc(t('needsAttention'))}</h2>
+          ${att.length ? `<ul class="att-list">${att.map(a => `<li class="att att-${a.kind}"><a href="${a.href}">${icon(a.icon)}<span>${esc(a.text)}</span>${icon('chevR')}</a></li>`).join('')}</ul>`
+            : `<p class="att-clear">${icon('check')}<span>${esc(t('allClear'))}</span></p>`}
+        </section>
+        <section class="sm-card ov-top">
+          <h2 class="sm-h">${esc(t('topEnforcers'))}</h2>
+          <p class="muted small">${esc(t('topEnforcersLead'))}</p>
+          ${top.length ? `<ol class="top-list">${top.map((r, i) => `<li>
+            <span class="top-rank">${i + 1}</span>
+            <a class="top-name" href="#/enforcers/${r.e.id}">${esc(displayName(r.e))}</a>
+            <span class="top-bar" aria-hidden="true"><i style="width:${r.done / topMax * 100}%"></i></span>
+            <b class="top-n">${r.done}</b></li>`).join('')}</ol>` : `<p class="muted">${esc(t('noIssuedMonth'))}</p>`}
+        </section>
+      </div>
+    </div>`;
+  };
+  render();
+  const off = subscribe(k => { if ((k === 'accounts' || k === 'citations') && document.body.contains(root)) render(); });
+  ctx.onLeave(off);
+}
 
 // ------------------------------------------------------------------ Enforcers
 const enfState = { status: 'all', q: '', page: 1 };
