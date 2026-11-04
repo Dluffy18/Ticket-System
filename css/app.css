@@ -1413,18 +1413,44 @@ a.bkg-cell:hover { filter: brightness(1.15); transform: translateY(-1px); }
 .repeat-list a:hover { background: var(--sheet-2); }
 .repeat-list a > :last-child { margin-left: auto; }
 
-/* Heatmap */
-.hm-card { display: grid; gap: 12px; padding: 14px; }
-.hm-count { font-weight: 700; }
-.hm-map { position: relative; height: min(64vh, 620px); min-height: 340px; border-radius: 10px; overflow: hidden; background: var(--sm-track); border: 1px solid var(--rule-3); }
+/* Heatmap: the whole page fits one screen; the map takes whatever height is left. */
+.page:has(> .hm) { padding-bottom: 16px; }
+.hm { display: flex; flex-direction: column; gap: 14px;
+  height: calc(100vh - var(--stick-top, 56px) - var(--nav-h) - 36px);
+  height: calc(100dvh - var(--stick-top, 56px) - var(--nav-h) - env(safe-area-inset-bottom) - 36px); }
+.hm-head { display: grid; gap: 12px; flex: none; }
+.hm-head .lead { margin-top: 2px; font-size: .9375rem; }
+.hm-filters { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.hm-filters .field:last-child:nth-child(odd) { grid-column: 1 / -1; }
+.hm-fixed { min-height: 44px; display: flex; align-items: center; padding: 0 12px; border: 1px solid var(--rule-2); border-radius: var(--r); background: var(--sheet); font-weight: 650; }
+.hm-card { position: relative; flex: 1; min-height: 360px; display: flex; border-radius: 14px; overflow: hidden; border: 1px solid var(--rule-3); background: var(--sm-track); }
+.hm-map { position: relative; flex: 1; min-height: 0; }
 .hm-map.is-msg, .hm-msg { display: grid; place-items: center; text-align: center; }
 .hm-msg { position: absolute; inset: 0; gap: 8px; align-content: center; padding: 16px; color: var(--ink-2); font-weight: 600; }
 .hm-msg .ic { width: 32px; height: 32px; margin: 0 auto; }
-.hm-foot { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px 20px; }
-.hm-scale { display: inline-flex; align-items: center; gap: 8px; font-size: .8125rem; font-weight: 600; color: var(--ink-2); }
-.hm-scale i { display: block; width: 140px; height: 10px; border-radius: 5px; background: linear-gradient(90deg, #2b83ba, #abdda4, #ffffbf, #fdae61, #d7191c); }
-.hm-fixed { min-height: 44px; display: flex; align-items: center; font-weight: 650; }
+.hm-badge { position: absolute; z-index: 1001; margin: 0; padding: 8px 12px; border-radius: 10px; background: rgb(255 255 255 / .94); color: #1C2B4A; box-shadow: 0 1px 4px rgb(0 0 0 / .18); font-size: .875rem; }
+.hm-count { top: 10px; right: 10px; font-weight: 750; }
+.hm-legend { left: 10px; bottom: 10px; display: grid; gap: 4px; max-width: calc(100% - 20px); }
+.hm-scale { display: inline-flex; align-items: center; gap: 8px; font-size: .8125rem; font-weight: 650; }
+.hm-scale i { display: block; width: 120px; height: 10px; border-radius: 5px; background: linear-gradient(90deg, #2b83ba, #abdda4, #ffffbf, #fdae61, #d7191c); }
+.hm-note { font-size: .75rem; color: #44506B; }
 .hm .leaflet-container { font: inherit; }
+.hm .leaflet-bottom.leaflet-right { max-width: 50%; }
+/* Phones: legend and map credit share the bottom edge without overlapping. */
+@media (max-width: 599px) {
+  .hm-legend { max-width: 56%; padding: 6px 9px; }
+  .hm-scale i { width: 56px; }
+  .hm .leaflet-bottom.leaflet-right { max-width: 40%; }
+  .hm .leaflet-control-attribution { white-space: normal; text-align: right; }
+}
+@media (min-width: 900px) {
+  .page:has(> .hm) { padding-top: 20px; padding-bottom: 20px; }
+  .hm { height: calc(100vh - var(--stick-top, 56px) - 40px); height: calc(100dvh - var(--stick-top, 56px) - 40px); }
+  .hm-head { grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 20px; }
+  .hm-head .sm-title { font-size: 2rem; }
+  .hm-filters { grid-template-columns: repeat(3, minmax(170px, 210px)); }
+  .hm-filters .field:last-child:nth-child(odd) { grid-column: auto; }
+}
 
 /* Lists: count line with a Download CSV button */
 .list-tools { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px 16px; }

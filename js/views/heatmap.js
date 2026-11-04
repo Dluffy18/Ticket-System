@@ -61,26 +61,25 @@ export function heatmapView(root, ctx) {
   const months = [...new Set(S.citations.map(c => monthKey(c.at)))].sort().reverse().filter(m => m !== monthKey(Date.now()));
   const opt = (v, label, sel) => `<option value="${esc(v)}" ${sel === v ? 'selected' : ''}>${esc(label)}</option>`;
 
+  // One screen: title and filters share a row, the count and color scale sit on the map.
   root.innerHTML = `
   <div class="sm hm">
-    <header class="sm-head">
+    <header class="hm-head">
       <div><h1 class="h1 sm-title">${esc(t('heatmapTitle'))}</h1>
         <p class="lead">${esc(office ? t('heatmapLeadOffice', { agency: ag.name }) : t('heatmapLead'))}</p></div>
-    </header>
-    <div class="filters filters-desk bk-filters">
-      <div class="filter-grid">
+      <div class="hm-filters">
         ${office ? `<div class="field"><span class="lbl">${esc(t('period'))}</span><p class="hm-fixed">${esc(t('thisMonth'))}</p></div>` : `
         <label class="field"><span class="lbl">${esc(t('period'))}</span><select class="input" name="period">${opt('today', t('today'), hm.period)}${opt('month', t('thisMonth'), hm.period)}${months.map(m => opt(m, fMonthKey(m), hm.period)).join('')}</select></label>
         <label class="field"><span class="lbl">${esc(t('agency'))}</span><select class="input" name="agency">${opt('', t('allAgencies'), hm.agency)}${S.ref.agencies.map(a => opt(a.id, a.name, hm.agency)).join('')}</select></label>`}
         <label class="field"><span class="lbl">${esc(t('citationType'))}</span><select class="input" name="ctype">${opt('', t('allTypes'), hm.ctype)}${ctypes.map(c => opt(c.id, c.name, hm.ctype)).join('')}</select></label>
       </div>
-    </div>
-    <section class="sm-card hm-card">
-      <p class="hm-count" aria-live="polite" data-count></p>
+    </header>
+    <section class="hm-card">
       <div class="hm-map" data-map role="img" aria-label="${esc(t('heatmapAlt'))}"></div>
-      <div class="hm-foot">
+      <p class="hm-badge hm-count" aria-live="polite" data-count></p>
+      <div class="hm-badge hm-legend">
         <span class="hm-scale"><span>${esc(t('fewer'))}</span><i aria-hidden="true"></i><span>${esc(t('more'))}</span></span>
-        <span class="muted small">${esc(office ? t('heatmapNoteOffice', { n: OFFICE_MIN }) : t('heatmapNote'))}</span>
+        ${office ? `<span class="hm-note">${esc(t('heatmapNoteOffice', { n: OFFICE_MIN }))}</span>` : ''}
       </div>
     </section>
   </div>`;
