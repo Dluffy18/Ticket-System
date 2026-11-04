@@ -4,11 +4,11 @@ import { S, me, enforcer, agencyOf, ctName, markPaid, setUnpaid, validatePayment
 import { icon, serial, stamp, toast, dialog, pager, paginate, emptyState, dateBox, bindDateBox } from '../ui.js';
 import { citationDetail, violatorShort } from './citation.js';
 
-const st = { q: '', agency: '', ctype: '', outcome: '', pay: '', month: '', day: '', page: 1 };
-const clearState = () => Object.assign(st, { q: '', agency: '', ctype: '', outcome: '', pay: '', month: '', day: '', page: 1 });
-const activeCount = () => ['agency', 'ctype', 'outcome', 'pay', 'month', 'day'].filter(k => st[k]).length;
+const st = { q: '', agency: '', ctype: '', outcome: '', pay: '', age: '', month: '', day: '', page: 1 };
+const clearState = () => Object.assign(st, { q: '', agency: '', ctype: '', outcome: '', pay: '', age: '', month: '', day: '', page: 1 });
+const activeCount = () => ['agency', 'ctype', 'outcome', 'pay', 'age', 'month', 'day'].filter(k => st[k]).length;
 let filtersOpen = false;
-const isFiltered = () => !!(st.q || st.agency || st.ctype || st.outcome || st.pay || st.month || st.day);
+const isFiltered = () => !!(st.q || st.agency || st.ctype || st.outcome || st.pay || st.age || st.month || st.day);
 
 function matches(c) {
   if (st.q) {
@@ -24,11 +24,19 @@ function matches(c) {
   if (st.outcome && c.status !== st.outcome) return false;
   if (st.pay === 'paid' && !(c.status === 'done' && c.payment)) return false;
   if (st.pay === 'unpaid' && !(c.status === 'done' && !c.payment)) return false;
+  if (st.age && !(c.status === 'done' && !c.payment && unpaidAge(c) === st.age)) return false;
   if (st.month && monthKey(c.at) !== st.month) return false;
   if (st.day && dayKey(c.at) !== st.day) return false;
   return true;
 }
 
+// How long an Unpaid Citation has waited since it was issued.
+const DAY = 86400000;
+export const AGE_KEYS = ['0-7', '8-30', '30+'];
+function unpaidAge(c) {
+  const d = Math.floor((Date.now() - c.at) / DAY);
+  return d <= 7 ? '0-7' : d <= 30 ? '8-30' : '30+';
+}
 // Months that have Citations, newest first; this month is always listed so the Summary can link to it.
 function monthsWithCitations() {
   const set = new Set(S.citations.map(c => monthKey(c.at)));
@@ -44,11 +52,12 @@ export function vCitationsView(root, ctx) {
     root.querySelector('[data-filters]').innerHTML = `
       <label class="search search-wide">${icon('search')}<span class="sr">${esc(t('search'))}</span>
         <input class="input" type="search" name="q" placeholder="${esc(t('searchCitations'))}" value="${esc(st.q)}" autocomplete="off"></label>
-      <div class="filter-grid">
+      <div class="filter-grid filter-grid-wide">
         <label class="field"><span class="lbl">${esc(t('agency'))}</span><select class="input" name="agency">${opt('', t('allAgencies'), st.agency)}${S.ref.agencies.map(a => opt(a.id, a.name, st.agency)).join('')}</select></label>
         <label class="field"><span class="lbl">${esc(t('citationType'))}</span><select class="input" name="ctype">${opt('', t('allTypes'), st.ctype)}${S.ref.citationTypes.map(c => opt(c.id, c.name, st.ctype)).join('')}</select></label>
         <label class="field"><span class="lbl">${esc(t('outcome'))}</span><select class="input" name="outcome">${opt('', t('allOutcomes'), st.outcome)}${opt('done', t('stIssued'), st.outcome)}${opt('cancelled', t('stCancelled'), st.outcome)}${opt('voided', t('stVoided'), st.outcome)}</select></label>
         <label class="field"><span class="lbl">${esc(t('payment'))}</span><select class="input" name="pay">${opt('', t('payBoth'), st.pay)}${opt('unpaid', t('stUnpaid'), st.pay)}${opt('paid', t('stPaid'), st.pay)}</select></label>
+        <label class="field"><span class="lbl">${esc(t('unpaidFor'))}</span><select class="input" name="age">${opt('', t('anyAge'), st.age)}${AGE_KEYS.map(k => opt(k, t('age_' + k), st.age)).join('')}</select></label>
         <label class="field"><span class="lbl">${esc(t('month'))}</span><select class="input" name="month">${opt('', t('allMonths'), st.month)}${monthsWithCitations().map(m => opt(m, fMonthKey(m), st.month)).join('')}</select></label>
         <div class="field"><label class="lbl" for="v-day">${esc(t('day'))}</label>${dateBox({ id: 'v-day', name: 'day', value: st.day, clearable: true, attrs: `max="${todayKey()}"` })}</div>
       </div>`;
@@ -64,7 +73,7 @@ export function vCitationsView(root, ctx) {
       const tg = root.querySelector('[data-toggle]'); if (tg?.offsetParent) tg.focus();
     };
     f.querySelector('[name=q]').addEventListener('input', e => { st.q = e.target.value; st.page = 1; renderList(); f.querySelector('[data-clear]').disabled = !isFiltered(); });
-    ['agency', 'ctype', 'outcome', 'pay'].forEach(k => f.querySelector(`[name=${k}]`).addEventListener('change', e => { st[k] = e.target.value; applied(); }));
+    ['agency', 'ctype', 'outcome', 'pay', 'age'].forEach(k => f.querySelector(`[name=${k}]`).addEventListener('change', e => { st[k] = e.target.value; applied(); }));
     // Month and Day narrow the same date, so picking one clears the other.
     f.querySelector('[name=month]').addEventListener('change', e => { st.month = e.target.value; if (st.month) st.day = ''; applied(); });
     f.querySelector('[name=day]').addEventListener('change', e => { const v = e.target.value; st.day = v && v <= todayKey() ? v : ''; if (st.day) st.month = ''; applied(); });
@@ -223,6 +232,7 @@ export function summaryView(root) {
         ${donutCard(rows, tot.issued)}
         ${barsCard(rows)}
       </div>
+      ${ageCard()}
     </div>`;
     root.querySelectorAll('[data-p]').forEach(b => b.addEventListener('click', () => { sumState.period = b.dataset.p; render(); }));
     // "View citations": open the list showing exactly what the tile counted.
@@ -232,10 +242,30 @@ export function summaryView(root) {
       if (k === 'unpaid' || k === 'paid') st.pay = k; else st.outcome = k;
       if (p === 'today') st.day = todayKey(); else st.month = monthKey(Date.now());
     }));
+    root.querySelectorAll('[data-age]').forEach(a => a.addEventListener('click', () => { clearState(); st.age = a.dataset.age; }));
   };
   render();
 }
 
+// Every Issued Citation not yet Paid, by days since it was issued. Not limited to the period above.
+function ageCard() {
+  const unpaid = S.citations.filter(c => c.status === 'done' && !c.payment);
+  const n = Object.fromEntries(AGE_KEYS.map(k => [k, 0]));
+  unpaid.forEach(c => { n[unpaidAge(c)]++; });
+  const max = Math.max(1, ...Object.values(n));
+  return `
+  <section class="sm-card age-card">
+    <div class="age-head">
+      <div><h2 class="sm-h">${esc(t('unpaidByAge'))}</h2><p class="muted small">${esc(t('unpaidByAgeLead', { n: unpaid.length }))}</p></div>
+    </div>
+    <ul class="age-list">${AGE_KEYS.map(k => `<li class="age-${k === '30+' ? 'old' : k === '8-30' ? 'mid' : 'new'}">
+      <a href="#/v/citations" data-age="${k}" aria-label="${esc(t('viewCitationsOf', { what: t('age_' + k) }))}">
+        <span class="age-lbl">${esc(t('age_' + k))}</span>
+        <span class="age-bar" aria-hidden="true"><i style="width:${n[k] / max * 100}%"></i></span>
+        <b class="age-n">${n[k]}</b>${icon('chevR')}
+      </a></li>`).join('')}</ul>
+  </section>`;
+}
 const agColor = a => `--c: var(--ag-${a.id}, var(--ink-3))`;
 const pct = (n, d) => d ? Math.round(n / d * 100) : null;
 

@@ -519,6 +519,13 @@ const en = {
   bkGridTitle: 'Every Control Number',
   bkGridLead: 'Open a used number to see its Citation. The outlined number is the next one the Enforcer will use.',
   bkGridLeadDone: 'Open any number to see its Citation.',
+  unpaidFor: 'Unpaid for',
+  anyAge: 'Any time',
+  'age_0-7': '0–7 days',
+  'age_8-30': '8–30 days',
+  'age_30+': 'Over 30 days',
+  unpaidByAge: 'Unpaid, by days since issued',
+  unpaidByAgeLead: 'All {n} Issued Citations not yet Paid, not just Today or This month.',
   bkAllAccounted: 'Every number in this Booklet has a recorded outcome.',
 };
 
