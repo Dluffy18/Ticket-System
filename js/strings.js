@@ -546,6 +546,16 @@ const en = {
   onMapNone: 'No Issued Citations to show for this choice.',
   mapLoading: 'Loading the map…',
   mapOffline: 'The map needs an internet connection.',
+  downloadCsv: 'Download CSV',
+  printSummary: 'Print',
+  csvSaved: 'CSV with {n} rows downloaded.',
+  csvSaved1: 'CSV with 1 row downloaded.',
+  printedOn: 'Printed {date}',
+  csvNo: 'Control Number', csvType: 'Citation Type', csvEnforcer: 'Enforcer', csvAgency: 'Agency', csvOutcome: 'Outcome',
+  csvPayment: 'Payment', csvOr: 'OR number', csvDatePaid: 'Date paid', csvIssued: 'Date issued', csvViolator: 'Violator',
+  csvName: 'Name', csvRank: 'Rank', csvBadge: 'Badge', csvStatus: 'Account status',
+  csvTodayIssued: 'Issued today', csvTodayCancelled: 'Cancelled today', csvTodayVoided: 'Voided today',
+  csvMonthIssued: 'Issued this month', csvMonthCancelled: 'Cancelled this month', csvMonthVoided: 'Voided this month',
   bkAllAccounted: 'Every number in this Booklet has a recorded outcome.',
 };
 

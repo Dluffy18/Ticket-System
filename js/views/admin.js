@@ -1,5 +1,5 @@
 import { t, tn } from '../strings.js';
-import { esc, fullName, displayName, fDate, fDateTime, isToday, isThisMonth, fPhone, normName } from '../util.js';
+import { esc, fullName, displayName, fDate, fDateTime, isToday, isThisMonth, fPhone, normName, downloadCsv, todayKey } from '../util.js';
 import { S, me, allEnforcers, enforcer, changeStatus, personName, subscribe, activeBooklets, bookletSize, ctName } from '../store.js';
 import { icon, toast, dialog, pager, paginate, emptyState, kv, menuMarkup, bindMenu } from '../ui.js';
 import { kpi, dailyChart, bookletSplit, bookletBar, splitText } from './dash.js';
@@ -152,7 +152,8 @@ export function enforcersView(root, ctx) {
       return [e.id, k];
     }));
     root.querySelector('[data-table]').innerHTML = `
-      <p class="showing">${esc(pg.n ? t('showingEnf', { a: pg.a, b: pg.b, n: pg.n }) : t('showingEnfNone'))}</p>
+      <div class="list-tools"><p class="showing">${esc(pg.n ? t('showingEnf', { a: pg.a, b: pg.b, n: pg.n }) : t('showingEnfNone'))}</p>
+        ${pg.n ? `<button type="button" class="btn btn-ghost btn-sm" data-csv>${icon('download')}<span>${esc(t('downloadCsv'))}</span></button>` : ''}</div>
       ${pg.n ? `<div class="table-wrap"><table class="tbl tbl-enf">
         <thead><tr><th scope="col">${esc(t('colName'))}</th><th scope="col">${esc(t('colStatus'))}</th><th scope="col" class="n">${esc(t('colToday'))}</th><th scope="col" class="n">${esc(t('colMonth'))}</th></tr></thead>
         <tbody>${pg.slice.map(e => {
@@ -168,6 +169,15 @@ export function enforcersView(root, ctx) {
       ${pager(pg.page, pg.pages)}`;
     root.querySelectorAll('[data-page]').forEach(b => b.addEventListener('click', () => { enfState.page = Number(b.dataset.page); renderTable(); }));
     root.querySelectorAll('.tr-link').forEach(tr => tr.addEventListener('click', e => { if (!e.target.closest('a')) location.hash = tr.dataset.href; }));
+    root.querySelector('[data-csv]')?.addEventListener('click', () => {
+      const header = ['csvName', 'csvRank', 'csvBadge', 'csvStatus', 'csvTodayIssued', 'csvTodayCancelled', 'csvTodayVoided', 'csvMonthIssued', 'csvMonthCancelled', 'csvMonthVoided'].map(k => t(k));
+      const csvRows = list.map(e => {
+        const k = rows.get(e.id);
+        return [fullName(e), e.rank || '', e.badge || '', t(STATUS_LABEL[e.status]), k.today.done, k.today.cancelled, k.today.voided, k.month.done, k.month.cancelled, k.month.voided];
+      });
+      downloadCsv(`enforcers-${ag.id.toLowerCase()}-${todayKey()}.csv`, header, csvRows);
+      toast(tn('csvSaved', csvRows.length));
+    });
   };
   root.querySelector('[name=q]').addEventListener('input', e => { enfState.q = e.target.value; enfState.page = 1; renderTable(); });
   renderTable();

@@ -1,5 +1,5 @@
 import { t, tn } from '../strings.js';
-import { esc, fullName, displayName, fDateTime, fDayKey, dayKey, monthKey, fMonthKey, todayKey, isToday, isThisMonth, normName } from '../util.js';
+import { esc, fullName, displayName, fDateTime, fDate, downloadCsv, isoDateTime, fDayKey, dayKey, monthKey, fMonthKey, todayKey, isToday, isThisMonth, normName } from '../util.js';
 import { S, me, enforcer, agencyOf, ctName, markPaid, setUnpaid, validatePayment, personName, subscribe } from '../store.js';
 import { icon, serial, stamp, toast, dialog, pager, paginate, emptyState, dateBox, bindDateBox } from '../ui.js';
 import { citationDetail, violatorShort } from './citation.js';
@@ -104,7 +104,8 @@ export function vCitationsView(root, ctx) {
       ? (pg.n ? t('showingAll', { a: pg.a, b: pg.b, n: pg.n }) : t('showingNone'))
       : (pg.n ? t('showingMatching', { a: pg.a, b: pg.b, m: pg.n, n: all.length }) : t('showingMatchingNone', { n: all.length }));
     root.querySelector('[data-list]').innerHTML = `
-      <p class="showing">${esc(line)}</p>
+      <div class="list-tools"><p class="showing">${esc(line)}</p>
+        ${pg.n ? `<button type="button" class="btn btn-ghost btn-sm" data-csv>${icon('download')}<span>${esc(t('downloadCsv'))}</span></button>` : ''}</div>
       ${pg.n ? `<div class="table-wrap"><table class="tbl tbl-cit">
         <thead><tr><th scope="col">${esc(t('colNo'))}</th><th scope="col">${esc(t('colType'))}</th><th scope="col">${esc(t('colEnforcer'))}</th><th scope="col">${esc(t('colViolator'))}</th><th scope="col">${esc(t('colOutcome'))}</th><th scope="col">${esc(t('colPayment'))}</th><th scope="col">${esc(t('colDate'))}</th></tr></thead>
         <tbody>${pg.slice.map(c => {
@@ -121,6 +122,7 @@ export function vCitationsView(root, ctx) {
       ${pager(pg.page, pg.pages)}`;
     root.querySelectorAll('[data-page]').forEach(b => b.addEventListener('click', () => { st.page = Number(b.dataset.page); renderList(); }));
     root.querySelectorAll('.tr-link').forEach(tr => tr.addEventListener('click', e => { if (!e.target.closest('a')) location.hash = tr.dataset.href; }));
+    root.querySelector('[data-csv]')?.addEventListener('click', () => { citationsCsv(list); toast(tn('csvSaved', list.length)); });
   };
 
   root.innerHTML = `
@@ -131,6 +133,21 @@ export function vCitationsView(root, ctx) {
   renderList();
   const off = subscribe(k => { if (k === 'citations' && document.body.contains(root)) renderList(); });
   ctx.onLeave(off);
+}
+
+// Citations as a CSV for reports. Name only: no birthday, address, ID details or photos.
+function citationsCsv(list) {
+  const outcome = { done: t('stIssued'), cancelled: t('stCancelled'), voided: t('stVoided') };
+  const header = ['csvNo', 'csvType', 'csvEnforcer', 'csvAgency', 'csvOutcome', 'csvPayment', 'csvOr', 'csvDatePaid', 'csvIssued', 'csvViolator'].map(k => t(k));
+  const rows = list.map(c => {
+    const e = enforcer(c.owner);
+    return [
+      c.no, ctName(c.ctype), e ? displayName(e) : c.owner, agencyOf(c.owner)?.name || '', outcome[c.status],
+      c.status !== 'done' ? '' : c.payment ? t('stPaid') : t('stUnpaid'),
+      c.payment?.orNo || '', c.payment?.date || '', isoDateTime(c.at), fullName(c.violator || {}),
+    ];
+  });
+  downloadCsv(`citations-${todayKey()}.csv`, header, rows);
 }
 
 function vDetail(root, ctx, no) {
@@ -240,7 +257,11 @@ export function summaryView(root) {
     <div class="sm">
       <header class="sm-head">
         <div><h1 class="h1 sm-title">${esc(t('summaryTitle'))}</h1><p class="lead">${esc(t('summaryNote'))}</p></div>
-        <div class="sm-seg" role="group" aria-label="${esc(t('period'))}">${seg('today', 'today')}${seg('month', 'thisMonth')}</div>
+        <div class="sm-head-tools">
+          <div class="sm-seg" role="group" aria-label="${esc(t('period'))}">${seg('today', 'today')}${seg('month', 'thisMonth')}</div>
+          <button type="button" class="btn btn-ghost sm-print" data-print>${icon('printer')}<span>${esc(t('printSummary'))}</span></button>
+        </div>
+        <p class="print-only print-meta">${esc(t(p === 'today' ? 'today' : 'thisMonth'))} · ${esc(t('printedOn', { date: fDate(Date.now()) }))}</p>
       </header>
       <div class="sm-cards">
         ${tile('unpaid', t('stUnpaid'), tot.unpaid, 'clock')}
@@ -262,6 +283,7 @@ export function summaryView(root) {
       if (k === 'unpaid' || k === 'paid') st.pay = k; else st.outcome = k;
       if (p === 'today') st.day = todayKey(); else st.month = monthKey(Date.now());
     }));
+    root.querySelector('[data-print]').addEventListener('click', () => window.print());
     root.querySelectorAll('[data-age]').forEach(a => a.addEventListener('click', () => { clearState(); st.age = a.dataset.age; }));
   };
   render();

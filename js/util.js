@@ -140,3 +140,24 @@ export function ssSet(key, value) {
 }
 
 export function clamp(n, lo, hi) { return Math.max(lo, Math.min(hi, n)); }
+
+// CSV download. Cells that start like a spreadsheet formula get a leading ' so they stay text.
+export function downloadCsv(filename, header, rows) {
+  const cell = v => {
+    let s = String(v ?? '');
+    if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;
+    return '"' + s.replace(/"/g, '""') + '"';
+  };
+  const text = '\uFEFF' + [header, ...rows].map(r => r.map(cell).join(',')).join('\r\n');
+  const url = URL.createObjectURL(new Blob([text], { type: 'text/csv;charset=utf-8' }));
+  const a = Object.assign(document.createElement('a'), { href: url, download: filename });
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+// 2026-11-04 14:05, for files.
+export function isoDateTime(ts) {
+  const d = new Date(ts);
+  return `${dayKey(d)} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+}
