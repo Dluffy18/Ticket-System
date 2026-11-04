@@ -1,14 +1,14 @@
-import { t } from '../strings.js';
+import { t, tn } from '../strings.js';
 import { esc, fullName, displayName, fDateTime, fDayKey, dayKey, monthKey, fMonthKey, todayKey, isToday, isThisMonth, normName } from '../util.js';
 import { S, me, enforcer, agencyOf, ctName, markPaid, setUnpaid, validatePayment, personName, subscribe } from '../store.js';
 import { icon, serial, stamp, toast, dialog, pager, paginate, emptyState, dateBox, bindDateBox } from '../ui.js';
 import { citationDetail, violatorShort } from './citation.js';
 
-const st = { q: '', agency: '', ctype: '', outcome: '', pay: '', age: '', month: '', day: '', page: 1 };
-const clearState = () => Object.assign(st, { q: '', agency: '', ctype: '', outcome: '', pay: '', age: '', month: '', day: '', page: 1 });
-const activeCount = () => ['agency', 'ctype', 'outcome', 'pay', 'age', 'month', 'day'].filter(k => st[k]).length;
+const st = { q: '', agency: '', ctype: '', outcome: '', pay: '', age: '', repeat: '', month: '', day: '', page: 1 };
+const clearState = () => Object.assign(st, { q: '', agency: '', ctype: '', outcome: '', pay: '', age: '', repeat: '', month: '', day: '', page: 1 });
+const activeCount = () => ['agency', 'ctype', 'outcome', 'pay', 'age', 'repeat', 'month', 'day'].filter(k => st[k]).length;
 let filtersOpen = false;
-const isFiltered = () => !!(st.q || st.agency || st.ctype || st.outcome || st.pay || st.age || st.month || st.day);
+const isFiltered = () => !!(st.q || st.agency || st.ctype || st.outcome || st.pay || st.age || st.repeat || st.month || st.day);
 
 function matches(c) {
   if (st.q) {
@@ -25,11 +25,19 @@ function matches(c) {
   if (st.pay === 'paid' && !(c.status === 'done' && c.payment)) return false;
   if (st.pay === 'unpaid' && !(c.status === 'done' && !c.payment)) return false;
   if (st.age && !(c.status === 'done' && !c.payment && unpaidAge(c) === st.age)) return false;
+  if (st.repeat && !isRepeat(c)) return false;
   if (st.month && monthKey(c.at) !== st.month) return false;
   if (st.day && dayKey(c.at) !== st.day) return false;
   return true;
 }
 
+// Repeat Violator: a Violator Record with two or more Done Citations.
+let issuedPerViolator = new Map();
+function countViolators() {
+  issuedPerViolator = new Map();
+  S.citations.forEach(c => { if (c.status === 'done' && c.violatorId) issuedPerViolator.set(c.violatorId, (issuedPerViolator.get(c.violatorId) || 0) + 1); });
+}
+const isRepeat = c => !!c.violatorId && (issuedPerViolator.get(c.violatorId) || 0) >= 2;
 // How long an Unpaid Citation has waited since it was issued.
 const DAY = 86400000;
 export const AGE_KEYS = ['0-7', '8-30', '30+'];
@@ -58,6 +66,7 @@ export function vCitationsView(root, ctx) {
         <label class="field"><span class="lbl">${esc(t('outcome'))}</span><select class="input" name="outcome">${opt('', t('allOutcomes'), st.outcome)}${opt('done', t('stIssued'), st.outcome)}${opt('cancelled', t('stCancelled'), st.outcome)}${opt('voided', t('stVoided'), st.outcome)}</select></label>
         <label class="field"><span class="lbl">${esc(t('payment'))}</span><select class="input" name="pay">${opt('', t('payBoth'), st.pay)}${opt('unpaid', t('stUnpaid'), st.pay)}${opt('paid', t('stPaid'), st.pay)}</select></label>
         <label class="field"><span class="lbl">${esc(t('unpaidFor'))}</span><select class="input" name="age">${opt('', t('anyAge'), st.age)}${AGE_KEYS.map(k => opt(k, t('age_' + k), st.age)).join('')}</select></label>
+        <label class="field"><span class="lbl">${esc(t('colViolator'))}</span><select class="input" name="repeat">${opt('', t('allViolators'), st.repeat)}${opt('yes', t('repeatOnly'), st.repeat)}</select></label>
         <label class="field"><span class="lbl">${esc(t('month'))}</span><select class="input" name="month">${opt('', t('allMonths'), st.month)}${monthsWithCitations().map(m => opt(m, fMonthKey(m), st.month)).join('')}</select></label>
         <div class="field"><label class="lbl" for="v-day">${esc(t('day'))}</label>${dateBox({ id: 'v-day', name: 'day', value: st.day, clearable: true, attrs: `max="${todayKey()}"` })}</div>
       </div>`;
@@ -73,7 +82,7 @@ export function vCitationsView(root, ctx) {
       const tg = root.querySelector('[data-toggle]'); if (tg?.offsetParent) tg.focus();
     };
     f.querySelector('[name=q]').addEventListener('input', e => { st.q = e.target.value; st.page = 1; renderList(); f.querySelector('[data-clear]').disabled = !isFiltered(); });
-    ['agency', 'ctype', 'outcome', 'pay', 'age'].forEach(k => f.querySelector(`[name=${k}]`).addEventListener('change', e => { st[k] = e.target.value; applied(); }));
+    ['agency', 'ctype', 'outcome', 'pay', 'age', 'repeat'].forEach(k => f.querySelector(`[name=${k}]`).addEventListener('change', e => { st[k] = e.target.value; applied(); }));
     // Month and Day narrow the same date, so picking one clears the other.
     f.querySelector('[name=month]').addEventListener('change', e => { st.month = e.target.value; if (st.month) st.day = ''; applied(); });
     f.querySelector('[name=day]').addEventListener('change', e => { const v = e.target.value; st.day = v && v <= todayKey() ? v : ''; if (st.day) st.month = ''; applied(); });
@@ -87,6 +96,7 @@ export function vCitationsView(root, ctx) {
 
   const renderList = () => {
     const all = S.citations;
+    countViolators();
     const list = all.filter(matches).sort((a, b) => b.at - a.at);
     const pg = paginate(list, st.page);
     st.page = pg.page;
@@ -103,7 +113,7 @@ export function vCitationsView(root, ctx) {
             <th scope="row"><a href="#/v/citations/${c.no}">${serial(c.no)}</a></th>
             <td data-label="${esc(t('colType'))}">${esc(ctName(c.ctype))}</td>
             <td data-label="${esc(t('colEnforcer'))}"><span class="cell-name">${esc(e ? displayName(e) : c.owner)}</span><span class="cell-sub">${esc(ag?.name || '')}</span></td>
-            <td data-label="${esc(t('colViolator'))}">${violatorShort(c)}</td>
+            <td data-label="${esc(t('colViolator'))}">${violatorShort(c)}${isRepeat(c) ? ` <span class="tag tag-repeat">${esc(t('repeatTag'))}</span>` : ''}</td>
             <td data-label="${esc(t('colOutcome'))}">${stamp(c.status, { admin: true })}</td>
             <td data-label="${esc(t('colPayment'))}">${c.status !== 'done' ? `<span class="muted">${esc(t('dash'))}</span>` : c.payment ? `<span class="stamp stamp-paid stamp-sm">${esc(t('stPaid'))}</span><span class="cell-sub">${esc(c.payment.orNo)}</span>` : `<span class="tag tag-unpaid">${esc(t('stUnpaid'))}</span>`}</td>
             <td data-label="${esc(t('colDate'))}" class="nowrap">${esc(fDateTime(c.at))}</td></tr>`;
@@ -161,9 +171,19 @@ function vDetail(root, ctx, no) {
       </section>`;
   };
 
+  const repeatHtml = () => {
+    if (!c.violatorId) return '';
+    const others = S.citations.filter(x => x.violatorId === c.violatorId && x.no !== c.no && x.status === 'done').sort((a, b) => b.at - a.at);
+    if (!others.length) return '';
+    return `
+      <section class="sec sec-repeat">
+        <h2 class="h2">${esc(tn('otherCitationsN', others.length))} <span class="tag tag-repeat">${esc(t('repeatViolator'))}</span></h2>
+        <ul class="repeat-list">${others.map(x => `<li><a href="#/v/citations/${x.no}">${serial(x.no)}<span>${esc(ctName(x.ctype))}</span><span class="muted">${esc(fDateTime(x.at))}</span>${x.payment ? `<span class="stamp stamp-paid stamp-sm">${esc(t('stPaid'))}</span>` : `<span class="tag tag-unpaid">${esc(t('stUnpaid'))}</span>`}</a></li>`).join('')}</ul>
+      </section>`;
+  };
   const render = () => {
     root.innerHTML = `<a class="back" href="#/v/citations">${icon('arrowL')}<span>${esc(t('backToList'))}</span></a>
-      ${citationDetail(c, { role: 'verifier', paymentHtml: payHtml() })}`;
+      ${citationDetail(c, { role: 'verifier', paymentHtml: repeatHtml() + payHtml() })}`;
     const f = root.querySelector('.pay-form');
     if (f) {
       f.or.addEventListener('input', () => { form.or = f.or.value; if (form.errors.or) { form.errors = validatePayment(c, form.or, form.date).err; refreshErr(f); } });

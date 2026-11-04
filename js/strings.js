@@ -526,6 +526,12 @@ const en = {
   'age_30+': 'Over 30 days',
   unpaidByAge: 'Unpaid, by days since issued',
   unpaidByAgeLead: 'All {n} Issued Citations not yet Paid, not just Today or This month.',
+  allViolators: 'All Violators',
+  repeatOnly: 'Repeat Violators only',
+  repeatTag: 'Repeat',
+  repeatViolator: 'Repeat Violator',
+  otherCitationsN: 'This Violator has {n} other Citations',
+  otherCitationsN1: 'This Violator has 1 other Citation',
   bkAllAccounted: 'Every number in this Booklet has a recorded outcome.',
 };
 

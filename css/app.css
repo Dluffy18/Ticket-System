@@ -1398,3 +1398,11 @@ a.bkg-cell:hover { filter: brightness(1.15); transform: translateY(-1px); }
 @media (min-width: 1400px) {
   .filter-grid-wide { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
+
+/* Verifier: Repeat Violators */
+.tag-repeat { background: var(--pending-bg); color: var(--pending); font-size: .75rem; padding: 1px 6px; vertical-align: 1px; }
+.repeat-list { list-style: none; margin: 0; padding: 0; display: grid; border: 1px solid var(--rule-2); }
+.repeat-list li + li { border-top: 1px solid var(--rule-3); }
+.repeat-list a { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; padding: 10px 14px; color: var(--ink); text-decoration: none; }
+.repeat-list a:hover { background: var(--sheet-2); }
+.repeat-list a > :last-child { margin-left: auto; }
