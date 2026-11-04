@@ -1246,6 +1246,10 @@ body:has(.sm) { background: var(--ground-2); }
 }
 
 /* ---------------------------------------------------------------- dashboards (Overview, Booklets, Heatmap) */
+/* Chart colors, also used outside .sm pages (e.g. the Enforcer detail chart). */
+:root { --s-issued: #1F2B4D; --s-cancelled: #E0A23A; --s-voided: #D9445A; --s-paid: #6E4BD0; --s-open: #E8EBF1; --sm-track: #E8EBF1; }
+:root[data-theme="dark"] { --s-issued: #A5B3DA; --s-cancelled: #E8B55A; --s-voided: #F07083; --s-paid: #A58BF0; --s-open: #242C42; --sm-track: #242C42; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --s-issued: #A5B3DA; --s-cancelled: #E8B55A; --s-voided: #F07083; --s-paid: #A58BF0; --s-open: #242C42; --sm-track: #242C42; } }
 .sm { --s-issued: #1F2B4D; --s-open: #E8EBF1; }
 :root[data-theme="dark"] .sm { --s-issued: #A5B3DA; --s-open: #242C42; }
 @media (prefers-color-scheme: dark) {
@@ -1328,3 +1332,13 @@ body:has(.sm) { background: var(--ground-2); }
   .dc-plot { height: 260px; }
   .dc-head { grid-template-columns: 1fr auto; align-items: center; }
 }
+
+/* Enforcer detail: Booklets in hand and activity chart */
+.det-dash { display: grid; gap: 16px; padding: 0 16px 18px; }
+.det-dash .sm-card { padding: 16px; border-radius: 12px; }
+.bkh-list { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 12px; }
+.bkh { display: grid; gap: 6px; }
+.bkh-top { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; align-items: baseline; }
+.bkh-range { font-family: var(--mono); font-weight: 700; color: var(--serial); }
+.bkh-meta { font-size: .8125rem; color: var(--ink-2); }
+@media (min-width: 900px) { .det-dash { grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr); align-items: start; } }

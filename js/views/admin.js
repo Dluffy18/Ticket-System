@@ -1,8 +1,8 @@
 import { t, tn } from '../strings.js';
 import { esc, fullName, displayName, fDate, fDateTime, isToday, isThisMonth, fPhone, normName } from '../util.js';
-import { S, me, allEnforcers, enforcer, changeStatus, personName, subscribe } from '../store.js';
+import { S, me, allEnforcers, enforcer, changeStatus, personName, subscribe, activeBooklets, bookletSize, ctName } from '../store.js';
 import { icon, toast, dialog, pager, paginate, emptyState, kv, menuMarkup, bindMenu } from '../ui.js';
-import { kpi, dailyChart } from './dash.js';
+import { kpi, dailyChart, bookletSplit, bookletBar, splitText } from './dash.js';
 
 const STATUS_LABEL = { active: 'acActive', pending: 'acPending', rejected: 'acRejected', inactive: 'acInactive' };
 const statusTag = s => `<span class="acct acct-${s}">${esc(t(STATUS_LABEL[s]))}</span>`;
@@ -210,6 +210,8 @@ function enforcerDetail(root, ctx, id) {
       return;
     }
     const k = counts(e.id);
+    const own = S.citations.filter(c => c.owner === e.id);
+    const books = activeBooklets(e.id);
     const acts = {
       pending: [['rejected', t('reject'), 'btn-danger-ghost'], ['active', t('approve'), 'btn-primary']],
       rejected: [['active', t('approveAfterAll'), 'btn-primary']],
@@ -241,6 +243,19 @@ function enforcerDetail(root, ctx, id) {
                 <tr><th scope="row">${esc(t('colMonth'))}</th><td class="n">${k.month.done}</td><td class="n">${k.month.cancelled}</td><td class="n">${k.month.voided}</td></tr>
               </tbody></table></div>
           </section>
+        </div>
+        <div class="det-dash">
+          <section class="sm-card">
+            <h2 class="sm-h">${esc(t('bookletsInHand'))}</h2>
+            ${books.length ? `<ul class="bkh-list">${books.map(b => {
+              const sp = bookletSplit(b, own), size = bookletSize(b);
+              return `<li class="bkh">
+                <div class="bkh-top"><span class="strong">${esc(ctName(b.ctype))}</span><span class="bkh-range">${b.from}–${b.to}</span></div>
+                ${bookletBar(sp, size)}
+                <div class="bkh-top"><span class="bkh-meta">${esc(splitText(sp))}</span><b class="small">${esc(tn('formsLeftN', sp.open))}</b></div></li>`;
+            }).join('')}</ul>` : `<p class="muted">${esc(t('noBookletInHand'))}</p>`}
+          </section>
+          ${dailyChart(own, { title: t('activity30') })}
         </div>
         <section class="sec"><h2 class="h2">${esc(t('history'))}</h2>${historyList(e.history)}</section>
         ${acts.length ? `<div class="actions-row">${acts.map(([to, label, cls]) => `<button type="button" class="btn ${cls} btn-lg" data-to="${to}">${esc(label)}</button>`).join('')}</div>` : ''}

@@ -493,6 +493,9 @@ const en = {
   attIdle: '{name}: no Citations in {d} days',
   attSpoiled: '{name}: {k} of {n} forms Cancelled or Voided this month ({p}%)',
   notUsedYet: 'Not used yet',
+  bookletsInHand: 'Booklets in hand',
+  noBookletInHand: 'No Booklet in hand. All registered Booklets are used up.',
+  activity30: 'Activity, last 30 days',
 };
 
 const tables = { en };
