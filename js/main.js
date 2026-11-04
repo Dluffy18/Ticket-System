@@ -10,6 +10,7 @@ import { profilePage } from './views/profile.js';
 import { overviewView, enforcersView, registrationsView, pendingCount } from './views/admin.js';
 import { vCitationsView, summaryView } from './views/verifier.js';
 import { bookletsView } from './views/booklets.js';
+import { heatmapView } from './views/heatmap.js';
 
 const app = document.getElementById('app');
 let leaveFns = [];
@@ -27,20 +28,22 @@ const NAV = {
     ['overview', '#/overview', 'navOverview', 'chart'],
     ['enforcers', '#/enforcers', 'navEnforcers', 'users'],
     ['registrations', '#/registrations', 'navRegistrations', 'inbox'],
+    ['heatmap', '#/heatmap', 'navHeatmap', 'map'],
     ['profile', '#/profile', 'navProfile', 'user'],
   ],
   verifier: [
     ['v', '#/v/citations', 'navCitations', 'list'],
     ['summary', '#/summary', 'navSummary', 'summary'],
     ['booklets', '#/booklets', 'navBooklets', 'book'],
+    ['heatmap', '#/heatmap', 'navHeatmap', 'map'],
     ['profile', '#/profile', 'navProfile', 'user'],
   ],
 };
 
 const ROUTES = {
   enforcer: { home: homeView, type: typeView, record: recordView, citations: citationsView, stats: statsView, profile: profilePage },
-  office: { overview: overviewView, enforcers: enforcersView, registrations: registrationsView, profile: profilePage },
-  verifier: { v: (root, ctx) => vCitationsView(root, { ...ctx, params: ctx.params.slice(1) }), summary: summaryView, booklets: bookletsView, profile: profilePage },
+  office: { overview: overviewView, enforcers: enforcersView, registrations: registrationsView, heatmap: heatmapView, profile: profilePage },
+  verifier: { v: (root, ctx) => vCitationsView(root, { ...ctx, params: ctx.params.slice(1) }), summary: summaryView, booklets: bookletsView, heatmap: heatmapView, profile: profilePage },
 };
 
 function defaultRoute(u) {

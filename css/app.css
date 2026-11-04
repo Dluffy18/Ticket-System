@@ -1406,3 +1406,16 @@ a.bkg-cell:hover { filter: brightness(1.15); transform: translateY(-1px); }
 .repeat-list a { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; padding: 10px 14px; color: var(--ink); text-decoration: none; }
 .repeat-list a:hover { background: var(--sheet-2); }
 .repeat-list a > :last-child { margin-left: auto; }
+
+/* Heatmap */
+.hm-card { display: grid; gap: 12px; padding: 14px; }
+.hm-count { font-weight: 700; }
+.hm-map { position: relative; height: min(64vh, 620px); min-height: 340px; border-radius: 10px; overflow: hidden; background: var(--sm-track); border: 1px solid var(--rule-3); }
+.hm-map.is-msg, .hm-msg { display: grid; place-items: center; text-align: center; }
+.hm-msg { position: absolute; inset: 0; gap: 8px; align-content: center; padding: 16px; color: var(--ink-2); font-weight: 600; }
+.hm-msg .ic { width: 32px; height: 32px; margin: 0 auto; }
+.hm-foot { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px 20px; }
+.hm-scale { display: inline-flex; align-items: center; gap: 8px; font-size: .8125rem; font-weight: 600; color: var(--ink-2); }
+.hm-scale i { display: block; width: 140px; height: 10px; border-radius: 5px; background: linear-gradient(90deg, #2b83ba, #abdda4, #ffffbf, #fdae61, #d7191c); }
+.hm-fixed { min-height: 44px; display: flex; align-items: center; font-weight: 650; }
+.hm .leaflet-container { font: inherit; }

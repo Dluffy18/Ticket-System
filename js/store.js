@@ -662,13 +662,13 @@ function rng(seedN) {
 }
 // Busy spots around Mati City, weighted by how often Citations happen there.
 const MATI_SPOTS = [
-  { lat: 6.9555, lng: 126.2167, w: 9, r: 0.0025 },  // public market and downtown
-  { lat: 6.9505, lng: 126.2135, w: 6, r: 0.0025 },  // Rizal Street and the plaza
-  { lat: 6.9603, lng: 126.2246, w: 5, r: 0.003 },   // national highway junction
-  { lat: 6.9441, lng: 126.2205, w: 3, r: 0.0025 },  // city hall area
-  { lat: 6.9318, lng: 126.2702, w: 3, r: 0.004 },   // Dahican beach road
-  { lat: 6.9712, lng: 126.2088, w: 2, r: 0.004 },   // Madang
-  { lat: 6.9395, lng: 126.2440, w: 1, r: 0.005 },   // Sainz
+  { lat: 6.9575, lng: 126.2160, w: 9, r: 0.002 },   // public market and downtown
+  { lat: 6.9600, lng: 126.2115, w: 6, r: 0.002 },   // plaza and Rizal Street
+  { lat: 6.9620, lng: 126.2250, w: 5, r: 0.0025 },  // national highway, Sainz
+  { lat: 6.9475, lng: 126.2330, w: 3, r: 0.002 },   // Matiao
+  { lat: 6.9455, lng: 126.2620, w: 3, r: 0.003 },   // Dahican beach road
+  { lat: 6.9680, lng: 126.2075, w: 2, r: 0.003 },   // Central
+  { lat: 6.9750, lng: 126.2350, w: 1, r: 0.004 },   // inland barangays
 ];
 function matiGps(rnd) {
   const total = MATI_SPOTS.reduce((n, p) => n + p.w, 0);
@@ -677,7 +677,7 @@ function matiGps(rnd) {
   const g = () => (rnd() + rnd() + rnd() - 1.5) / 1.5; // rough bell curve, -1..1
   return { lat: +(spot.lat + g() * spot.r).toFixed(6), lng: +(spot.lng + g() * spot.r).toFixed(6) };
 }
-export const MATI_CENTER = { lat: 6.9530, lng: 126.2300 };
+export const MATI_CENTER = { lat: 6.9590, lng: 126.2330 };
 
 const FIRSTS = ['Antonio', 'Bea', 'Cesar', 'Dina', 'Efren', 'Fe', 'Gilbert', 'Hazel', 'Ismael', 'Jenny', 'Karlo', 'Lorna', 'Manuel', 'Nina', 'Oscar', 'Pia', 'Romeo', 'Sheila', 'Teodoro', 'Vilma', 'Wilfredo', 'Yolanda', 'Arnel', 'Cristina', 'Danilo', 'Edna', 'Fernando', 'Gemma', 'Herminio', 'Imelda'];
 const LASTS = ['Abella', 'Bacani', 'Cabrera', 'Dacanay', 'Espino', 'Fajardo', 'Galang', 'Hidalgo', 'Ilagan', 'Jimenez', 'Lacson', 'Macaraeg', 'Nepomuceno', 'Ocampo', 'Pascual', 'Quiambao', 'Rosales', 'Salazar', 'Tolentino', 'Umali', 'Valdez', 'Yap', 'Zamora', 'Belmonte', 'Corpuz', 'Dimaculangan', 'Estrada', 'Francisco', 'Guevarra', 'Lagman'];
