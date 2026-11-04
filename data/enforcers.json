@@ -6,5 +6,17 @@
   { "id": "E003", "first": "Ana", "middle": "Cruz", "last": "Reyes", "suffix": "", "gender": "F", "agency": "PSO",
     "rank": "Public Safety Officer", "badge": "PSO-0332", "address": "8 Bonifacio Street, Barangay Lahug, Sample City", "contact": "+639171234503" },
   { "id": "E004", "first": "Ben", "middle": "", "last": "Villanueva", "suffix": "Jr.", "gender": "M", "agency": "CSU",
-    "rank": "Civil Security Officer", "badge": "CSU-0518", "address": "77 Luna Street, Barangay Mabolo, Sample City", "contact": "+639171234504" }
+    "rank": "Civil Security Officer", "badge": "CSU-0518", "address": "77 Luna Street, Barangay Mabolo, Sample City", "contact": "+639171234504" },
+  { "id": "E005", "first": "Carlo", "middle": "Medina", "last": "Navarro", "suffix": "", "gender": "M", "agency": "POLICE",
+    "rank": "Patrolman", "badge": "PNP-05112", "address": "19 Quezon Street, Barangay Central, Sample City", "contact": "+639171234505" },
+  { "id": "E006", "first": "Grace", "middle": "Torres", "last": "Villamor", "suffix": "", "gender": "F", "agency": "POLICE",
+    "rank": "Patrolwoman", "badge": "PNP-05230", "address": "6 Burgos Street, Barangay Dahican, Sample City", "contact": "+639171234506" },
+  { "id": "E007", "first": "Dennis", "middle": "Aguilar", "last": "Ramos", "suffix": "", "gender": "M", "agency": "TRAFFIC",
+    "rank": "Traffic Enforcer II", "badge": "TE-1204", "address": "31 Del Pilar Street, Barangay Sainz, Sample City", "contact": "+639171234507" },
+  { "id": "E008", "first": "Joy", "middle": "Perez", "last": "Castillo", "suffix": "", "gender": "F", "agency": "TRAFFIC",
+    "rank": "Traffic Enforcer I", "badge": "TE-1219", "address": "12 Aguinaldo Street, Barangay Matiao, Sample City", "contact": "+639171234508" },
+  { "id": "E009", "first": "Mark", "middle": "Lopez", "last": "Flores", "suffix": "", "gender": "M", "agency": "PSO",
+    "rank": "Public Safety Officer", "badge": "PSO-0347", "address": "54 Jacinto Street, Barangay Badas, Sample City", "contact": "+639171234509" },
+  { "id": "E010", "first": "Rhea", "middle": "Dizon", "last": "Lim", "suffix": "", "gender": "F", "agency": "CSU",
+    "rank": "Civil Security Officer", "badge": "CSU-0533", "address": "3 Osmeña Street, Barangay Don Enrique Lopez, Sample City", "contact": "+639171234510" }
 ]

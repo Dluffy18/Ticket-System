@@ -74,7 +74,7 @@ export function citationDetail(c, { role = 'enforcer', paymentHtml = '' } = {}) 
       ${kv([
         [t('incidentPaperNo'), serial(c.incident.paperNo)],
         [t('whatHappened'), esc(c.incident.text)],
-        [t('incidentHint'), esc(c.incident.hint || '')],
+        c.incident.hint ? [t('incidentHint'), esc(c.incident.hint)] : null,
       ])}
     </section>` : '';
 

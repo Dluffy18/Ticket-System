@@ -555,7 +555,8 @@ function seed() {
 
   let doneIdx = 0;
   const vl = S.ref.violators;
-  const gpsNear = (i) => ({ lat: +(10.3157 + ((i * 37) % 100 - 50) / 10000).toFixed(6), lng: +(123.8854 + ((i * 53) % 100 - 50) / 10000).toFixed(6) });
+  const gpsRnd = rng(7);
+  const gpsNear = () => matiGps(gpsRnd);
   const add = (b, no, status, at, opts = {}) => {
     const ag = S.ag.get(enforcer(b.owner).agency);
     const pool = ag.violationTypes.filter(id => S.vt.get(id).citationType === b.ctype);
@@ -643,4 +644,154 @@ function seed() {
       c.payment = { orNo, date };
       c.payHistory = [{ action: 'paid', orNo, date, by: 'V001', at: paidTs }];
     });
+
+  seedHistory(now);
+}
+
+// ------------------------------------------------------------------ sample history
+// Made-up activity for the last ~75 days so the Overview, charts, Booklets and
+// Heatmap have something to show. Deterministic: the same data on every load.
+function rng(seedN) {
+  let a = seedN >>> 0;
+  return () => {
+    a = (a + 0x6D2B79F5) >>> 0;
+    let x = Math.imul(a ^ (a >>> 15), 1 | a);
+    x = (x + Math.imul(x ^ (x >>> 7), 61 | x)) ^ x;
+    return ((x ^ (x >>> 14)) >>> 0) / 4294967296;
+  };
+}
+// Busy spots around Mati City, weighted by how often Citations happen there.
+const MATI_SPOTS = [
+  { lat: 6.9555, lng: 126.2167, w: 9, r: 0.0025 },  // public market and downtown
+  { lat: 6.9505, lng: 126.2135, w: 6, r: 0.0025 },  // Rizal Street and the plaza
+  { lat: 6.9603, lng: 126.2246, w: 5, r: 0.003 },   // national highway junction
+  { lat: 6.9441, lng: 126.2205, w: 3, r: 0.0025 },  // city hall area
+  { lat: 6.9318, lng: 126.2702, w: 3, r: 0.004 },   // Dahican beach road
+  { lat: 6.9712, lng: 126.2088, w: 2, r: 0.004 },   // Madang
+  { lat: 6.9395, lng: 126.2440, w: 1, r: 0.005 },   // Sainz
+];
+function matiGps(rnd) {
+  const total = MATI_SPOTS.reduce((n, p) => n + p.w, 0);
+  let pick = rnd() * total;
+  const spot = MATI_SPOTS.find(p => (pick -= p.w) < 0) || MATI_SPOTS[0];
+  const g = () => (rnd() + rnd() + rnd() - 1.5) / 1.5; // rough bell curve, -1..1
+  return { lat: +(spot.lat + g() * spot.r).toFixed(6), lng: +(spot.lng + g() * spot.r).toFixed(6) };
+}
+export const MATI_CENTER = { lat: 6.9530, lng: 126.2300 };
+
+const FIRSTS = ['Antonio', 'Bea', 'Cesar', 'Dina', 'Efren', 'Fe', 'Gilbert', 'Hazel', 'Ismael', 'Jenny', 'Karlo', 'Lorna', 'Manuel', 'Nina', 'Oscar', 'Pia', 'Romeo', 'Sheila', 'Teodoro', 'Vilma', 'Wilfredo', 'Yolanda', 'Arnel', 'Cristina', 'Danilo', 'Edna', 'Fernando', 'Gemma', 'Herminio', 'Imelda'];
+const LASTS = ['Abella', 'Bacani', 'Cabrera', 'Dacanay', 'Espino', 'Fajardo', 'Galang', 'Hidalgo', 'Ilagan', 'Jimenez', 'Lacson', 'Macaraeg', 'Nepomuceno', 'Ocampo', 'Pascual', 'Quiambao', 'Rosales', 'Salazar', 'Tolentino', 'Umali', 'Valdez', 'Yap', 'Zamora', 'Belmonte', 'Corpuz', 'Dimaculangan', 'Estrada', 'Francisco', 'Guevarra', 'Lagman'];
+const MIDDLES = ['', 'Santos', 'Cruz', 'Ramos', 'Diaz', 'Gomez', 'Lopez', 'Rivera'];
+
+function seedHistory(now) {
+  const DAY = 86400000;
+  const rnd = rng(42);
+  const monthStart = startOfMonth(now);
+  const pickOf = a => a[Math.floor(rnd() * a.length)];
+  const nextNo = { TRAFFIC: 18103000, ORD: 30214000 };
+  const people = [];
+  let vlN = 100;
+  let orN = 7600100;
+  const newPerson = () => {
+    const y = 1960 + Math.floor(rnd() * 46), m = 1 + Math.floor(rnd() * 12), d = 1 + Math.floor(rnd() * 28);
+    const p = {
+      id: 'VL-' + String(++vlN).padStart(4, '0'), first: pickOf(FIRSTS), middle: pickOf(MIDDLES), last: pickOf(LASTS), suffix: '',
+      birthday: `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`, sex: rnd() < 0.62 ? 'M' : 'F',
+    };
+    S.violators.push(p);
+    people.push(p);
+    return p;
+  };
+  // About one in six Citations goes to someone already cited: the Repeat Violators.
+  const violatorFor = () => (people.length > 8 && rnd() < 0.17 ? pickOf(people) : newPerson());
+  const INCIDENTS = [
+    'The form tore while I was writing it, so I used the next form instead.',
+    'Rain soaked the form and the writing could no longer be read.',
+    'I wrote the wrong Citation Type on this form and started over on the next one.',
+  ];
+
+  // [Enforcer, Citation Type, forms per day, days since last activity (null: history
+  // ends before this month because the original sample already covers it), whether
+  // a third of this month's forms are spoiled]
+  const PLAN = [
+    ['E001', 'TRAFFIC', 0.55, null, 0], ['E001', 'ORD', 0.3, null, 0],
+    ['E002', 'TRAFFIC', 0.7, null, 0],
+    ['E003', 'ORD', 0.5, null, 0],
+    ['E004', 'ORD', 0.45, null, 0],
+    ['E005', 'TRAFFIC', 0.9, 0, 0], ['E005', 'ORD', 0.35, 0, 0],
+    ['E006', 'TRAFFIC', 0.6, 12, 0],
+    ['E007', 'TRAFFIC', 1.4, 0, true],
+    ['E008', 'TRAFFIC', 0.8, 0, 0],
+    ['E009', 'ORD', 0.75, 0, 0],
+    ['E010', 'ORD', 0.6, 0, 0],
+  ];
+  const SIZE = 25;
+  PLAN.forEach(([owner, ctype, perDay, idleDays, spoilShare]) => {
+    const e = enforcer(owner);
+    const ag = S.ag.get(e.agency);
+    const pool = ag.violationTypes.filter(id => S.vt.get(id).citationType === ctype);
+    // Their current Booklets stay the active ones, so the history fills whole Booklets only.
+    const keepsCurrent = idleDays === null;
+    const start = now - 75 * DAY;
+    const end = keepsCurrent ? startOfMonth(now) - 3600000 : now - idleDays * DAY - 3600000;
+    let count = Math.max(1, Math.round((end - start) / DAY * perDay));
+    if (keepsCurrent) count = Math.max(SIZE, Math.round(count / SIZE) * SIZE);
+    else if (count % SIZE === 0) count++; // keep one Booklet in hand
+    const times = Array.from({ length: count }, () => start + rnd() * (end - start))
+      .map(ts => { const d = new Date(ts); d.setHours(7 + Math.floor(rnd() * 12), Math.floor(rnd() * 60), 0, 0); return Math.min(d.getTime(), end); })
+      .sort((a, b) => a - b);
+    let b = null;
+    let spoilN = 0;
+    times.forEach((at, i) => {
+      if (i % SIZE === 0) {
+        const from = nextNo[ctype];
+        nextNo[ctype] += SIZE;
+        b = { id: `B-${ctype}-${from}`, owner, ctype, from, to: from + SIZE - 1, at: at - DAY };
+        S.booklets.push(b);
+      }
+      const no = b.from + (i % SIZE);
+      const r = rnd();
+      // A planned share of spoiled forms this month is fixed (every third form), not left to chance.
+      const spoiledMonth = spoilShare && at >= monthStart;
+      if (spoiledMonth) spoilN++;
+      const status = spoiledMonth ? (spoilN % 3 === 0 ? (spoilN % 2 ? 'voided' : 'cancelled') : 'done')
+        : r < 0.075 ? 'cancelled' : r < 0.1 ? 'voided' : 'done';
+      const rec = {
+        no, owner, ctype, bookletId: b.id, status, at, synced: true,
+        violations: [], photos: { form: null, id: null, violator: null, plate: null }, noId: false,
+        violator: { first: '', middle: '', last: '', suffix: '', birthday: '', sex: '' },
+        violatorId: null, gps: null, incident: null, payment: null, payHistory: [],
+      };
+      if (status === 'done') {
+        const n = rnd() < 0.35 ? 2 : 1;
+        rec.violations = [...new Set(Array.from({ length: n }, () => pickOf(pool)))];
+        const p = violatorFor();
+        rec.violator = { first: p.first, middle: p.middle, last: p.last, suffix: p.suffix, birthday: p.birthday, sex: p.sex };
+        rec.violatorId = p.id;
+        rec.noId = rnd() < 0.2;
+        rec.photos.form = samplePhoto('form', no);
+        if (!rec.noId) rec.photos.id = samplePhoto('id', no);
+        rec.photos.violator = samplePhoto('violator', no);
+        if (S.ct.get(ctype).needsPlatePhoto) rec.photos.plate = samplePhoto('plate', no);
+        rec.gps = matiGps(rnd);
+        // Older Citations are more likely to be Paid already.
+        const age = (now - at) / DAY;
+        if (rnd() < (age > 30 ? 0.7 : age > 7 ? 0.5 : 0.25)) {
+          const paidTs = Math.min(at + (1 + Math.floor(rnd() * 9)) * DAY, now - 60000);
+          const date = dayKey(paidTs);
+          const orNo = 'OR-' + orN++;
+          rec.payment = { orNo, date };
+          rec.payHistory = [{ action: 'paid', orNo, date, by: 'V001', at: paidTs }];
+        }
+      } else if (status === 'cancelled') {
+        if (rnd() < 0.5) rec.violations = [pickOf(pool)];
+        rec.photos.form = samplePhoto('form', no);
+      } else {
+        rec.violations = [pickOf(pool)];
+        rec.photos.form = samplePhoto('form', no);
+        rec.incident = { paperNo: String(no), text: pickOf(INCIDENTS), hint: '' };
+      }
+      S.citations.push(rec);
+    });
+  });
 }
