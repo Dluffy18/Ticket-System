@@ -200,6 +200,8 @@ export function recordView(root, ctx) {
   d.step = step;
   let query = '';
   let incident = { paper: '', text: '', open: false };
+  // Photo the Enforcer tapped to take next. Screen-only: leaving the step resets it.
+  let picked = null;
 
   const stepsNav = () => {
     const miss = missingItems(d);
@@ -256,18 +258,28 @@ export function recordView(root, ctx) {
   };
   const step2 = () => {
     const req = requiredPhotos(d);
-    const nextKind = nextMissingPhoto(d);
+    const nextKind = req.includes(picked) && !d.photos[picked] ? picked : nextMissingPhoto(d);
+    const lead = !nextKind ? t('photosLeadDone')
+      : req.some(k => d.photos[k]) ? t('photosLeadNext', { what: photoWhat(nextKind) })
+      : t('photosLead');
+    const shotName = k => `<span class="shot-name" title="${esc(t(PHOTO_LABEL[k]))}">${esc(t(PHOTO_LABEL[k]))}</span>`;
     const v = d.violator;
     const sfx = SUFFIXES.map(s => `<option value="${esc(s)}" ${v.suffix === s ? 'selected' : ''}>${esc(s || t('none'))}</option>`).join('');
     return `
       <h1 class="h1 rec-h">${esc(t('step2'))}</h1>
-      <p class="muted">${esc(t('photosLead'))}</p>
+      <p class="muted" aria-live="polite">${esc(lead)}</p>
       <ol class="shots${req.length === 4 ? ' shots-4' : ''}">
-        ${req.map(k => `<li class="shot ${d.photos[k] ? 'has' : ''} ${k === nextKind ? 'next' : ''}">
-          <div class="shot-img">${d.photos[k] ? `<img src="${esc(d.photos[k])}" alt="${esc(t('photoAlt', { what: photoWhat(k) }))}">` : icon('camera')}</div>
-          <div class="shot-meta"><span class="shot-name" title="${esc(t(PHOTO_LABEL[k]))}">${esc(t(PHOTO_LABEL[k]))}</span>
+        ${req.map(k => d.photos[k]
+          ? `<li class="shot has">
+          <div class="shot-img"><img src="${esc(d.photos[k])}" alt="${esc(t('photoAlt', { what: photoWhat(k) }))}"></div>
+          <div class="shot-meta">${shotName(k)}
             ${k === 'id' && d.reading ? `<span class="reading" role="status">${esc(t('readingId'))}</span>` : ''}
-            ${d.photos[k] ? `<button type="button" class="btn btn-ghost btn-sm" data-shoot="${k}">${icon('retake')}<span>${esc(t('retake'))}</span></button>` : ''}</div>
+            <button type="button" class="btn btn-ghost btn-sm" data-shoot="${k}">${icon('retake')}<span>${esc(t('retake'))}</span></button></div>
+        </li>`
+          : `<li class="shot ${k === nextKind ? 'next' : ''}">
+          <button type="button" class="shot-pick" name="pick-${k}" data-pick="${k}" aria-pressed="${k === nextKind}">
+            <span class="shot-img">${icon('camera')}</span>
+            <span class="shot-meta">${shotName(k)}</span></button>
         </li>`).join('')}
       </ol>
       ${nextKind
@@ -396,6 +408,11 @@ export function recordView(root, ctx) {
         const data = await takePhoto(kind, label, d.no);
         if (!data) return;
         setPhoto(d, kind, data);
+        picked = null; // next up: first missing photo in the standard order
+        render();
+      }));
+      root.querySelectorAll('[data-pick]').forEach(btn => btn.addEventListener('click', () => {
+        picked = btn.dataset.pick;
         render();
       }));
       root.querySelector('[name=noId]').addEventListener('change', e => { setNoId(d, e.target.checked); render(); });
