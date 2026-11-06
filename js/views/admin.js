@@ -54,13 +54,15 @@ export function overviewView(root, ctx) {
 
     // Needs attention
     const att = [];
-    if (waiting) att.push({ kind: 'wait', icon: 'inbox', href: '#/registrations', text: tn('attWaiting', waiting) });
+    if (waiting) att.push({ rank: 0, kind: 'wait', icon: 'inbox', href: '#/registrations', text: tn('attWaiting', waiting) });
     [...per.values()].filter(r => r.e.status === 'active').forEach(r => {
       const days = r.last ? Math.floor((Date.now() - r.last) / DAY) : null;
-      if (days !== null && days >= IDLE_DAYS) att.push({ kind: 'idle', icon: 'clock', href: `#/enforcers/${r.e.id}`, text: t('attIdle', { name: displayName(r.e), d: days }) });
+      if (days !== null && days >= IDLE_DAYS) att.push({ rank: 2, score: days, kind: 'idle', icon: 'clock', href: `#/enforcers/${r.e.id}`, text: t('attIdle', { name: displayName(r.e), d: days }) });
       const used = r.done + r.cancelled + r.voided, bad = r.cancelled + r.voided;
-      if (used >= SPOILED_MIN_FORMS && bad / used > SPOILED_SHARE) att.push({ kind: 'spoiled', icon: 'fileX', href: `#/enforcers/${r.e.id}`, text: t('attSpoiled', { name: displayName(r.e), k: bad, n: used, p: Math.round(bad / used * 100) }) });
+      if (used >= SPOILED_MIN_FORMS && bad / used > SPOILED_SHARE) att.push({ rank: 1, score: bad / used, kind: 'spoiled', icon: 'fileX', href: `#/enforcers/${r.e.id}`, text: t('attSpoiled', { name: displayName(r.e), k: bad, n: used, p: Math.round(bad / used * 100) }) });
     });
+    // Most urgent first: Registrations waiting, then the highest spoiled share, then the longest idle.
+    att.sort((a, b) => a.rank - b.rank || (b.score || 0) - (a.score || 0));
 
     root.innerHTML = `
     <div class="sm ov">
@@ -77,8 +79,8 @@ export function overviewView(root, ctx) {
       <div class="ov-grid">
         ${dailyChart(mine, { title: t('perDay30') })}
         <section class="sm-card ov-att">
-          <h2 class="sm-h">${esc(t('needsAttention'))}</h2>
-          ${att.length ? `<ul class="att-list">${att.map(a => `<li class="att att-${a.kind}"><a href="${a.href}">${icon(a.icon)}<span>${esc(a.text)}</span>${icon('chevR')}</a></li>`).join('')}</ul>`
+          <h2 class="sm-h">${esc(t('needsAttention'))}${att.length ? ` <span class="att-count">(${att.length})</span>` : ''}</h2>
+          ${att.length ? `<ul class="att-list" data-att>${att.map(a => `<li class="att att-${a.kind}"><a href="${a.href}">${icon(a.icon)}<span>${esc(a.text)}</span>${icon('chevR')}</a></li>`).join('')}</ul>`
             : `<p class="att-clear">${icon('check')}<span>${esc(t('allClear'))}</span></p>`}
         </section>
         <section class="sm-card ov-top">
@@ -92,6 +94,13 @@ export function overviewView(root, ctx) {
         </section>
       </div>
     </div>`;
+    // The list scrolls after about 5 rows; fade its bottom edge while more rows sit below.
+    const list = root.querySelector('[data-att]');
+    if (list) {
+      const fade = () => list.classList.toggle('has-more', list.scrollTop + list.clientHeight < list.scrollHeight - 4);
+      list.addEventListener('scroll', fade, { passive: true });
+      fade();
+    }
   };
   render();
   const off = subscribe(k => { if ((k === 'accounts' || k === 'citations') && document.body.contains(root)) render(); });
