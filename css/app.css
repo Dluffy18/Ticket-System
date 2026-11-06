@@ -1457,17 +1457,3 @@ a.bkg-cell:hover { filter: brightness(1.15); transform: translateY(-1px); }
 .list-tools .showing { margin: 0; }
 .list-tools + .table-wrap, .list-tools + .empty { margin-top: 10px; }
 
-/* Summary: period switch and Print */
-.sm-head-tools { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
-.sm-head-tools .sm-seg { flex: 1 1 260px; }
-.print-only { display: none; }
-@media print {
-  @page { margin: 12mm; }
-  body, body:has(.sm) { background: #fff !important; }
-  .topbar, .nav, #demo, .skip, .toasts, .offline-banner, .sm-head-tools, .sm-tile-foot, .age-list .ic, .list-tools .btn { display: none !important; }
-  .print-only { display: block; }
-  .main, .page { padding: 0 !important; margin: 0 !important; max-width: none !important; }
-  .sm { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  .sm-card, .kpi, .sm-tile { break-inside: avoid; }
-  .print-meta { color: #44506B; font-weight: 600; }
-}

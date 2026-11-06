@@ -1,5 +1,5 @@
 import { t, tn } from '../strings.js';
-import { esc, fullName, displayName, fDateTime, fDate, downloadCsv, isoDateTime, fDayKey, dayKey, monthKey, fMonthKey, todayKey, isToday, isThisMonth, normName } from '../util.js';
+import { esc, fullName, displayName, fDateTime, downloadCsv, isoDateTime, fDayKey, dayKey, monthKey, fMonthKey, todayKey, isToday, isThisMonth, normName } from '../util.js';
 import { S, me, enforcer, agencyOf, ctName, markPaid, setUnpaid, validatePayment, personName, subscribe } from '../store.js';
 import { icon, serial, stamp, toast, dialog, pager, paginate, emptyState, dateBox, bindDateBox } from '../ui.js';
 import { citationDetail, violatorShort } from './citation.js';
@@ -267,11 +267,7 @@ export function summaryView(root) {
     <div class="sm">
       <header class="sm-head">
         <div><h1 class="h1 sm-title">${esc(t('summaryTitle'))}</h1><p class="lead">${esc(t('summaryNote'))}</p></div>
-        <div class="sm-head-tools">
-          <div class="sm-seg" role="group" aria-label="${esc(t('period'))}">${seg('today', 'today')}${seg('month', 'thisMonth')}</div>
-          <button type="button" class="btn btn-ghost sm-print" data-print>${icon('printer')}<span>${esc(t('printSummary'))}</span></button>
-        </div>
-        <p class="print-only print-meta">${esc(t(p === 'today' ? 'today' : 'thisMonth'))} · ${esc(t('printedOn', { date: fDate(Date.now()) }))}</p>
+        <div class="sm-seg" role="group" aria-label="${esc(t('period'))}">${seg('today', 'today')}${seg('month', 'thisMonth')}</div>
       </header>
       <div class="sm-cards">
         ${tile('unpaid', t('stUnpaid'), tot.unpaid, 'clock')}
@@ -293,7 +289,6 @@ export function summaryView(root) {
       if (k === 'unpaid' || k === 'paid') st.pay = k; else st.outcome = k;
       if (p === 'today') st.day = todayKey(); else st.month = monthKey(Date.now());
     }));
-    root.querySelector('[data-print]').addEventListener('click', () => window.print());
     root.querySelectorAll('[data-age]').forEach(a => a.addEventListener('click', () => { clearState(); st.pay = 'unpaid'; st.age = a.dataset.age; }));
   };
   render();
