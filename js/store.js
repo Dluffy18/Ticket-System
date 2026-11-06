@@ -112,7 +112,7 @@ export async function signIn(nameInput, password) {
 // A changed password wins; otherwise registrations check their own hash.
 // Sample accounts from the JSON files have no stored password until they change it.
 async function passwordMatches(acc, password) {
-  const stored = S.passwords[acc.id] || (acc.source === 'reg' ? acc : null);
+  const stored = S.passwords[acc.id] || (acc.source === 'reg' && acc.hash ? acc : null);
   if (!stored) return true;
   return (await hashPassword(stored.salt, password)) === stored.hash;
 }
@@ -646,6 +646,18 @@ function seed() {
     });
 
   seedHistory(now);
+
+  // Two Police sign-ups waiting for approval. Kept in memory only, and skipped once the
+  // Office Admin has approved or rejected them (that decision is saved with their id).
+  [
+    { id: 'R-SAMPLE-1', first: 'Jessa', middle: 'Villar', last: 'Obando', gender: 'F', rank: 'Patrolwoman', badge: 'PNP-05441',
+      contact: '+639171234531', address: '27 Mabini Avenue, Barangay Central, Sample City', createdAt: now - DAY - 5 * 3600000 },
+    { id: 'R-SAMPLE-2', first: 'Leonardo', middle: 'Pineda', last: 'Quijano', gender: 'M', rank: 'Patrolman', badge: 'PNP-05458',
+      contact: '+639171234532', address: '15 Rizal Street, Barangay Dahican, Sample City', createdAt: now - 3 * 3600000 },
+  ].forEach(r => {
+    if (S.registrations.some(x => x.id === r.id)) return;
+    S.registrations.push({ ...r, suffix: '', agency: 'POLICE', status: 'pending', reason: '', registeredAt: r.createdAt, history: [] });
+  });
 }
 
 // ------------------------------------------------------------------ sample history
@@ -710,8 +722,8 @@ function seedHistory(now) {
   ];
 
   // [Enforcer, Citation Type, forms per day, days since last activity (null: history
-  // ends before this month because the original sample already covers it), whether
-  // a third of this month's forms are spoiled]
+  // ends before this month because the original sample already covers it), share of
+  // this month's forms that are spoiled (true: one in three)]
   const PLAN = [
     ['E001', 'TRAFFIC', 0.55, null, 0], ['E001', 'ORD', 0.3, null, 0],
     ['E002', 'TRAFFIC', 0.7, null, 0],
@@ -723,6 +735,11 @@ function seedHistory(now) {
     ['E008', 'TRAFFIC', 0.8, 0, 0],
     ['E009', 'ORD', 0.75, 0, 0],
     ['E010', 'ORD', 0.6, 0, 0],
+    // More Police Enforcers so the Overview's Needs attention list is long enough to scroll:
+    // eight who stopped issuing Citations, four with many spoiled forms this month.
+    ['E011', 'TRAFFIC', 0.6, 8, 0], ['E012', 'ORD', 0.5, 11, 0], ['E013', 'TRAFFIC', 0.7, 15, 0], ['E014', 'ORD', 0.4, 19, 0],
+    ['E015', 'TRAFFIC', 0.5, 23, 0], ['E016', 'ORD', 0.45, 27, 0], ['E017', 'TRAFFIC', 0.6, 33, 0], ['E018', 'ORD', 0.5, 40, 0],
+    ['E019', 'TRAFFIC', 1.8, 0, 0.5], ['E020', 'TRAFFIC', 1.6, 0, 0.4], ['E021', 'ORD', 2, 0, 0.3], ['E022', 'TRAFFIC', 2.2, 0, 0.25],
   ];
   const SIZE = 25;
   PLAN.forEach(([owner, ctype, perDay, idleDays, spoilShare]) => {
@@ -741,6 +758,7 @@ function seedHistory(now) {
       .sort((a, b) => a - b);
     let b = null;
     let spoilN = 0;
+    const share = spoilShare === true ? 1 / 3 : spoilShare;
     times.forEach((at, i) => {
       if (i % SIZE === 0) {
         const from = nextNo[ctype];
@@ -753,7 +771,8 @@ function seedHistory(now) {
       // A planned share of spoiled forms this month is fixed (every third form), not left to chance.
       const spoiledMonth = spoilShare && at >= monthStart;
       if (spoiledMonth) spoilN++;
-      const status = spoiledMonth ? (spoilN % 3 === 0 ? (spoilN % 2 ? 'voided' : 'cancelled') : 'done')
+      const spoiledNow = spoiledMonth && Math.floor(spoilN * share) > Math.floor((spoilN - 1) * share);
+      const status = spoiledMonth ? (spoiledNow ? (spoilN % 2 ? 'voided' : 'cancelled') : 'done')
         : r < 0.075 ? 'cancelled' : r < 0.1 ? 'voided' : 'done';
       const rec = {
         no, owner, ctype, bookletId: b.id, status, at, synced: true,
