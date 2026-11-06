@@ -528,7 +528,6 @@ const en = {
   unpaidByAge: 'Unpaid, by days since issued',
   unpaidByAgeLead: 'All {n} Issued Citations not yet Paid, not just Today or This month.',
   repeatOnly: 'Repeat Violators only',
-  repeatTag: 'Repeat',
   repeatViolator: 'Repeat Violator',
   otherCitationsN: 'This Violator has {n} other Citations',
   otherCitationsN1: 'This Violator has 1 other Citation',

@@ -124,7 +124,7 @@ export function vCitationsView(root, ctx) {
             <th scope="row"><a href="#/v/citations/${c.no}">${serial(c.no)}</a></th>
             <td data-label="${esc(t('colType'))}">${esc(ctName(c.ctype))}</td>
             <td data-label="${esc(t('colEnforcer'))}"><span class="cell-name">${esc(e ? displayName(e) : c.owner)}</span><span class="cell-sub">${esc(ag?.name || '')}</span></td>
-            <td data-label="${esc(t('colViolator'))}">${violatorShort(c)}${isRepeat(c) ? ` <span class="tag tag-repeat">${esc(t('repeatTag'))}</span>` : ''}</td>
+            <td data-label="${esc(t('colViolator'))}">${violatorShort(c)}</td>
             <td data-label="${esc(t('colOutcome'))}">${stamp(c.status, { admin: true })}</td>
             <td data-label="${esc(t('colPayment'))}">${c.status !== 'done' ? `<span class="muted">${esc(t('dash'))}</span>` : c.payment ? `<span class="stamp stamp-paid stamp-sm">${esc(t('stPaid'))}</span><span class="cell-sub">${esc(c.payment.orNo)}</span>` : `<span class="tag tag-unpaid">${esc(t('stUnpaid'))}</span>`}</td>
             <td data-label="${esc(t('colDate'))}" class="nowrap">${esc(fDateTime(c.at))}</td></tr>`;
