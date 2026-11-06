@@ -50,7 +50,7 @@ export function bookletsView(root, ctx) {
               <td data-label="${esc(t('colType'))}">${esc(ctName(b.ctype))}</td>
               <td data-label="${esc(t('colEnforcer'))}"><span class="cell-name">${esc(ownerName(b))}</span><span class="cell-sub">${esc(ag?.name || '')}</span></td>
               <td data-label="${esc(t('colProgress'))}" class="bk-prog">${bookletBar(sp, size)}<span class="cell-sub">${esc(splitText(sp))}</span></td>
-              <td data-label="${esc(t('bkState'))}">${active ? `<span class="tag tag-inuse">${esc(t('bkInUse'))}</span>` : `<span class="tag tag-usedup">${icon('check')}${esc(t('bkUsedUp'))}</span>`}</td></tr>`;
+              <td data-label="${esc(t('bkState'))}">${active ? `<span class="tag tag-inuse">${esc(t('bkInUse'))}</span>` : `<span class="tag tag-usedup">${esc(t('bkUsedUp'))}</span>`}</td></tr>`;
           }).join('')}</tbody></table></div>` : emptyState(t('noBkMatch'), t('noBkMatchBody'), 'search')}
         ${pager(pg.page, pg.pages)}
       </div>
