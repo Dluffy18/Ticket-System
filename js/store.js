@@ -649,8 +649,8 @@ function seed() {
 }
 
 // ------------------------------------------------------------------ sample history
-// Made-up activity for the last ~75 days so the Overview, charts, Booklets and
-// Heatmap have something to show. Deterministic: the same data on every load.
+// Made-up activity for the last ~75 days so the Overview, charts and Booklets
+// have something to show. Deterministic: the same data on every load.
 function rng(seedN) {
   let a = seedN >>> 0;
   return () => {
@@ -677,7 +677,6 @@ function matiGps(rnd) {
   const g = () => (rnd() + rnd() + rnd() - 1.5) / 1.5; // rough bell curve, -1..1
   return { lat: +(spot.lat + g() * spot.r).toFixed(6), lng: +(spot.lng + g() * spot.r).toFixed(6) };
 }
-export const MATI_CENTER = { lat: 6.9590, lng: 126.2330 };
 
 const FIRSTS = ['Antonio', 'Bea', 'Cesar', 'Dina', 'Efren', 'Fe', 'Gilbert', 'Hazel', 'Ismael', 'Jenny', 'Karlo', 'Lorna', 'Manuel', 'Nina', 'Oscar', 'Pia', 'Romeo', 'Sheila', 'Teodoro', 'Vilma', 'Wilfredo', 'Yolanda', 'Arnel', 'Cristina', 'Danilo', 'Edna', 'Fernando', 'Gemma', 'Herminio', 'Imelda'];
 const LASTS = ['Abella', 'Bacani', 'Cabrera', 'Dacanay', 'Espino', 'Fajardo', 'Galang', 'Hidalgo', 'Ilagan', 'Jimenez', 'Lacson', 'Macaraeg', 'Nepomuceno', 'Ocampo', 'Pascual', 'Quiambao', 'Rosales', 'Salazar', 'Tolentino', 'Umali', 'Valdez', 'Yap', 'Zamora', 'Belmonte', 'Corpuz', 'Dimaculangan', 'Estrada', 'Francisco', 'Guevarra', 'Lagman'];

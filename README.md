@@ -50,10 +50,4 @@ The **Demo** button switches users and goes offline/online. It's for testing, no
 
 Serve the same JSON shapes from an API. Store Citations, Booklets and Violator Records in a database, with real sign-in and access control. Never put real Violators' personal data in a file the app serves (Data Privacy Act, RA 10173).
 
-## Heatmap
-
-The Heatmap uses [Leaflet](https://leafletjs.com/) and the leaflet.heat plugin, loaded from a CDN, so it needs an internet connection. When offline it says so.
-
-- **Map tiles:** the prototype uses OpenStreetMap's public tile server, with the required credit. That server is only for light use. **Before going live, change `TILES` in `js/views/heatmap.js`** to a tile provider or the City's own tile server.
-- **Privacy:** `areaTotals()` in `js/views/heatmap.js` turns Citations into counts per area (about 280 m), and the map only ever gets those totals: no pins, no names. With a backend, compute those totals on the server so exact locations never reach an Office Admin's browser. Office Admins see their own Agency, This month only, and areas with fewer than 3 Citations aren't drawn.
 "# Ticket-System" 
