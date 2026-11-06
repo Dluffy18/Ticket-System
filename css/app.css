@@ -1264,16 +1264,11 @@ body:has(.sm) { background: var(--ground-2); }
 
 /* Count tiles */
 .kpis { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
-.kpi { --k: var(--s-issued); position: relative; display: grid; align-content: start; gap: 2px; min-width: 0; padding: 14px 16px 14px 20px; background: var(--sheet); border: 1px solid var(--rule-3); border-radius: 14px; overflow: hidden; }
-.kpi::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 6px; background: var(--k); }
-.kpi-cancelled { --k: var(--s-cancelled); }
-.kpi-voided { --k: var(--s-voided); }
-.kpi-waiting { --k: var(--pending); }
-.kpi-paid { --k: var(--s-paid); }
-.kpi-n { font-size: 2rem; line-height: 1; font-weight: 800; font-stretch: 80%; font-variant-numeric: tabular-nums; }
-.kpi-lbl { font-size: .875rem; font-weight: 650; color: var(--ink-2); line-height: 1.3; }
-.kpi-sub { font-size: .8125rem; color: var(--ink-3); }
-.kpi-link { margin-top: 6px; font-size: .875rem; font-weight: 650; }
+/* Count tiles on Overview and Booklets reuse .sm-tile; these only add what those pages need. */
+.sm-tile-waiting { --t-bg: var(--pending); }
+.sm-tile-sub { position: relative; margin-top: 4px; font-size: .8125rem; line-height: 1.3; opacity: .85; padding-right: 44px; }
+.kpi:not(:has(.sm-tile-foot)) .sm-tile-body { padding-top: 14px; padding-bottom: 14px; }
+.kpi .sm-tile-lbl { padding-right: 44px; }
 .kpis > .kpi:last-child:nth-child(odd) { grid-column: 1 / -1; }
 
 /* Daily chart */
@@ -1325,7 +1320,6 @@ body:has(.sm) { background: var(--ground-2); }
 @media (min-width: 900px) {
   .kpis { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 16px; }
   .kpis > .kpi:last-child:nth-child(odd) { grid-column: auto; }
-  .kpi-n { font-size: 2.25rem; }
   .ov-grid { grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); gap: 20px; }
   .ov-grid .dc { grid-row: span 2; }
   .dc-plot { height: 260px; }

@@ -68,11 +68,11 @@ export function overviewView(root, ctx) {
         <div><h1 class="h1 sm-title">${esc(t('overviewTitle'))}</h1><p class="lead">${esc(t('overviewLead', { agency: ag.name }))}</p></div>
       </header>
       <div class="kpis">
-        ${kpi({ kind: 'issued', label: t('kpiIssuedToday'), n: n(mine.filter(c => isToday(c.at)), 'done') })}
-        ${kpi({ kind: 'issued', label: t('kpiIssuedMonth'), n: n(month, 'done') })}
-        ${kpi({ kind: 'cancelled', label: t('kpiCancelledMonth'), n: n(month, 'cancelled') })}
-        ${kpi({ kind: 'voided', label: t('kpiVoidedMonth'), n: n(month, 'voided') })}
-        ${kpi({ kind: 'waiting', label: t('kpiWaiting'), n: waiting, href: '#/registrations', linkText: t('openRegistrations') })}
+        ${kpi({ kind: 'unpaid', ic: 'clock', label: t('kpiIssuedToday'), n: n(mine.filter(c => isToday(c.at)), 'done') })}
+        ${kpi({ kind: 'unpaid', ic: 'check', label: t('kpiIssuedMonth'), n: n(month, 'done') })}
+        ${kpi({ kind: 'cancelled', ic: 'fileX', label: t('kpiCancelledMonth'), n: n(month, 'cancelled') })}
+        ${kpi({ kind: 'voided', ic: 'ban', label: t('kpiVoidedMonth'), n: n(month, 'voided') })}
+        ${kpi({ kind: 'waiting', ic: 'users', label: t('kpiWaiting'), n: waiting, href: '#/registrations', linkText: t('openRegistrations') })}
       </div>
       <div class="ov-grid">
         ${dailyChart(mine, { title: t('perDay30') })}

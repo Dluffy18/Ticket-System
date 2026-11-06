@@ -28,9 +28,9 @@ export function bookletsView(root, ctx) {
     <div class="sm">
       <header class="sm-head"><div><h1 class="h1 sm-title">${esc(t('bookletsTitle'))}</h1><p class="lead">${esc(t('bookletsLead'))}</p></div></header>
       <div class="kpis kpis-3">
-        ${kpi({ kind: 'issued', label: t('kpiBkInUse'), n: inUse.length })}
-        ${kpi({ kind: 'paid', label: t('kpiBkUsedUp'), n: all.length - inUse.length })}
-        ${kpi({ kind: 'cancelled', label: t('kpiFormsOut'), n: formsOut, sub: t('kpiFormsOutSub') })}
+        ${kpi({ kind: 'unpaid', ic: 'book', label: t('kpiBkInUse'), n: inUse.length })}
+        ${kpi({ kind: 'paid', ic: 'check', label: t('kpiBkUsedUp'), n: all.length - inUse.length })}
+        ${kpi({ kind: 'cancelled', ic: 'file', label: t('kpiFormsOut'), n: formsOut, sub: t('kpiFormsOutSub') })}
       </div>
       <div class="filters filters-desk bk-filters">
         <div class="filter-grid">

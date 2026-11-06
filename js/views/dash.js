@@ -3,19 +3,25 @@
 import { t } from '../strings.js';
 import { esc, dayKey, fDate, startOfDay } from '../util.js';
 import { bookletSize } from '../store.js';
+import { icon } from '../ui.js';
 
 const DAY = 86400000;
 export const STATUS_KEYS = ['done', 'cancelled', 'voided'];
 const STATUS_LABEL = { done: 'stIssued', cancelled: 'stCancelled', voided: 'stVoided', open: 'notUsedYet' };
 
 // Count tile. `href` makes the footer a link.
-export function kpi({ kind, label, n, sub = '', href = '', linkText = '' }) {
+// A full-color count tile, the same look as the Verifier Summary tiles.
+// The bottom bar only appears when the tile links somewhere.
+export function kpi({ kind, label, n, ic, sub = '', href = '', linkText = '' }) {
   return `
-  <section class="kpi kpi-${kind}">
-    <p class="kpi-n">${n}</p>
-    <h2 class="kpi-lbl">${esc(label)}</h2>
-    ${sub ? `<p class="kpi-sub">${esc(sub)}</p>` : ''}
-    ${href ? `<a class="kpi-link" href="${href}">${esc(linkText)}</a>` : ''}
+  <section class="kpi sm-tile sm-tile-${kind}">
+    <div class="sm-tile-body">
+      <p class="sm-tile-n">${n}</p>
+      <h2 class="sm-tile-lbl">${esc(label)}</h2>
+      ${sub ? `<p class="sm-tile-sub">${esc(sub)}</p>` : ''}
+      ${ic ? `<span class="sm-tile-ic" aria-hidden="true">${icon(ic)}</span>` : ''}
+    </div>
+    ${href ? `<a class="sm-tile-foot" href="${href}"><span>${esc(linkText)}</span>${icon('chevR')}</a>` : ''}
   </section>`;
 }
 
