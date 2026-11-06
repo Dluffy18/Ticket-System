@@ -1152,10 +1152,7 @@ body:has(.sm) { background: var(--ground-2); }
 .sm-head { display: grid; gap: 14px; }
 .sm-title { font-size: 2rem; font-weight: 800; font-stretch: 80%; }
 .sm-head .lead { margin-top: 2px; font-size: .9375rem; }
-.sm-seg { display: grid; grid-template-columns: 1fr 1fr; padding: 4px; gap: 4px; background: var(--sm-track); border-radius: 12px; }
-.sm-seg-btn { min-height: 44px; padding: 0 20px; border: 0; border-radius: 9px; background: none; font: inherit; font-weight: 600; color: var(--ink-2); cursor: pointer; }
-.sm-seg-btn.on { background: var(--ink); color: var(--on-ink); }
-.sm-seg-btn:not(.on):hover { color: var(--ink); }
+.sm-period select.input { background-color: var(--sheet); }
 
 .sm-card { position: relative; background: var(--sheet); border: 1px solid var(--rule-3); border-radius: 16px; padding: 20px; min-width: 0; }
 .sm-h { font-size: 1.375rem; line-height: 1.2; font-weight: 750; font-stretch: 85%; }
@@ -1229,7 +1226,7 @@ body:has(.sm) { background: var(--ground-2); }
   .sm { gap: 24px; }
   .sm-head { grid-template-columns: 1fr auto; align-items: end; }
   .sm-title { font-size: 2.5rem; }
-  .sm-seg { min-width: 270px; }
+  .sm-period { min-width: 210px; }
   .sm-cards { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px; }
   .sm-card { padding: 26px 30px; }
   .sm-tile-body { padding: 9px 16px 7px; }

@@ -308,6 +308,7 @@ const en = {
   // Stats
   statsTitle: 'Stats',
   thisMonth: 'This month',
+  allTime: 'All time',
   statCitations: 'Citations',
   statViolations: 'Violations recorded',
   statCancelled: 'Cancelled forms',
@@ -526,7 +527,7 @@ const en = {
   'age_8-30': '8–30 days',
   'age_30+': 'Over 30 days',
   unpaidByAge: 'Unpaid, by days since issued',
-  unpaidByAgeLead: 'All {n} Issued Citations not yet Paid, not just Today or This month.',
+  unpaidByAgeLead: 'All {n} Issued Citations not yet Paid. Always counts all dates.',
   repeatOnly: 'Repeat Violators only',
   repeatViolator: 'Repeat Violator',
   otherCitationsN: 'This Violator has {n} other Citations',

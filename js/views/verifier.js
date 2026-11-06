@@ -247,7 +247,7 @@ function vDetail(root, ctx, no) {
 }
 
 // ------------------------------------------------------------------ Summary
-const sumState = { period: 'today' };
+const sumState = { period: 'all' };
 export function summaryView(root) {
   const calc = list => ({
     issued: list.filter(c => c.status === 'done').length,
@@ -256,18 +256,18 @@ export function summaryView(root) {
     cancelled: list.filter(c => c.status === 'cancelled').length,
     voided: list.filter(c => c.status === 'voided').length,
   });
-  const inPeriod = (c, p) => p === 'today' ? isToday(c.at) : isThisMonth(c.at);
+  const inPeriod = (c, p) => p === 'all' || (p === 'today' ? isToday(c.at) : isThisMonth(c.at));
   const render = () => {
     const p = sumState.period;
     const list = S.citations.filter(c => inPeriod(c, p));
     const rows = S.ref.agencies.map(a => ({ a, s: calc(list.filter(c => enforcer(c.owner)?.agency === a.id)) }));
     const tot = calc(list);
-    const seg = (k, l) => `<button type="button" class="sm-seg-btn ${p === k ? 'on' : ''}" data-p="${k}" aria-pressed="${p === k}">${esc(t(l))}</button>`;
+    const opt = (k, l) => `<option value="${k}" ${p === k ? 'selected' : ''}>${esc(t(l))}</option>`;
     root.innerHTML = `
     <div class="sm">
       <header class="sm-head">
         <div><h1 class="h1 sm-title">${esc(t('summaryTitle'))}</h1><p class="lead">${esc(t('summaryNote'))}</p></div>
-        <div class="sm-seg" role="group" aria-label="${esc(t('period'))}">${seg('today', 'today')}${seg('month', 'thisMonth')}</div>
+        <label class="field sm-period"><span class="lbl">${esc(t('period'))}</span><select class="input" name="period">${opt('all', 'allTime')}${opt('today', 'today')}${opt('month', 'thisMonth')}</select></label>
       </header>
       <div class="sm-cards">
         ${tile('unpaid', t('stUnpaid'), tot.unpaid, 'clock')}
@@ -281,13 +281,13 @@ export function summaryView(root) {
       </div>
       ${ageCard()}
     </div>`;
-    root.querySelectorAll('[data-p]').forEach(b => b.addEventListener('click', () => { sumState.period = b.dataset.p; render(); }));
+    root.querySelector('[name=period]').addEventListener('change', e => { sumState.period = e.target.value; render(); root.querySelector('[name=period]').focus(); });
     // "View citations": open the list showing exactly what the tile counted.
     root.querySelectorAll('[data-go]').forEach(a => a.addEventListener('click', () => {
       clearState();
       const k = a.dataset.go;
       if (k === 'unpaid' || k === 'paid') st.pay = k; else st.outcome = k;
-      if (p === 'today') st.day = todayKey(); else st.month = monthKey(Date.now());
+      if (p === 'today') st.day = todayKey(); else if (p === 'month') st.month = monthKey(Date.now());
     }));
     root.querySelectorAll('[data-age]').forEach(a => a.addEventListener('click', () => { clearState(); st.pay = 'unpaid'; st.age = a.dataset.age; }));
   };
