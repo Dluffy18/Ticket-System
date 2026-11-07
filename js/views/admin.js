@@ -36,8 +36,6 @@ const agencyCitations = ids => S.citations.filter(c => ids.has(c.owner));
 
 export function overviewView(root, ctx) {
   const render = () => {
-    const u = me();
-    const ag = S.ag.get(u.agency);
     const enfs = agencyEnforcers();
     const ids = new Set(enfs.map(e => e.id));
     const mine = agencyCitations(ids);
@@ -67,7 +65,7 @@ export function overviewView(root, ctx) {
     root.innerHTML = `
     <div class="sm ov">
       <header class="sm-head">
-        <div><h1 class="h1 sm-title">${esc(t('overviewTitle'))}</h1><p class="lead">${esc(t('overviewLead', { agency: ag.name }))}</p></div>
+        <div><h1 class="h1 sm-title">${esc(t('overviewTitle'))}</h1></div>
       </header>
       <div class="kpis">
         ${kpi({ kind: 'unpaid', ic: 'clock', label: t('kpiIssuedToday'), n: n(mine.filter(c => isToday(c.at)), 'done') })}

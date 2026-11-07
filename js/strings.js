@@ -476,7 +476,6 @@ const en = {
 
   // Office Admin Overview
   overviewTitle: 'Overview',
-  overviewLead: 'Counts for {agency} Enforcers. Citation contents stay with the Treasury Office.',
   kpiIssuedToday: 'Issued today',
   kpiIssuedMonth: 'Issued this month',
   kpiCancelledMonth: 'Cancelled this month',
