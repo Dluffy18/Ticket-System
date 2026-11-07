@@ -1,7 +1,7 @@
 // Shared rendering of one Citation (detail page) and list-row summaries.
 import { t } from '../strings.js';
 import { esc, fullName, fDateTime, fDayKey } from '../util.js';
-import { ctName, vtName, enforcer, agencyOf, statusWord } from '../store.js';
+import { ctName, vtName, findAccount, agencyOf, statusWord } from '../store.js';
 import { icon, serial, stamp, kv } from '../ui.js';
 
 const PHOTO_LABEL = { form: 'photoForm', id: 'photoId', violator: 'photoViolator', plate: 'photoPlate' };
@@ -57,7 +57,7 @@ function gpsText(g) {
 // role: 'enforcer' | 'verifier'
 export function citationDetail(c, { role = 'enforcer', paymentHtml = '' } = {}) {
   const admin = role !== 'enforcer';
-  const e = enforcer(c.owner);
+  const e = findAccount(c.owner);
   const ag = agencyOf(c.owner);
   const head = `
     <header class="sheet-head det-head">

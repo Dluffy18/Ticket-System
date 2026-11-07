@@ -1,14 +1,14 @@
 // Verifier: the Booklet ledger. Every Control Number in every Booklet and its recorded outcome.
 import { t } from '../strings.js';
 import { esc, displayName, fDate, fDateTime } from '../util.js';
-import { S, enforcer, agencyOf, ctName, bookletSize, bookletActive, bookletCurrent, subscribe } from '../store.js';
+import { S, findAccount, agencyOf, ctName, bookletSize, bookletActive, bookletCurrent, subscribe } from '../store.js';
 import { icon, serial, pager, paginate, emptyState } from '../ui.js';
 import { kpi, bookletSplit, bookletBar, splitText } from './dash.js';
 
 const st = { agency: '', ctype: '', state: '', page: 1 };
 const STATE_LABEL = { done: 'stIssued', cancelled: 'stCancelled', voided: 'stVoided', open: 'notUsedYet' };
 
-const ownerName = b => { const e = enforcer(b.owner); return e ? displayName(e) : t('unknownEnforcer'); };
+const ownerName = b => { const e = findAccount(b.owner); return e ? displayName(e) : t('unknownEnforcer'); };
 
 export function bookletsView(root, ctx) {
   if (ctx.params[0]) return bookletDetail(root, ctx, ctx.params[0]);

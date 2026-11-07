@@ -1,11 +1,11 @@
 import { t, tn } from '../strings.js';
 import { esc, fullName, displayName, fDate, fDateTime, isToday, isThisMonth, fPhone, normName, downloadCsv, todayKey } from '../util.js';
-import { S, me, allEnforcers, enforcer, changeStatus, personName, subscribe, activeBooklets, bookletSize, ctName } from '../store.js';
+import { S, me, allEnforcers, enforcer, changeStatus, personName, subscribe, activeBooklets, bookletSize, ctName, roleLabel } from '../store.js';
 import { icon, toast, dialog, pager, paginate, emptyState, kv, menuMarkup, bindMenu } from '../ui.js';
 import { kpi, dailyChart, bookletSplit, bookletBar, splitText } from './dash.js';
 
-const STATUS_LABEL = { active: 'acActive', pending: 'acPending', rejected: 'acRejected', inactive: 'acInactive' };
-const statusTag = s => `<span class="acct acct-${s}">${esc(t(STATUS_LABEL[s]))}</span>`;
+export const STATUS_LABEL = { active: 'acActive', pending: 'acPending', rejected: 'acRejected', inactive: 'acInactive' };
+export const statusTag = s => `<span class="acct acct-${s}">${esc(t(STATUS_LABEL[s]))}</span>`;
 
 function counts(enfId) {
   const r = { today: { done: 0, cancelled: 0, voided: 0 }, month: { done: 0, cancelled: 0, voided: 0 } };
@@ -193,11 +193,11 @@ export function enforcersView(root, ctx) {
   ctx.onLeave(off);
 }
 
-function historyList(h) {
+export function historyList(h) {
   if (!h || !h.length) return `<p class="muted">${esc(t('noHistory'))}</p>`;
   const key = { approved: 'hApproved', rejected: 'hRejected', inactive: 'hInactive', active: 'hActive' };
   return `<ol class="hist">${[...h].reverse().map(x => `<li>
-    <span class="hist-what">${esc(t(key[x.action], { by: personName(x.by) }))}</span>
+    <span class="hist-what">${esc(x.as ? t(x.action === 'role' ? 'hRole' : 'hApprovedAs', { role: roleLabel(x.as, x.agency), by: personName(x.by) }) : t(key[x.action], { by: personName(x.by) }))}</span>
     <span class="hist-when">${esc(fDateTime(x.at))}</span>
     ${x.reason ? `<span class="hist-reason">${esc(t('reason'))}: ${esc(x.reason)}</span>` : ''}</li>`).join('')}</ol>`;
 }

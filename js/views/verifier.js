@@ -1,6 +1,6 @@
 import { t, tn } from '../strings.js';
 import { esc, fullName, displayName, fDateTime, downloadCsv, isoDateTime, fDayKey, dayKey, monthKey, fMonthKey, todayKey, isToday, isThisMonth, normName } from '../util.js';
-import { S, me, enforcer, agencyOf, ctName, markPaid, setUnpaid, validatePayment, personName, subscribe } from '../store.js';
+import { S, me, findAccount, agencyOf, ctName, markPaid, setUnpaid, validatePayment, personName, subscribe } from '../store.js';
 import { icon, serial, stamp, toast, dialog, pager, paginate, emptyState, dateBox, bindDateBox } from '../ui.js';
 import { citationDetail, violatorShort } from './citation.js';
 
@@ -19,8 +19,7 @@ function matches(c) {
     const byName = normName(fullName(c.violator || {})).includes(normName(q));
     if (!byNo && !byName) return false;
   }
-  const e = enforcer(c.owner);
-  if (st.agency && e?.agency !== st.agency) return false;
+  if (st.agency && agencyOf(c.owner)?.id !== st.agency) return false;
   if (st.ctype && c.ctype !== st.ctype) return false;
   if (st.outcome && c.status !== st.outcome) return false;
   if (st.pay === 'paid' && !(c.status === 'done' && c.payment)) return false;
@@ -119,7 +118,7 @@ export function vCitationsView(root, ctx) {
       ${pg.n ? `<div class="table-wrap"><table class="tbl tbl-cit">
         <thead><tr><th scope="col">${esc(t('colNo'))}</th><th scope="col">${esc(t('colType'))}</th><th scope="col">${esc(t('colEnforcer'))}</th><th scope="col">${esc(t('colViolator'))}</th><th scope="col">${esc(t('colOutcome'))}</th><th scope="col">${esc(t('colPayment'))}</th><th scope="col">${esc(t('colDate'))}</th></tr></thead>
         <tbody>${pg.slice.map(c => {
-          const e = enforcer(c.owner); const ag = agencyOf(c.owner);
+          const e = findAccount(c.owner); const ag = agencyOf(c.owner);
           return `<tr class="tr-link" data-href="#/v/citations/${c.no}">
             <th scope="row"><a href="#/v/citations/${c.no}">${serial(c.no)}</a></th>
             <td data-label="${esc(t('colType'))}">${esc(ctName(c.ctype))}</td>
@@ -150,7 +149,7 @@ function citationsCsv(list) {
   const outcome = { done: t('stIssued'), cancelled: t('stCancelled'), voided: t('stVoided') };
   const header = ['csvNo', 'csvType', 'csvEnforcer', 'csvAgency', 'csvOutcome', 'csvPayment', 'csvOr', 'csvDatePaid', 'csvIssued', 'csvViolator'].map(k => t(k));
   const rows = list.map(c => {
-    const e = enforcer(c.owner);
+    const e = findAccount(c.owner);
     return [
       c.no, ctName(c.ctype), e ? displayName(e) : c.owner, agencyOf(c.owner)?.name || '', outcome[c.status],
       c.status !== 'done' ? '' : c.payment ? t('stPaid') : t('stUnpaid'),
@@ -260,7 +259,7 @@ export function summaryView(root) {
   const render = () => {
     const p = sumState.period;
     const list = S.citations.filter(c => inPeriod(c, p));
-    const rows = S.ref.agencies.map(a => ({ a, s: calc(list.filter(c => enforcer(c.owner)?.agency === a.id)) }));
+    const rows = S.ref.agencies.map(a => ({ a, s: calc(list.filter(c => agencyOf(c.owner)?.id === a.id)) }));
     const tot = calc(list);
     const opt = (k, l) => `<option value="${k}" ${p === k ? 'selected' : ''}>${esc(t(l))}</option>`;
     root.innerHTML = `

@@ -28,8 +28,9 @@ Accounts from `data/enforcers.json` and `data/admins.json` accept any password (
 | Liza Fernandez | Office Admin, Traffic Enforcement | Overview |
 | Carlos Mendoza | Office Admin, Police | Overview |
 | Teresa Garcia | Verifier, Treasury Office | Summary |
+| John Paul Dapitanon | Super Admin, CICT Office | Accounts |
 
-New sign-ups (“Create an account”) are stored in this browser with a salted SHA-256 password hash and must be approved by their Agency's Office Admin.
+New sign-ups (“Create an account”) are stored in this browser with a salted SHA-256 password hash and must be approved by their Agency's Office Admin or the Super Admin. Agency is optional; sign-ups without one are seen only by the Super Admin, who can also approve anyone as Office Admin or Verifier and change roles later.
 
 The **Demo** button switches users and goes offline/online. It's for testing, not a product feature.
 

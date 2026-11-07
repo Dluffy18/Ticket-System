@@ -241,7 +241,7 @@ fieldset { border: 0; padding: 0; min-width: 0; }
 
 .main { outline: none; }
 .page { max-width: 640px; margin: 0 auto; padding: 20px var(--gut) 32px; }
-.role-office .page, .role-verifier .page { max-width: 1240px; }
+.role-office .page, .role-verifier .page, .role-super .page { max-width: 1240px; }
 .page:has(> .pf) { max-width: 1240px; } /* every Profile uses the wide page */
 
 @media (min-width: 900px) {
@@ -674,6 +674,16 @@ a.cell-name:hover { text-decoration: underline; }
   .cit-table { display: block; }
 }
 @media (min-width: 1100px) and (max-width: 1299px) { .cit-table .tbl th, .cit-table .tbl td { padding-left: 9px; padding-right: 9px; } }
+
+/* Super Admin: Accounts filters. Search on its own row on phones; one row from 760px. */
+.acc-filters { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-bottom: 14px; }
+.acc-filters .f-q { grid-column: 1 / -1; }
+.acc-filters .search { max-width: none; }
+@media (max-width: 519px) { .acc-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); } .acc-filters .field:last-child { grid-column: 1 / -1; } }
+@media (min-width: 760px) { .acc-filters { grid-template-columns: minmax(0, 2fr) repeat(3, minmax(0, 1fr)); max-width: 1000px; } .acc-filters .f-q { grid-column: auto; } }
+.acc-actions { padding-top: 6px; }
+@media (max-width: 599px) { .acc-actions { flex-direction: column-reverse; } .acc-actions .btn { width: 100%; } }
+.dlg-form .alert-warn { margin: 0; }
 
 /* Tables become stacked records on narrow screens */
 @media (max-width: 760px) {

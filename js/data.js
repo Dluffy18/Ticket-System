@@ -96,7 +96,7 @@ export function validate(ref) {
   ref.admins.forEach((x, i) => {
     const e = x.id || `#${i + 1}`;
     checkPerson(F.admins, x, i, 'gender');
-    if (!['office', 'verifier'].includes(x.role)) p(F.admins, e, '"role" must be "office" or "verifier".');
+    if (!['office', 'verifier', 'super'].includes(x.role)) p(F.admins, e, '"role" must be "office", "verifier" or "super".');
     if (x.role === 'office') {
       if (!agIds.has(x.agency)) p(F.admins, e, `Agency "${x.agency}" doesn’t exist.`);
       else if (officeByAgency.has(x.agency)) p(F.admins, e, `Agency ${x.agency} already has an Office Admin (${officeByAgency.get(x.agency)}).`);

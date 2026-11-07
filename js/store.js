@@ -9,6 +9,7 @@ import { t } from './strings.js';
 const LS_REG = 'vt.registrations';
 const LS_STATUS = 'vt.accountStatus';
 const LS_PW = 'vt.passwords';   // accountId -> { salt, hash, changedAt } after a Change password
+const LS_ROLES = 'vt.roles';   // accountId -> { kind, agency, enfAgency } given by the Super Admin
 const LS_AVATAR = 'vt.avatars'; // accountId -> profile picture (JPEG data URL), kept on this device
 const SS_SESSION = 'vt.session';
 
@@ -20,6 +21,7 @@ export const S = {
   violators: [],
   registrations: [],
   statusOverrides: {},
+  roles: {},
   passwords: {},
   avatars: {},
   online: true,
@@ -43,6 +45,7 @@ export function init(ref) {
   S.violators = ref.violators.map(v => ({ ...v }));
   S.registrations = lsGet(LS_REG, []);
   S.statusOverrides = lsGet(LS_STATUS, {});
+  S.roles = lsGet(LS_ROLES, {});
   S.passwords = lsGet(LS_PW, {});
   S.avatars = lsGet(LS_AVATAR, {});
   S.online = navigator.onLine !== false;
@@ -55,15 +58,22 @@ export function init(ref) {
 }
 
 // ------------------------------------------------------------------ accounts
-function enforcerFromJson(e) {
-  const o = S.statusOverrides[e.id] || {};
+// Accounts come from the JSON files or from sign-ups. Status decisions on JSON accounts
+// live in statusOverrides; roles the Super Admin gave live in S.roles.
+function fromJson(a, kind) {
+  const o = S.statusOverrides[a.id] || {};
   return {
-    ...e, kind: 'enforcer', source: 'json',
+    ...a, kind, source: 'json',
     status: o.status || 'active', reason: o.reason || '', history: o.history || [], registeredAt: null,
   };
 }
-function enforcerFromReg(r) {
-  return { ...r, kind: 'enforcer', source: 'reg' };
+// enfAgency: the office whose Citations they issued, kept after they stop being an Enforcer.
+function withRole(a) {
+  const r = S.roles[a.id];
+  if (!r) return a;
+  const position = r.kind === 'office' ? t('posOffice', { agency: S.ag.get(r.agency)?.name || '' })
+    : r.kind === 'verifier' ? t('posVerifier') : a.position;
+  return { ...a, kind: r.kind, agency: r.agency, enfAgency: r.enfAgency || '', position };
 }
 
 // Registrations, newest per full name (a re-registration replaces a rejected one).
@@ -73,13 +83,14 @@ function liveRegistrations() {
   return [...byName.values()];
 }
 
-export function allEnforcers() {
-  return [...S.ref.enforcers.map(enforcerFromJson), ...liveRegistrations().map(enforcerFromReg)];
-}
 export function allAccounts() {
-  const admins = S.ref.admins.map(a => ({ ...a, kind: a.role === 'verifier' ? 'verifier' : 'office', status: 'active', source: 'json' }));
-  return [...allEnforcers(), ...admins];
+  return [
+    ...S.ref.enforcers.map(e => fromJson(e, 'enforcer')),
+    ...liveRegistrations().map(r => ({ ...r, kind: 'enforcer', source: 'reg' })),
+    ...S.ref.admins.map(a => fromJson(a, a.role)),
+  ].map(withRole);
 }
+export function allEnforcers() { return allAccounts().filter(a => a.kind === 'enforcer'); }
 export function findAccount(id) { return allAccounts().find(a => a.id === id) || null; }
 export function enforcer(id) { return allEnforcers().find(e => e.id === id) || null; }
 export function personName(id) {
@@ -150,7 +161,7 @@ export function validateRegistration(f) {
   if (!f.first.trim()) err.first = t('errFirstRequired');
   if (!f.last.trim()) err.last = t('errLastRequired');
   if (!['M', 'F'].includes(f.gender)) err.gender = t('errGenderRequired');
-  if (!S.ag.has(f.agency)) err.agency = t('errAgencyRequired');
+  if (f.agency && !S.ag.has(f.agency)) err.agency = t('errAgencyRequired');
   if (!normPhone(f.contact)) err.contact = t('errContact');
   if (!f.address.trim()) err.address = t('errAddress');
   if ((f.password || '').length < 8) err.password = t('errPasswordShort');
@@ -171,7 +182,7 @@ export async function register(f) {
   const r = {
     id: 'R' + now.toString(36).toUpperCase() + Math.floor(Math.random() * 1296).toString(36).toUpperCase(),
     first: f.first.trim(), middle: f.middle.trim(), last: f.last.trim(), suffix: SUFFIXES.includes(f.suffix) ? f.suffix : '',
-    gender: f.gender, agency: f.agency, rank: f.rank.trim(), badge: f.badge.trim(),
+    gender: f.gender, agency: S.ag.has(f.agency) ? f.agency : '', rank: f.rank.trim(), badge: f.badge.trim(),
     contact: normPhone(f.contact), address: f.address.trim(),
     salt, hash, status: 'pending', reason: '', createdAt: now, registeredAt: now,
     history: [],
@@ -185,33 +196,91 @@ const MOVES = {
   'pending>active': 'approved', 'pending>rejected': 'rejected', 'rejected>active': 'approved',
   'active>inactive': 'inactive', 'inactive>active': 'active',
 };
+export const ROLES = ['enforcer', 'office', 'verifier'];
 
-export function changeStatus(adminId, enforcerId, to, reason = '') {
-  const admin = S.admins.get(adminId);
-  const e = enforcer(enforcerId);
-  if (!admin || admin.role !== 'office' || !e || e.agency !== admin.agency) return { error: t('errNotYourAgency') };
-  const action = MOVES[`${e.status}>${to}`];
-  if (!action) return { error: 'Not allowed.' };
+// "Enforcer · Police", "Office Admin · Police", "Verifier · Treasury Office", "Super Admin · CICT Office"
+export function roleLabel(kind, agency) {
+  const ag = S.ag.get(agency)?.name;
+  if (kind === 'enforcer') return ag ? t('roleEnforcerOf', { office: ag }) : t('roleEnforcer');
+  if (kind === 'office') return t('roleOfficeOf', { office: ag || '' });
+  if (kind === 'super') return t('roleSuper');
+  return t('roleVerifier');
+}
+
+// Who may decide on an account: the Super Admin on anyone but themselves; an Office Admin
+// on the Enforcers of their own office.
+export function canManage(actor, acc) {
+  if (!actor || !acc || actor.status !== 'active') return false;
+  if (actor.kind === 'super') return acc.id !== actor.id && acc.kind !== 'super';
+  return actor.kind === 'office' && acc.kind === 'enforcer' && !!acc.agency && acc.agency === actor.agency;
+}
+
+function saveDecision(acc, patch, entry) {
+  const rec = acc.source === 'reg' ? S.registrations.find(x => x.id === acc.id)
+    : (S.statusOverrides[acc.id] ||= { history: [] });
+  Object.assign(rec, patch);
+  rec.history = [...(rec.history || []), entry];
+  if (acc.source === 'reg') lsSet(LS_REG, S.registrations); else lsSet(LS_STATUS, S.statusOverrides);
+}
+
+export function changeStatus(actorId, accId, to, reason = '') {
+  const actor = findAccount(actorId);
+  const acc = findAccount(accId);
+  if (!canManage(actor, acc)) return { error: t(actor?.kind === 'super' ? 'errNotAllowed' : 'errNotYourAgency') };
+  const action = MOVES[`${acc.status}>${to}`];
+  if (!action) return { error: t('errNotAllowed') };
+  if (action === 'approved' && acc.kind === 'enforcer' && !S.ag.has(acc.agency)) return { error: t('errNeedOffice') };
   reason = to === 'rejected' ? String(reason || '').trim().slice(0, 200) : '';
-  const entry = { action, by: adminId, at: Date.now(), reason };
-  if (e.source === 'reg') {
-    const r = S.registrations.find(x => x.id === enforcerId);
-    r.status = to; r.reason = reason; r.history = [...(r.history || []), entry];
-    lsSet(LS_REG, S.registrations);
-  } else {
-    const o = S.statusOverrides[enforcerId] || { history: [] };
-    o.status = to; o.reason = reason; o.history = [...(o.history || []), entry];
-    S.statusOverrides[enforcerId] = o;
-    lsSet(LS_STATUS, S.statusOverrides);
-  }
-  const name = displayName(e);
+  saveDecision(acc, { status: to, reason }, { action, by: actorId, at: Date.now(), reason });
   const msg = { approved: 'msgApproved', rejected: 'msgRejected', inactive: 'msgInactive', active: 'msgActive' }[action];
   emit('accounts');
-  return { ok: true, message: t(msg, { name }) };
+  return { ok: true, message: t(msg, { name: displayName(acc) }) };
+}
+
+function giveRole(acc, kind, agency) {
+  const enfAgency = acc.kind === 'enforcer' ? acc.agency : acc.enfAgency || '';
+  S.roles[acc.id] = { kind, agency: kind === 'verifier' ? '' : agency, enfAgency: kind === 'enforcer' ? '' : enfAgency };
+  lsSet(LS_ROLES, S.roles);
+}
+function roleCheck(actorId, acc, kind, agency) {
+  if (findAccount(actorId)?.kind !== 'super' || !canManage(findAccount(actorId), acc)) return t('errNotAllowed');
+  if (!ROLES.includes(kind)) return t('errNotAllowed');
+  if (kind !== 'verifier' && !S.ag.has(agency)) return t('errNeedOffice');
+  return '';
+}
+
+// Super Admin: approve a Pending (or Rejected) sign-up as Enforcer, Office Admin or Verifier.
+export function approveAs(actorId, accId, kind, agency) {
+  const acc = findAccount(accId);
+  const err = roleCheck(actorId, acc, kind, agency);
+  if (err) return { error: err };
+  if (!['pending', 'rejected'].includes(acc.status)) return { error: t('errNotAllowed') };
+  giveRole(acc, kind, agency);
+  saveDecision(acc, { status: 'active', reason: '' }, { action: 'approved', as: kind, agency: kind === 'verifier' ? '' : agency, by: actorId, at: Date.now(), reason: '' });
+  emit('accounts');
+  return { ok: true, message: t('msgApprovedAs', { name: displayName(acc), role: roleLabel(kind, agency) }) };
+}
+
+// Super Admin: change an approved account's role or office. Their Citations and Booklets stay.
+export function changeRole(actorId, accId, kind, agency) {
+  const acc = findAccount(accId);
+  const err = roleCheck(actorId, acc, kind, agency);
+  if (err) return { error: err };
+  if (!['active', 'inactive'].includes(acc.status)) return { error: t('errNotAllowed') };
+  if (kind === acc.kind && (kind === 'verifier' || agency === acc.agency)) return { error: t('errSameRole') };
+  giveRole(acc, kind, agency);
+  saveDecision(acc, {}, { action: 'role', as: kind, agency: kind === 'verifier' ? '' : agency, by: actorId, at: Date.now(), reason: '' });
+  emit('accounts');
+  return { ok: true, message: t('msgRoleChanged', { name: displayName(acc), role: roleLabel(kind, agency) }) };
 }
 
 // ------------------------------------------------------------------ reference helpers
-export function agencyOf(enfId) { const e = enforcer(enfId); return e ? S.ag.get(e.agency) : null; }
+// The office an account issues (or issued) Citations for.
+export function agencyOf(id) {
+  const a = findAccount(id);
+  if (!a) return null;
+  return S.ag.get(a.kind === 'enforcer' ? a.agency : a.enfAgency || a.agency) || null;
+}
 export function typesFor(enfId) { const a = agencyOf(enfId); return a ? a.citationTypes.map(id => S.ct.get(id)) : []; }
 export function violationsFor(enfId, ctype) {
   const a = agencyOf(enfId);
@@ -558,7 +627,7 @@ function seed() {
   const gpsRnd = rng(7);
   const gpsNear = () => matiGps(gpsRnd);
   const add = (b, no, status, at, opts = {}) => {
-    const ag = S.ag.get(enforcer(b.owner).agency);
+    const ag = agencyOf(b.owner);
     const pool = ag.violationTypes.filter(id => S.vt.get(id).citationType === b.ctype);
     let rec = {
       no, owner: b.owner, ctype: b.ctype, bookletId: b.id, status, at, synced: true,
@@ -647,16 +716,19 @@ function seed() {
 
   seedHistory(now);
 
-  // Two Police sign-ups waiting for approval. Kept in memory only, and skipped once the
+  // Sign-ups waiting for approval. Kept in memory only, and skipped once the
   // Office Admin has approved or rejected them (that decision is saved with their id).
   [
     { id: 'R-SAMPLE-1', first: 'Jessa', middle: 'Villar', last: 'Obando', gender: 'F', rank: 'Patrolwoman', badge: 'PNP-05441',
       contact: '+639171234531', address: '27 Mabini Avenue, Barangay Central, Sample City', createdAt: now - DAY - 5 * 3600000 },
     { id: 'R-SAMPLE-2', first: 'Leonardo', middle: 'Pineda', last: 'Quijano', gender: 'M', rank: 'Patrolman', badge: 'PNP-05458',
       contact: '+639171234532', address: '15 Rizal Street, Barangay Dahican, Sample City', createdAt: now - 3 * 3600000 },
+    // No office picked: only the Super Admin sees this one (e.g. to approve as Verifier).
+    { id: 'R-SAMPLE-3', first: 'Rowena', middle: 'Lim', last: 'Sarmiento', gender: 'F', rank: '', badge: '', agency: '',
+      contact: '+639171234533', address: '8 Quezon Street, Barangay Poblacion, Sample City', createdAt: now - 2 * 3600000 },
   ].forEach(r => {
     if (S.registrations.some(x => x.id === r.id)) return;
-    S.registrations.push({ ...r, suffix: '', agency: 'POLICE', status: 'pending', reason: '', registeredAt: r.createdAt, history: [] });
+    S.registrations.push({ suffix: '', agency: 'POLICE', ...r, status: 'pending', reason: '', registeredAt: r.createdAt, history: [] });
   });
 }
 
@@ -743,8 +815,7 @@ function seedHistory(now) {
   ];
   const SIZE = 25;
   PLAN.forEach(([owner, ctype, perDay, idleDays, spoilShare]) => {
-    const e = enforcer(owner);
-    const ag = S.ag.get(e.agency);
+    const ag = agencyOf(owner);
     const pool = ag.violationTypes.filter(id => S.vt.get(id).citationType === ctype);
     // Their current Booklets stay the active ones, so the history fills whole Booklets only.
     const keepsCurrent = idleDays === null;

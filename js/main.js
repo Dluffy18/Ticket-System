@@ -1,7 +1,7 @@
 import { t, tn } from './strings.js';
 import { esc, displayName } from './util.js';
 import { loadReference } from './data.js';
-import { S, init, me, signOut, startSession, setOnline, subscribe, activeBooklets, findAccount, enforcer, agencyOf } from './store.js';
+import { S, init, me, signOut, startSession, setOnline, subscribe, activeBooklets, findAccount, enforcer, agencyOf, roleLabel } from './store.js';
 import { icon, toast } from './ui.js';
 import { applyTheme, setTheme, currentTheme } from './views/common.js';
 import { signInView, registerView } from './views/auth.js';
@@ -10,6 +10,7 @@ import { profilePage } from './views/profile.js';
 import { overviewView, enforcersView, registrationsView, pendingCount } from './views/admin.js';
 import { vCitationsView, summaryView } from './views/verifier.js';
 import { bookletsView } from './views/booklets.js';
+import { accountsView, superPendingCount } from './views/super.js';
 
 const app = document.getElementById('app');
 let leaveFns = [];
@@ -35,20 +36,30 @@ const NAV = {
     ['booklets', '#/booklets', 'navBooklets', 'book'],
     ['profile', '#/profile', 'navProfile', 'user'],
   ],
+  super: [
+    ['accounts', '#/accounts', 'navAccounts', 'users'],
+    ['profile', '#/profile', 'navProfile', 'user'],
+  ],
 };
 
 const ROUTES = {
   enforcer: { home: homeView, type: typeView, record: recordView, citations: citationsView, stats: statsView, profile: profilePage },
   office: { overview: overviewView, enforcers: enforcersView, registrations: registrationsView, profile: profilePage },
   verifier: { v: (root, ctx) => vCitationsView(root, { ...ctx, params: ctx.params.slice(1) }), summary: summaryView, booklets: bookletsView, profile: profilePage },
+  super: { accounts: accountsView, profile: profilePage },
 };
 
 function defaultRoute(u) {
   if (!u) return '#/signin';
   if (u.kind === 'office') return '#/overview';
   if (u.kind === 'verifier') return '#/summary';
+  if (u.kind === 'super') return '#/accounts';
   return activeBooklets(u.id).length ? '#/home' : '#/type';
 }
+
+// Sign-ups waiting: on Registrations for an Office Admin, on Accounts for the Super Admin.
+const BADGE_KEYS = ['registrations', 'accounts'];
+const waitingCount = () => pendingCount() + superPendingCount();
 
 function go(hash, message) {
   flash = message || null;
@@ -58,8 +69,9 @@ function go(hash, message) {
 function shell(u, active, focus) {
   const nav = NAV[u.kind];
   const ag = u.kind === 'enforcer' ? agencyOf(u.id) : u.agency ? S.ag.get(u.agency) : null;
-  const sub = u.kind === 'enforcer' ? `${ag?.name || ''}${u.badge ? ' · ' + u.badge : ''}` : u.kind === 'office' ? `${t('roleOffice')} · ${ag?.name || ''}` : t('roleVerifier');
-  const waiting = u.kind === 'office' ? pendingCount() : 0;
+  const sub = u.kind === 'enforcer' ? `${ag?.name || ''}${u.badge ? ' · ' + u.badge : ''}` : u.kind === 'office' ? `${t('roleOffice')} · ${ag?.name || ''}`
+    : u.kind === 'super' ? t('roleSuper') : t('roleVerifier');
+  const waiting = waitingCount();
   return `
   <div class="app role-${u.kind} ${focus ? 'is-focus' : ''}">
     <header class="topbar">
@@ -71,7 +83,7 @@ function shell(u, active, focus) {
     ${focus ? '' : `<nav class="nav" aria-label="Main">
       ${nav.map(([key, href, label, ic, long]) => `<a class="nav-a ${key === 'home' ? 'nav-home' : ''} ${key === active ? 'on' : ''}" href="${href}" ${key === active ? 'aria-current="page"' : ''}>
         ${icon(ic)}<span class="nav-l"><span class="nav-short">${esc(t(label))}</span>${long ? `<span class="nav-long">${esc(t(long))}</span>` : ''}</span>
-        ${key === 'registrations' && waiting ? `<span class="badge" aria-label="${waiting} waiting">${waiting}</span>` : ''}</a>`).join('')}
+        ${BADGE_KEYS.includes(key) && waiting ? `<span class="badge" aria-label="${waiting} waiting">${waiting}</span>` : ''}</a>`).join('')}
       <button type="button" class="nav-a nav-out" data-signout>${icon('logout')}<span class="nav-l">${esc(t('signOut'))}</span></button>
     </nav>`}
     <main id="main" class="main" tabindex="-1"><div class="page" id="page"></div></main>
@@ -156,9 +168,9 @@ subscribe((kind, d) => {
     else toast(d.synced ? tn('backOnlineSynced', d.synced) : t('backOnline'));
   }
   if (kind === 'accounts') {
-    const b = document.querySelector('.nav-a[href="#/registrations"] .badge');
-    const n = pendingCount();
-    const a = document.querySelector('.nav-a[href="#/registrations"]');
+    const a = document.querySelector('.nav-a[href="#/registrations"], .nav-a[href="#/accounts"]');
+    const b = a?.querySelector('.badge');
+    const n = waitingCount();
     if (a) { if (b) b.remove(); if (n) a.insertAdjacentHTML('beforeend', `<span class="badge">${n}</span>`); }
   }
 });
@@ -175,10 +187,9 @@ function renderDemo() {
   }
   const open = host.dataset.open === '1';
   const cur = S.session?.id;
-  const people = [
-    ...S.ref.enforcers.map(e => ({ id: e.id, label: displayName(e), sub: S.ag.get(e.agency).name })),
-  ];
-  const admins = S.ref.admins.map(a => ({ id: a.id, label: displayName(a), sub: a.role === 'verifier' ? t('roleVerifier') : `${t('roleOffice')} · ${S.ag.get(a.agency).name}` }));
+  const now = id => findAccount(id);
+  const people = S.ref.enforcers.map(e => now(e.id)).map(a => ({ id: a.id, label: displayName(a), sub: a.kind === 'enforcer' ? S.ag.get(a.agency)?.name || '' : roleLabel(a.kind, a.agency) }));
+  const admins = S.ref.admins.map(a => now(a.id)).map(a => ({ id: a.id, label: displayName(a), sub: roleLabel(a.kind, a.agency) }));
   const btn = p => `<button type="button" class="demo-p ${p.id === cur ? 'on' : ''}" data-as="${p.id}"><span>${esc(p.label)}</span><small>${esc(p.sub)}</small></button>`;
   host.innerHTML = `
     <button type="button" class="demo-fab" aria-expanded="${open}" aria-controls="demo-panel">${icon('sliders')}<span>${esc(t('demo'))}</span>${S.online ? '' : `<span class="demo-dot" aria-label="${esc(t('offline'))}"></span>`}</button>

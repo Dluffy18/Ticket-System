@@ -38,7 +38,7 @@ export function profilePage(root, ctx) {
   const u = me();
   const isEnf = u.kind === 'enforcer';
   const ag = isEnf ? agencyOf(u.id) : u.agency ? S.ag.get(u.agency) : null;
-  const roleName = u.kind === 'verifier' ? t('roleVerifier') : u.kind === 'office' ? t('roleOffice') : t('roleEnforcer');
+  const roleName = t({ verifier: 'roleVerifier', office: 'roleOffice', super: 'roleSuper' }[u.kind] || 'roleEnforcer');
   const sub = isEnf ? (u.rank || roleName) : (u.position || roleName);
   const name = [u.first, u.middle, u.last, u.suffix].filter(Boolean).join(' ');
 
@@ -55,7 +55,7 @@ export function profilePage(root, ctx) {
     ${ag ? item(t('agency'), ag.name, 'pf-wide') : ''}
     ${isEnf ? item(t('rankPosition'), u.rank) + item(t('badgeId'), u.badge) : item(t('position'), u.position)}
   </dl>
-  <p class="pf-note">${esc(t(isEnf ? 'askOfficeAdmin' : 'askIctOffice'))}</p>`;
+  ${u.kind === 'super' ? '' : `<p class="pf-note">${esc(t(isEnf ? 'askOfficeAdmin' : 'askIctOffice'))}</p>`}`;
   const types = isEnf ? card(t('canIssueTitle'), `<ul class="pf-chips">${typesFor(u.id)
     .map(c => `<li class="pf-chip">${icon('check')}<span>${esc(c.name)}</span></li>`).join('')}</ul>`, '', 'pf-types') : '';
 
