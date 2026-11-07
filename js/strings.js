@@ -64,7 +64,7 @@ const en = {
   rankPosition: 'Rank / Position',
   badgeId: 'Badge or ID number',
   contactNumber: 'Contact number',
-  contactHint: 'Philippine mobile, 09XX XXX XXXX or +639XX XXX XXXX',
+  contactHint: 'Mobile: 09XX XXX XXXX or +639XX XXX XXXX',
   address: 'Address',
   confirmPassword: 'Confirm password',
   passwordHint: 'At least 8 characters',
