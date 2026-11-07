@@ -40,6 +40,10 @@ _Avoid_: Face photo, selfie, mugshot
 A consecutive range of Control Numbers for one Citation Type, handed to one Enforcer by the Treasury Office.
 _Avoid_: Pad, stack
 
+**Registered (Booklet)**:
+When the Enforcer entered the Booklet's first and last Control Number in the app, before using it. Not when the Treasury Office handed it over; that moment isn't recorded.
+_Avoid_: Received, issued (for a Booklet)
+
 **Repeat Violator**:
 A Violator Record with two or more Done Citations. Cancelled and Voided forms don't count, because no Citation was issued on them.
 _Avoid_: Repeat offender, habitual violator

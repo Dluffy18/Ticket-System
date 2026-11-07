@@ -314,7 +314,7 @@ const en = {
   agoToday: 'today',
   agoYesterday: 'yesterday',
   agoDays: '{n} days ago',
-  bkReceived: 'Received {date}',
+  bkRegisteredOn: 'Registered {date}',
   statCitations: 'Citations',
   statViolations: 'Violations recorded',
   statCancelled: 'Cancelled forms',

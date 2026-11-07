@@ -277,7 +277,7 @@ function enforcerDetail(root, ctx, id) {
               const sp = bookletSplit(b, own), size = bookletSize(b);
               return `<li class="bkh">
                 <div class="bkh-top"><span class="strong">${esc(ctName(b.ctype))}</span><span class="bkh-range">${b.from}–${b.to}</span></div>
-                <p class="bkh-meta">${esc(t('bkReceived', { date: fDate(b.at) }))}</p>
+                <p class="bkh-meta">${esc(t('bkRegisteredOn', { date: fDate(b.at) }))}</p>
                 ${bookletBar(sp, size)}
                 <div class="bkh-top"><span class="bkh-meta">${esc(splitText(sp))}</span><b class="small">${esc(tn('formsLeftN', sp.open))}</b></div></li>`;
             }).join('')}</ul>` : `<p class="muted">${esc(t('noBookletInHand'))}</p>`}
