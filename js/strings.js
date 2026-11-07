@@ -366,7 +366,6 @@ const en = {
   acActive: 'Active', acPending: 'Pending', acRejected: 'Rejected', acInactive: 'Inactive',
   searchEnforcers: 'Name, badge, rank',
   colName: 'Name', colStatus: 'Status', colToday: 'Today', colMonth: 'This month',
-  issuedUnder: '{c} cancelled · {v} voided',
   totalIssued: 'Total issued',
   showingEnf: 'Showing {a}–{b} of {n} Enforcers, A–Z by name.',
   showingEnfNone: 'Showing 0 of 0 Enforcers.',

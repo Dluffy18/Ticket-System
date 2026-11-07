@@ -638,7 +638,6 @@ a.row:hover { background: color-mix(in srgb, var(--sheet) 60%, transparent); }
 a.cell-name:hover { text-decoration: underline; }
 .cell-sub { display: block; font-size: .8125rem; color: var(--ink-3); font-weight: 400; margin-top: 2px; }
 .n-main { display: block; font-weight: 700; font-size: 1rem; }
-.n-sub { display: block; font-size: .75rem; color: var(--ink-3); white-space: nowrap; }
 .cell-actions { white-space: nowrap; text-align: right; }
 .cell-actions .btn + .btn { margin-left: 6px; }
 
@@ -686,7 +685,6 @@ a.cell-name:hover { text-decoration: underline; }
   .tbl tfoot th, .tbl tfoot td { border: 0; }
   .tbl-enf tr { grid-template-columns: 6.5em minmax(0, 1fr) minmax(0, 1fr); }
   .tbl-enf tfoot th { grid-column: 1; align-self: center; }
-  .tbl-enf .n-sub { white-space: normal; }
   .tbl-bk .bk-prog { grid-column: 1 / -1; min-width: 0; }
   .cell-actions { grid-column: 1 / -1; text-align: left; display: flex !important; gap: 8px; margin-top: 4px; }
   .cell-actions .btn { flex: 1; }

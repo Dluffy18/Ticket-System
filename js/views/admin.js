@@ -17,8 +17,9 @@ function counts(enfId) {
   return r;
 }
 
+// Issued only; Cancelled and Voided are on the Enforcer's own page and in the CSV.
 function cell(x) {
-  return `<span class="n-main">${x.done}</span>${x.cancelled || x.voided ? `<span class="n-sub">${esc(t('issuedUnder', { c: x.cancelled, v: x.voided }))}</span>` : ''}`;
+  return `<span class="n-main">${x.done}</span>`;
 }
 
 const agencyEnforcers = () => {
