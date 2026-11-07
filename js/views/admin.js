@@ -229,6 +229,12 @@ function enforcerDetail(root, ctx, id) {
     }
     const k = counts(e.id);
     const own = S.citations.filter(c => c.owner === e.id);
+    const all = { done: 0, cancelled: 0, voided: 0 };
+    own.forEach(c => { all[c.status]++; });
+    // Last form used (any outcome), so a 0 for This month explains itself.
+    const lastAt = own.reduce((m, c) => Math.max(m, c.at), 0);
+    const ago = d => d <= 0 ? t('agoToday') : d === 1 ? t('agoYesterday') : t('agoDays', { n: d });
+    const lastLine = lastAt ? t('lastCitation', { date: fDate(lastAt), ago: ago(Math.floor((Date.now() - lastAt) / 86400000)) }) : t('lastCitationNone');
     const books = activeBooklets(e.id);
     const acts = {
       pending: [['rejected', t('reject'), 'btn-danger-ghost'], ['active', t('approve'), 'btn-primary']],
@@ -259,7 +265,9 @@ function enforcerDetail(root, ctx, id) {
               <tbody>
                 <tr><th scope="row">${esc(t('colToday'))}</th><td class="n">${k.today.done}</td><td class="n">${k.today.cancelled}</td><td class="n">${k.today.voided}</td></tr>
                 <tr><th scope="row">${esc(t('colMonth'))}</th><td class="n">${k.month.done}</td><td class="n">${k.month.cancelled}</td><td class="n">${k.month.voided}</td></tr>
+                <tr><th scope="row">${esc(t('allTime'))}</th><td class="n">${all.done}</td><td class="n">${all.cancelled}</td><td class="n">${all.voided}</td></tr>
               </tbody></table></div>
+            <p class="last-cit">${esc(lastLine)}</p>
           </section>
         </div>
         <div class="det-dash">
@@ -269,6 +277,7 @@ function enforcerDetail(root, ctx, id) {
               const sp = bookletSplit(b, own), size = bookletSize(b);
               return `<li class="bkh">
                 <div class="bkh-top"><span class="strong">${esc(ctName(b.ctype))}</span><span class="bkh-range">${b.from}–${b.to}</span></div>
+                <p class="bkh-meta">${esc(t('bkReceived', { date: fDate(b.at) }))}</p>
                 ${bookletBar(sp, size)}
                 <div class="bkh-top"><span class="bkh-meta">${esc(splitText(sp))}</span><b class="small">${esc(tn('formsLeftN', sp.open))}</b></div></li>`;
             }).join('')}</ul>` : `<p class="muted">${esc(t('noBookletInHand'))}</p>`}

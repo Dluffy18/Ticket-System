@@ -1339,6 +1339,8 @@ body:has(.sm) { background: var(--ground-2); }
 .bkh-top { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; align-items: baseline; }
 .bkh-range { font-family: var(--mono); font-weight: 700; color: var(--serial); }
 .bkh-meta { font-size: .8125rem; color: var(--ink-2); }
+.det-cols > .sec { align-content: start; }
+.last-cit { margin-top: 10px; font-size: .875rem; color: var(--ink-2); font-weight: 600; }
 @media (min-width: 900px) { .det-dash { grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr); align-items: start; } }
 
 /* Verifier Booklets */
