@@ -12,7 +12,7 @@ const STATUS_LABEL = { done: 'stIssued', cancelled: 'stCancelled', voided: 'stVo
 // Count tile. `href` makes the footer a link.
 // A full-color count tile, the same look as the Verifier Summary tiles.
 // The bottom bar only appears when the tile links somewhere.
-export function kpi({ kind, label, n, ic, sub = '', href = '', linkText = '' }) {
+export function kpi({ kind, label, n, ic, sub = '', href = '', linkText = '', linkAttrs = '' }) {
   return `
   <section class="kpi sm-tile sm-tile-${kind}">
     <div class="sm-tile-body">
@@ -21,7 +21,7 @@ export function kpi({ kind, label, n, ic, sub = '', href = '', linkText = '' }) 
       ${sub ? `<p class="sm-tile-sub">${esc(sub)}</p>` : ''}
       ${ic ? `<span class="sm-tile-ic" aria-hidden="true">${icon(ic)}</span>` : ''}
     </div>
-    ${href ? `<a class="sm-tile-foot" href="${href}"><span>${esc(linkText)}</span>${icon('chevR')}</a>` : ''}
+    ${href ? `<a class="sm-tile-foot" href="${href}" ${linkAttrs}><span>${esc(linkText)}</span>${icon('chevR')}</a>` : ''}
   </section>`;
 }
 

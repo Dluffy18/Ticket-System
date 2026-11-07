@@ -8,6 +8,7 @@ import {
 import { icon, serial, stamp, toast, dialog, pager, paginate, emptyState, kv, unsyncedTag, menuMarkup, bindMenu, setMenuValue, dateBox, bindDateBox, fitLines } from '../ui.js';
 import { takePhoto } from '../camera.js';
 import { citationDetail, rowSummary, violatorShort, photoGrid, violationList, photoWhat } from './citation.js';
+import { kpi, dailyChart } from './dash.js';
 
 const PHOTO_LABEL = { form: 'photoForm', id: 'photoId', violator: 'photoViolator', plate: 'photoPlate' };
 const myCitations = id => S.citations.filter(c => c.owner === id);
@@ -477,7 +478,10 @@ export function recordView(root, ctx) {
 }
 
 // ------------------------------------------------------------------ Citations (own)
-const listState = { status: 'all', ctype: '', day: '', page: 1 };
+// when: '' all dates, 'today', 'month' (this month) or 'day' (the day in `day`)
+const listState = { status: 'all', ctype: '', when: '', day: '', page: 1 };
+const inWhen = c => listState.when === 'today' ? isToday(c.at) : listState.when === 'month' ? isThisMonth(c.at)
+  : listState.when === 'day' && listState.day ? dayKey(c.at) === listState.day : true;
 
 export function citationsView(root, ctx) {
   const u = me();
@@ -488,7 +492,7 @@ export function citationsView(root, ctx) {
 
   const render = () => {
     const mine = myCitations(u.id);
-    const base = mine.filter(c => (!listState.ctype || c.ctype === listState.ctype) && (!listState.day || dayKey(c.at) === listState.day));
+    const base = mine.filter(c => (!listState.ctype || c.ctype === listState.ctype) && inWhen(c));
     const count = { all: base.length, done: 0, cancelled: 0, voided: 0, unsynced: 0 };
     base.forEach(c => { count[c.status]++; if (!c.synced) count.unsynced++; });
     const filt = base.filter(c => listState.status === 'all' ? true : listState.status === 'unsynced' ? !c.synced : c.status === listState.status)
@@ -501,7 +505,7 @@ export function citationsView(root, ctx) {
     if (!pg.n) {
       if (!mine.length) empty = emptyState(t('emptyAllTitle'), t('emptyAllBody'));
       else if (listState.status === 'unsynced') empty = emptyState(t('emptySyncTitle'), t('emptySyncBody'), 'check');
-      else if (listState.day) empty = emptyState(t('emptyDayTitle'), t('emptyDayBody'), 'calendar');
+      else if (listState.when === 'today' || (listState.when === 'day' && listState.day)) empty = emptyState(t('emptyDayTitle'), t('emptyDayBody'), 'calendar');
       else empty = emptyState(t('emptyFilterTitle'), t('emptyFilterBody'), 'search');
     }
 
@@ -519,8 +523,11 @@ export function citationsView(root, ctx) {
         ${multi ? `<label class="field f-ctype"><span class="lbl">${esc(t('citationType'))}</span>
           <select class="input" name="ctype"><option value="">${esc(t('allTypes'))}</option>${types.map(c => `<option value="${c.id}" ${listState.ctype === c.id ? 'selected' : ''}>${esc(c.name)}</option>`).join('')}</select></label>` : ''}
         <div class="field"><span class="lbl" id="status-lbl">${esc(t('colStatus'))}</span>${statusMenu}</div>
-        <div class="field"><label class="lbl" for="f-day">${esc(t('day'))}</label>
-          ${dateBox({ id: 'f-day', name: 'day', value: listState.day, clearable: true, attrs: `max="${todayKey()}"` })}</div>
+        <label class="field"><span class="lbl">${esc(t('date'))}</span>
+          <select class="input" name="when">${[['', t('allDates')], ['today', t('today')], ['month', t('thisMonth')], ['day', t('aDay')]]
+            .map(([v, l]) => `<option value="${v}" ${listState.when === v ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select></label>
+        ${listState.when === 'day' ? `<div class="field f-day"><label class="lbl" for="f-day">${esc(t('day'))}</label>
+          ${dateBox({ id: 'f-day', name: 'day', value: listState.day, clearable: true, attrs: `max="${todayKey()}"` })}</div>` : ''}
       </div>
       <p class="showing">${esc(pg.n ? t('showing', { a: pg.a, b: pg.b, n: pg.n }) : t('showingNone'))}</p>
       ${pg.n ? `<ul class="rows rows-cit">${pg.slice.map(c => `
@@ -548,11 +555,17 @@ export function citationsView(root, ctx) {
     }, ctx.onLeave);
     root.querySelector('[data-unsynced]')?.addEventListener('click', () => { listState.status = 'unsynced'; listState.page = 1; render(); });
     root.querySelector('[name=ctype]')?.addEventListener('change', e => { listState.ctype = e.target.value; listState.page = 1; render(); });
-    root.querySelector('[name=day]').addEventListener('change', e => {
+    root.querySelector('[name=when]').addEventListener('change', e => {
+      listState.when = e.target.value; if (listState.when !== 'day') listState.day = '';
+      listState.page = 1; render();
+      root.querySelector(listState.when === 'day' ? '#f-day' : '[name=when]')?.focus();
+    });
+    root.querySelector('[name=day]')?.addEventListener('change', e => {
       const v = e.target.value;
       listState.day = v && v <= todayKey() ? v : ''; listState.page = 1; render();
     });
-    bindDateBox(root.querySelector('.cit-filters [data-datebox]'), () => { listState.day = ''; listState.page = 1; render(); root.querySelector('#f-day')?.focus(); });
+    const box = root.querySelector('.cit-filters [data-datebox]');
+    if (box) bindDateBox(box, () => { listState.day = ''; listState.page = 1; render(); root.querySelector('#f-day')?.focus(); });
     root.querySelectorAll('[data-page]').forEach(b => b.addEventListener('click', () => { listState.page = Number(b.dataset.page); render(); root.querySelector('.showing')?.scrollIntoView({ block: 'nearest' }); }));
     fitLines(root);
   };
@@ -579,61 +592,100 @@ function citationDetailView(root, ctx, no) {
 }
 
 // ------------------------------------------------------------------ Stats
+const statsState = { period: 'today' };
+// Donut and Booklet colors; the last one is for "Other".
+const V_COLORS = ['var(--v1)', 'var(--v2)', 'var(--v3)', 'var(--v4)', 'var(--v5)', 'var(--v6)'];
+const TOP_N = 5;
+
 export function statsView(root) {
   const u = me();
   const types = typesFor(u.id);
-  const mine = myCitations(u.id);
-  const calc = list => {
+  const render = () => {
+    const mine = myCitations(u.id);
+    const p = statsState.period;
+    const list = mine.filter(c => (p === 'today' ? isToday(c.at) : isThisMonth(c.at)));
     const done = list.filter(c => c.status === 'done');
-    return {
+    const s = {
       citations: done.length,
       violations: done.reduce((n, c) => n + c.violations.length, 0),
       cancelled: list.filter(c => c.status === 'cancelled').length,
       voided: list.filter(c => c.status === 'voided').length,
     };
+    const unsynced = mine.filter(c => !c.synced && isToday(c.at)).length;
+    const periodWord = t(p === 'today' ? 'today' : 'thisMonth');
+
+    // Tiles: "View citations" opens the Citations list showing what the tile counted.
+    const TILES = [
+      ['citations', 'statCitations', 'file', 'done'],
+      ['violations', 'statViolations', 'alert', 'done'],
+      ['cancelled', 'statCancelled', 'fileX', 'cancelled'],
+      ['voided', 'statVoided', 'ban', 'voided'],
+    ];
+    const tiles = TILES.map(([k, l, ic, status]) => kpi({
+      kind: 'st-' + k, ic, label: t(l), n: s[k], href: '#/citations', linkText: t('viewCitations'),
+      linkAttrs: `data-go="${status}" aria-label="${esc(t('viewCitationsOf', { what: t(l) }))}"`,
+    })).join('');
+
+    // Violations in the period, most first. The donut shows the top 5 and "Other".
+    const per = new Map();
+    done.forEach(c => c.violations.forEach(v => per.set(v, (per.get(v) || 0) + 1)));
+    const ranked = [...per.entries()].sort((x, y) => y[1] - x[1] || vtName(x[0]).localeCompare(vtName(y[0])));
+    const slices = ranked.slice(0, TOP_N).map(([, n], i) => ({ n, c: V_COLORS[i] }));
+    const rest = ranked.slice(TOP_N).reduce((n, [, k]) => n + k, 0);
+    if (rest) slices.push({ n: rest, c: V_COLORS[TOP_N] });
+    const R = 80, C = 2 * Math.PI * R;
+    let at = 0;
+    const arcs = slices.map(sl => {
+      const len = sl.n / s.violations * C, gap = slices.length > 1 ? Math.min(2, len / 3) : 0;
+      const arc = `<circle r="${R}" cx="100" cy="100" style="--c:${sl.c}" stroke-dasharray="${len - gap} ${C - len + gap}" stroke-dashoffset="${-at}"/>`;
+      at += len;
+      return arc;
+    }).join('');
+    const donut = `
+      <section class="sm-card st-donut-card">
+        <div class="st-card-head"><h2 class="sm-h">${esc(t('violationsTitle'))}</h2><span class="muted small">${esc(periodWord)}</span></div>
+        <div class="sm-donut st-donut">
+          <svg viewBox="0 0 200 200" aria-hidden="true" focusable="false"><g transform="rotate(-90 100 100)">
+            <circle r="${R}" cx="100" cy="100" class="sm-ring"/>${arcs}</g></svg>
+          <p class="sm-donut-mid"><b>${s.violations}</b>${esc(t('violationsRecordedShort'))}</p>
+        </div>
+        ${ranked.length ? `<ul class="st-vlist">${ranked.map(([id, n], i) => `
+          <li><i class="sm-dot" style="--c:${V_COLORS[Math.min(i, TOP_N)]}"></i><span>${esc(vtName(id))}</span><b>${n}</b></li>`).join('')}</ul>`
+          : `<p class="muted st-none">${esc(t('noViolationsYet'))}</p>`}
+      </section>`;
+
+    // One card per Citation Type the Enforcer can issue.
+    const active = types.filter(ct => activeBooklet(u.id, ct.id)).length;
+    const bookCards = types.map((ct, i) => {
+      const b = activeBooklet(u.id, ct.id);
+      if (!b) return `<li class="st-bk is-off"><p class="st-bk-name"><i class="sm-dot"></i>${esc(ct.name)}</p>
+        <p class="st-bk-n"><b>—</b></p><div class="st-bk-bar"></div><p class="st-bk-sub">${esc(t('noActiveBooklet'))}</p></li>`;
+      const size = bookletSize(b), left = size - bookletUsed(b);
+      return `<li class="st-bk" style="--c:${V_COLORS[i % TOP_N]}"><p class="st-bk-name"><i class="sm-dot"></i>${esc(ct.name)}</p>
+        <p class="st-bk-n"><b>${left}</b> ${esc(t('ofFormsLeft', { n: size }))}</p>
+        <div class="st-bk-bar"><i style="width:${Math.round(left / size * 100)}%"></i></div>
+        <p class="st-bk-sub num">${esc(t('bkNoRange', { from: b.from, to: b.to }))}</p></li>`;
+    }).join('');
+
+    const seg = (k, l) => `<button type="button" class="st-seg-btn ${p === k ? 'on' : ''}" data-p="${k}" aria-pressed="${p === k}">${esc(t(l))}</button>`;
+    root.innerHTML = `<div class="sm stats">
+      <header class="st-head"><h1 class="h1">${esc(t('statsTitle'))}</h1>
+        <div class="st-seg" role="group" aria-label="${esc(t('period'))}">${seg('today', 'today')}${seg('month', 'thisMonth')}</div></header>
+      ${unsynced ? `<p class="alert alert-sync stats-sync">${icon('cloudOff')}<span>${esc(t('statNotSynced', { n: unsynced }))}</span></p>` : ''}
+      <div class="kpis st-tiles">${tiles}</div>
+      <div class="st-mid">${donut}${dailyChart(mine, { title: t('perDay30') })}</div>
+      <section class="sm-card st-books">
+        <div class="st-card-head"><h2 class="sm-h">${esc(t('booklets'))}</h2><span class="muted small">${esc(t('activeOfN', { a: active, n: types.length }))}</span></div>
+        <ul class="st-bk-list">${bookCards}</ul>
+      </section>
+    </div>`;
+    root.querySelectorAll('[data-p]').forEach(btn => btn.addEventListener('click', () => {
+      statsState.period = btn.dataset.p; render();
+      root.querySelector(`[data-p="${statsState.period}"]`)?.focus();
+    }));
+    root.querySelectorAll('[data-go]').forEach(a => a.addEventListener('click', () => {
+      Object.assign(listState, { status: a.dataset.go, ctype: '', when: p, day: '', page: 1 });
+    }));
   };
-  const today = calc(mine.filter(c => isToday(c.at)));
-  const month = calc(mine.filter(c => isThisMonth(c.at)));
-  const unsynced = mine.filter(c => !c.synced && isToday(c.at)).length;
-  const ROWS = [['citations', 'statCitations'], ['violations', 'statViolations'], ['cancelled', 'statCancelled'], ['voided', 'statVoided']];
-
-  // One card per period: side by side from 600px, stacked on phones
-  const card = (title, s) => `
-    <section class="sheet stat-sheet">
-      <header class="sheet-head"><h2 class="h2">${esc(title)}</h2></header>
-      <div class="perf" aria-hidden="true"></div>
-      <div class="stat-grid">${ROWS.map(([k, l]) => `<div class="box box-fill box-fill-${k}"><span class="lbl">${esc(t(l))}</span><span class="box-n">${s[k]}</span></div>`).join('')}</div>
-    </section>`;
-
-  const short = (full, abbr) => `<span class="lbl-full">${esc(t(full))}</span><span class="lbl-short">${esc(t(abbr))}</span>`;
-  const typeRows = types.map(ct => ({ ct, s: calc(mine.filter(c => isThisMonth(c.at) && c.ctype === ct.id)) }))
-    .map((r, i) => ({ ...r, i, zero: !r.s.citations && !r.s.violations }))
-    .sort((a, b) => (a.zero - b.zero) || (a.i - b.i));
-  const byType = types.length > 1 ? `
-    <section class="sec">
-      <h2 class="h2">${esc(t('byType'))} <span class="muted small">${esc(t('byTypeLead'))}</span></h2>
-      <div class="table-wrap"><table class="tbl">
-        <thead><tr><th scope="col">${esc(t('citationType'))}</th><th scope="col" class="n">${esc(t('statCitations'))}</th><th scope="col" class="n">${short('statViolations', 'statViolationsShort')}</th></tr></thead>
-        <tbody>${typeRows.map(({ ct, s, zero }) => `<tr class="${zero ? 'is-zero' : ''}"><th scope="row">${esc(ct.name)}</th><td class="n">${s.citations}</td><td class="n">${s.violations}</td></tr>`).join('')}</tbody></table></div>
-    </section>` : '';
-
-  const booklets = `
-    <section class="sec">
-      <h2 class="h2">${esc(t('booklets'))}</h2>
-      <ul class="bk-list">${types.map(ct => {
-        const b = activeBooklet(u.id, ct.id);
-        if (!b) return `<li class="bk"><div class="bk-top"><span class="strong">${esc(ct.name)}</span><span class="muted">${esc(t('noActiveBooklet'))}</span></div></li>`;
-        const size = bookletSize(b), used = bookletUsed(b);
-        return `<li class="bk"><div class="bk-top"><span class="strong">${esc(ct.name)}</span><span class="num muted">${b.from}–${b.to}</span></div>
-          <div class="bk-bar" aria-hidden="true"><i style="width:${Math.round(used / size * 100)}%"></i></div>
-          <span class="bk-left">${esc(tn('formsLeftN', size - used))}</span></li>`;
-      }).join('')}</ul>
-    </section>`;
-
-  root.innerHTML = `<div class="stats">
-    <h1 class="h1">${esc(t('statsTitle'))}</h1>
-    ${unsynced ? `<p class="alert alert-sync stats-sync">${icon('cloudOff')}<span>${esc(t('statNotSynced', { n: unsynced }))}</span></p>` : ''}
-    <div class="stat-cols">${card(t('today'), today)}${card(t('thisMonth'), month)}</div>
-    <div class="stats-lower">${byType}${booklets}</div>
-  </div>`;
+  render();
 }
