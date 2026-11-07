@@ -1330,7 +1330,7 @@ body:has(.sm) { background: var(--ground-2); }
   .ov-grid { grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); gap: 20px; }
   /* The chart sets the top row's height; Needs attention matches it and scrolls inside. */
   .ov-att { contain: size; display: flex; flex-direction: column; }
-  .ov-att .att-list { flex: 1; min-height: 0; max-height: none; }
+  .ov-att .att-list { flex: 1; min-height: 0; max-height: none; align-content: start; }
   /* Top Enforcers: full width under both, one Enforcer per line: rank, name, bar, count. */
   .ov-top { grid-column: 1 / -1; }
   .ov-top .top-list li { grid-template-columns: 26px minmax(160px, 240px) minmax(0, 1fr) 2.5em; grid-template-areas: "rank name bar n"; gap: 0 16px; }
