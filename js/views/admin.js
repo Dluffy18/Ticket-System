@@ -4,6 +4,7 @@ import { S, me, allEnforcers, enforcer, changeStatus, personName, subscribe, act
 import { icon, toast, dialog, pager, paginate, emptyState, kv, menuMarkup, bindMenu } from '../ui.js';
 import { kpi, dailyChart, bookletSplit, bookletBar, splitText } from './dash.js';
 import { editDetailsDialog, resetPasswordFlow } from './acctools.js';
+import { reviewPage, card } from './review.js';
 
 export const STATUS_LABEL = { active: 'acActive', pending: 'acPending', rejected: 'acRejected', inactive: 'acInactive' };
 export const statusTag = s => `<span class="acct acct-${s}">${esc(t(STATUS_LABEL[s]))}</span>`;
@@ -245,63 +246,45 @@ function enforcerDetail(root, ctx, id) {
     const ago = d => d <= 0 ? t('agoToday') : d === 1 ? t('agoYesterday') : t('agoDays', { n: d });
     const lastLine = lastAt ? t('lastCitation', { date: fDate(lastAt), ago: ago(Math.floor((Date.now() - lastAt) / 86400000)) }) : t('lastCitationNone');
     const books = activeBooklets(e.id);
-    const acts = {
-      pending: [['rejected', t('reject'), 'btn-danger-ghost'], ['active', t('approve'), 'btn-primary']],
-      rejected: [['active', t('approveAfterAll'), 'btn-primary']],
+    const buttons = {
+      pending: [['rejected', t('reject'), 'btn-danger-ghost'], ['active', t('approve'), 'btn-go']],
+      rejected: [['active', t('approveAfterAll'), 'btn-go']],
       active: [['inactive', t('setInactive'), 'btn-danger-ghost']],
-      inactive: [['active', t('setActive'), 'btn-primary']],
+      inactive: [['active', t('setActive'), 'btn-go']],
     }[e.status] || [];
-    root.innerHTML = `
-      <a class="back" href="#/enforcers">${icon('arrowL')}<span>${esc(t('backToEnforcers'))}</span></a>
-      <article class="sheet">
-        <header class="sheet-head">
-          <div><h1 class="det-type">${esc(fullName(e))}</h1><p class="muted small">${esc([e.rank, e.badge].filter(Boolean).join(' · '))}</p></div>
-          <div>${statusTag(e.status)}</div>
-        </header>
-        <div class="perf" aria-hidden="true"></div>
-        ${e.status === 'rejected' ? '' : `<div class="acc-tools">
-          <button type="button" class="btn btn-ghost btn-sm" data-tool="edit">${icon('pencil')}<span>${esc(t('editDetails'))}</span></button>
-          ${['active', 'inactive'].includes(e.status) ? `<button type="button" class="btn btn-ghost btn-sm" data-tool="reset">${icon('key')}<span>${esc(t('resetPassword'))}</span></button>` : ''}</div>`}
-        <div class="det-cols">
-          <section class="sec">
-            ${kv([
-              [t('rank'), esc(e.rank || t('dash'))], [t('badge'), esc(e.badge || t('dash'))],
-              [t('gender'), esc(e.gender === 'M' ? t('male') : t('female'))], [t('contactNumber'), esc(fPhone(e.contact))],
-              [t('address'), esc(e.address || t('dash'))], [t('registered'), esc(e.registeredAt ? fDate(e.registeredAt) : t('fromRecords'))],
-            ])}
-          </section>
-          <section class="sec">
-            <h2 class="h2">${esc(t('citationsIssued'))}</h2>
-            <div class="table-wrap"><table class="tbl tbl-compact">
-              <thead><tr><th scope="col"><span class="sr">${esc(t('period'))}</span></th><th scope="col" class="n">${esc(t('stIssued'))}</th><th scope="col" class="n">${esc(t('stCancelled'))}</th><th scope="col" class="n">${esc(t('stVoided'))}</th></tr></thead>
-              <tbody>
-                <tr><th scope="row">${esc(t('colToday'))}</th><td class="n">${k.today.done}</td><td class="n">${k.today.cancelled}</td><td class="n">${k.today.voided}</td></tr>
-                <tr><th scope="row">${esc(t('colMonth'))}</th><td class="n">${k.month.done}</td><td class="n">${k.month.cancelled}</td><td class="n">${k.month.voided}</td></tr>
-                <tr><th scope="row">${esc(t('allTime'))}</th><td class="n">${all.done}</td><td class="n">${all.cancelled}</td><td class="n">${all.voided}</td></tr>
-              </tbody></table></div>
-            <p class="last-cit">${esc(lastLine)}</p>
-          </section>
-        </div>
-        <div class="det-dash">
-          <section class="sm-card">
-            <h2 class="sm-h">${esc(t('bookletsInHand'))}</h2>
-            ${books.length ? `<ul class="bkh-list">${books.map(b => {
-              const sp = bookletSplit(b, own), size = bookletSize(b);
-              return `<li class="bkh">
-                <div class="bkh-top"><span class="strong">${esc(ctName(b.ctype))}</span><span class="bkh-range">${b.from}–${b.to}</span></div>
-                <p class="bkh-meta">${esc(t('bkRegisteredOn', { date: fDate(b.at) }))}</p>
-                ${bookletBar(sp, size)}
-                <div class="bkh-top"><span class="bkh-meta">${esc(splitText(sp))}</span><b class="small">${esc(tn('formsLeftN', sp.open))}</b></div></li>`;
-            }).join('')}</ul>` : `<p class="muted">${esc(t('noBookletInHand'))}</p>`}
-          </section>
-          ${dailyChart(own, { title: t('activity30') })}
-        </div>
-        <section class="sec"><h2 class="h2">${esc(t('history'))}</h2>${historyList(e.history)}</section>
-        ${acts.length ? `<div class="actions-row">${acts.map(([to, label, cls]) => `<button type="button" class="btn ${cls} btn-lg" data-to="${to}">${esc(label)}</button>`).join('')}</div>` : ''}
-      </article>`;
-    root.querySelectorAll('[data-to]').forEach(b => b.addEventListener('click', () => decide(e, b.dataset.to, render)));
-    root.querySelector('[data-tool=edit]')?.addEventListener('click', async () => { if (await editDetailsDialog(u.id, e)) render(); });
-    root.querySelector('[data-tool=reset]')?.addEventListener('click', async () => { if (await resetPasswordFlow(u.id, e)) render(); });
+    const tools = e.status === 'rejected' ? [] : [['edit', t('editDetails'), 'pencil'], ...(['active', 'inactive'].includes(e.status) ? [['reset', t('resetPassword'), 'key']] : [])];
+    const text = e.status === 'pending' ? t('rvPendingAs', { role: t('roleEnforcer') })
+      : e.status === 'rejected' ? t('rvRejectedAs', { role: t('roleEnforcer') })
+      : e.status === 'active' ? t('rvActive', { role: roleLabel(e.kind, e.agency) }) : t('rvInactive');
+    const issued = card(t('citationsIssued'), `
+      <div class="table-wrap"><table class="tbl tbl-compact">
+        <thead><tr><th scope="col"><span class="sr">${esc(t('period'))}</span></th><th scope="col" class="n">${esc(t('stIssued'))}</th><th scope="col" class="n">${esc(t('stCancelled'))}</th><th scope="col" class="n">${esc(t('stVoided'))}</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">${esc(t('colToday'))}</th><td class="n">${k.today.done}</td><td class="n">${k.today.cancelled}</td><td class="n">${k.today.voided}</td></tr>
+          <tr><th scope="row">${esc(t('colMonth'))}</th><td class="n">${k.month.done}</td><td class="n">${k.month.cancelled}</td><td class="n">${k.month.voided}</td></tr>
+          <tr><th scope="row">${esc(t('allTime'))}</th><td class="n">${all.done}</td><td class="n">${all.cancelled}</td><td class="n">${all.voided}</td></tr>
+        </tbody></table></div>
+      <p class="last-cit">${esc(lastLine)}</p>`, 'rv-first');
+    const inHand = card(t('bookletsInHand'), books.length ? `<ul class="bkh-list">${books.map(b => {
+      const sp = bookletSplit(b, own), size = bookletSize(b);
+      return `<li class="bkh">
+        <div class="bkh-top"><span class="strong">${esc(ctName(b.ctype))}</span><span class="bkh-range">${b.from}–${b.to}</span></div>
+        <p class="bkh-meta">${esc(t('bkRegisteredOn', { date: fDate(b.at) }))}</p>
+        ${bookletBar(sp, size)}
+        <div class="bkh-top"><span class="bkh-meta">${esc(splitText(sp))}</span><b class="small">${esc(tn('formsLeftN', sp.open))}</b></div></li>`;
+    }).join('')}</ul>` : `<p class="muted">${esc(t('noBookletInHand'))}</p>`);
+    root.innerHTML = reviewPage({
+      back: `<a class="back" href="#/enforcers">${icon('arrowL')}<span>${esc(t('backToEnforcers'))}</span></a>`,
+      tools, a: e,
+      main: `${issued}${inHand}<div class="rv-chart">${dailyChart(own, { title: t('activity30') })}</div>${card(t('history'), historyList(e.history))}`,
+      bar: { text, buttons },
+    });
+    root.querySelectorAll('[data-act]').forEach(b => b.addEventListener('click', async () => {
+      const what = b.dataset.act;
+      if (what === 'edit') { if (await editDetailsDialog(u.id, e)) render(); }
+      else if (what === 'reset') { if (await resetPasswordFlow(u.id, e)) render(); }
+      else decide(e, what, render);
+    }));
   };
   render();
 }

@@ -7,18 +7,16 @@ import {
   S, me, allAccounts, findAccount, changeStatus, approveAs, changeRole, canManage, roleLabel, ROLES,
   activeBooklets, bookletSize, bookletUsed, subscribe, activityLog, personName,
 } from '../store.js';
-import { icon, toast, dialog, pager, paginate, emptyState, kv } from '../ui.js';
+import { icon, toast, dialog, pager, paginate, emptyState } from '../ui.js';
 import { statusTag, historyList, changeLines, STATUS_LABEL } from './admin.js';
 import { kpi } from './dash.js';
 import { editDetailsDialog, resetPasswordFlow } from './acctools.js';
+import { reviewPage, card, roleName, agencyText } from './review.js';
 
 const DAY = 86400000;
 const WAIT_DAYS = 2;
-const ROLE_NAME = { enforcer: 'roleEnforcer', office: 'roleOffice', verifier: 'roleVerifierShort', super: 'roleSuperShort' };
-const roleName = k => t(ROLE_NAME[k]);
-// The Agency column: Verifiers belong to the Treasury Office, the Super Admin to the CICT Office.
-const agencyText = a => a.kind === 'verifier' ? t('treasuryOffice') : a.kind === 'super' ? t('cictOffice')
-  : S.ag.get(a.agency)?.name || t('noAgency');
+const ROLE_ICON = { enforcer: 'shield', office: 'users', verifier: 'check' };
+const ROLE_DESC = { enforcer: 'roleDescEnforcer', office: 'roleDescOffice', verifier: 'roleDescVerifier' };
 
 export function superPendingCount() {
   const u = me();
@@ -239,44 +237,60 @@ function roleDialog({ title, confirm, kind, agency, fixedKind = '', acc }) {
 
 function accountDetail(root, ctx, id) {
   const u = me();
+  let pick = null; // the role card picked; starts on their current or signed-up role
   const render = () => {
     const a = findAccount(id);
     const back = `<a class="back" href="#/accounts">${icon('arrowL')}<span>${esc(t('backToAccounts'))}</span></a>`;
     if (!a) { root.innerHTML = `${back}<p class="alert alert-error">${icon('alert')}<span>${esc(t('noAccountsMatch'))}</span></p>`; return; }
+    if (!ROLES.includes(pick)) pick = ROLES.includes(a.kind) ? a.kind : 'enforcer';
     const can = canManage(u, a);
     const books = bookletsInUse(a.id);
     const cits = S.citations.filter(c => c.owner === a.id).length;
     const issuer = a.kind === 'enforcer' || cits || books.n;
-    const acts = !can ? [] : {
-      pending: [['reject', t('reject'), 'btn-danger-ghost'], ['as-verifier', t('approveAsVerifier'), 'btn-ghost'], ['as-office', t('approveAsOffice'), 'btn-ghost'], ['as-enforcer', t('approveAsEnforcer'), 'btn-primary']],
-      rejected: [['as-verifier', t('approveAsVerifier'), 'btn-ghost'], ['as-office', t('approveAsOffice'), 'btn-ghost'], ['as-enforcer', t('approveAsEnforcer'), 'btn-primary']],
-      active: [['inactive', t('setInactive'), 'btn-danger-ghost'], ['role', t('changeRole'), 'btn-primary']],
-      inactive: [['role', t('changeRole'), 'btn-ghost'], ['active', t('setActive'), 'btn-primary']],
-    }[a.status] || [];
+    const deciding = ['pending', 'rejected'].includes(a.status);
+    const changing = !deciding && pick !== a.kind;
     // Edit details for anyone the Super Admin manages; Reset password once they can sign in.
     const tools = !can ? [] : [['edit', t('editDetails'), 'pencil'], ...(['active', 'inactive'].includes(a.status) ? [['reset', t('resetPassword'), 'key']] : [])];
-    root.innerHTML = `${back}
-      <article class="sheet">
-        <header class="sheet-head">
-          <div><h1 class="det-type">${esc(fullName(a))}</h1><p class="muted small">${esc(roleLabel(a.kind, a.agency))}</p></div>
-          <div>${statusTag(a.status)}</div>
-        </header>
-        <div class="perf" aria-hidden="true"></div>
-        ${tools.length ? `<div class="acc-tools">${tools.map(([act, label, ic]) => `<button type="button" class="btn btn-ghost btn-sm" data-act="${act}">${icon(ic)}<span>${esc(label)}</span></button>`).join('')}</div>` : ''}
-        <section class="sec">
-          ${kv([
-            [t('role'), esc(roleName(a.kind))], [t('agency'), esc(agencyText(a))],
-            ...(a.kind === 'enforcer' || a.rank || a.badge ? [[t('rank'), esc(a.rank || t('dash'))], [t('badge'), esc(a.badge || t('dash'))]] : [[t('position'), esc(a.position || t('dash'))]]),
-            [t('gender'), esc(a.gender === 'M' ? t('male') : t('female'))], [t('contactNumber'), esc(fPhone(a.contact))],
-            [t('address'), esc(a.address || t('dash'))], [t('registered'), esc(a.registeredAt ? fDate(a.registeredAt) : t('fromRecords'))],
-            ...(issuer ? [[t('bookletsInUse'), esc(books.n ? tn('bookletsLeftN', books.n, { left: books.left }) : t('none'))], [t('citationsRecorded'), String(cits)]] : []),
-          ])}
-        </section>
-        <section class="sec"><h2 class="h2">${esc(t('history'))}</h2>${historyList(a.history)}</section>
-        ${a.id === u.id ? `<p class="muted own-note">${esc(t('ownAccount'))}</p>` : ''}
-        ${acts.length ? `<div class="actions-row acc-actions">${acts.map(([act, label, cls]) => `<button type="button" class="btn ${cls} btn-lg" data-act="${act}">${esc(label)}</button>`).join('')}</div>` : ''}
-      </article>`;
+    const go = deciding ? [['approve', t('approveAsRole', { role: roleName(pick) }), 'btn-go']]
+      : changing ? [['role', t('changeTo', { role: roleName(pick) }), a.status === 'active' ? 'btn-go' : 'btn-ghost']] : [];
+    const buttons = !can ? [] : {
+      pending: [['reject', t('reject'), 'btn-danger-ghost'], ...go],
+      rejected: go,
+      active: [['inactive', t('setInactive'), 'btn-danger-ghost'], ...go],
+      inactive: [...go, ['active', t('setActive'), 'btn-go']],
+    }[a.status] || [];
+    const lastReason = [...(a.history || [])].reverse().find(h => h.action === 'rejected')?.reason;
+    const text = a.status === 'pending' ? t('rvPendingAs', { role: roleName(pick) })
+      : a.status === 'rejected' ? t('rvRejectedAs', { role: roleName(pick) }) + (lastReason ? ` · ${t('reason')}: ${lastReason}` : '')
+      : changing ? t('rvChangeTo', { status: t(STATUS_LABEL[a.status]), role: roleName(pick) })
+      : a.status === 'active' ? t('rvActive', { role: roleLabel(a.kind, a.agency) }) : t('rvInactive');
+
+    const roleCards = can ? card(t('giveRole'), `<div class="rv-roles" role="radiogroup" aria-label="${esc(t('giveRole'))}">
+      ${ROLES.map(k => `<button type="button" class="rv-role ${pick === k ? 'on' : ''}" role="radio" aria-checked="${pick === k}" tabindex="${pick === k ? 0 : -1}" data-pick="${k}">
+        <span class="rv-role-ic">${icon(ROLE_ICON[k])}</span>
+        <span class="rv-role-name">${esc(roleName(k))}</span>
+        <span class="rv-role-desc">${esc(t(ROLE_DESC[k]))}</span>
+        ${pick === k ? `<span class="rv-role-check">${icon('check')}</span>` : ''}
+      </button>`).join('')}</div>`, 'rv-first') : '';
+    const note = a.id === u.id ? `<p class="muted rv-note">${esc(t('ownAccount'))}</p>` : '';
+    const stats = issuer ? `<div class="rv-stats">
+      <div class="rv-stat"><b>${esc(books.n ? tn('bookletsLeftN', books.n, { left: books.left }) : t('none'))}</b><span>${esc(t('bookletsInUse'))}</span></div>
+      <div class="rv-stat"><b>${cits}</b><span>${esc(t('citationsRecorded'))}</span></div></div>` : '';
+    root.innerHTML = reviewPage({
+      back, tools, a,
+      main: `${note}${roleCards}${card(t('history'), historyList(a.history), can ? 'rv-hist' : 'rv-first')}${stats}`,
+      bar: { text, buttons },
+    });
     root.querySelectorAll('[data-act]').forEach(b => b.addEventListener('click', () => act(a, b.dataset.act)));
+    const choose = k => { pick = k; render(); root.querySelector(`[data-pick="${pick}"]`)?.focus(); };
+    root.querySelectorAll('[data-pick]').forEach(b => b.addEventListener('click', () => choose(b.dataset.pick)));
+    // Arrow keys move between role cards, like radio buttons.
+    root.querySelector('.rv-roles')?.addEventListener('keydown', e => {
+      const d = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
+      if (!d) return;
+      e.preventDefault();
+      choose(ROLES[(ROLES.indexOf(pick) + d + ROLES.length) % ROLES.length]);
+    });
   };
 
   const done = res => { if (res.error) toast(res.error, 'error'); else toast(res.message); render(); };
@@ -293,15 +307,14 @@ function accountDetail(root, ctx, id) {
       if (r) done(changeStatus(u.id, a.id, 'inactive'));
     } else if (what === 'active') {
       done(changeStatus(u.id, a.id, 'active'));
-    } else if (what === 'as-verifier') {
+    } else if (what === 'approve' && pick === 'verifier') {
       const r = await dialog({ title: t('approveAsTitle', { name: displayName(a), role: roleName('verifier') }), body: t('approveVerifierBody'), confirm: t('approveAsVerifier') });
       if (r) done(approveAs(u.id, a.id, 'verifier', ''));
-    } else if (what === 'as-office' || what === 'as-enforcer') {
-      const kind = what === 'as-office' ? 'office' : 'enforcer';
-      const r = await roleDialog({ title: t('approveAsTitle', { name: displayName(a), role: roleName(kind) }), confirm: t(kind === 'office' ? 'approveAsOffice' : 'approveAsEnforcer'), kind, fixedKind: kind, agency: a.agency, acc: a });
+    } else if (what === 'approve') {
+      const r = await roleDialog({ title: t('approveAsTitle', { name: displayName(a), role: roleName(pick) }), confirm: t('approveAsRole', { role: roleName(pick) }), kind: pick, fixedKind: pick, agency: a.agency, acc: a });
       if (r) done(approveAs(u.id, a.id, r.kind, r.agency));
     } else if (what === 'role') {
-      const r = await roleDialog({ title: t('changeRoleTitle', { name: displayName(a) }), confirm: t('changeRole'), kind: a.kind, agency: a.agency || a.enfAgency, acc: a });
+      const r = await roleDialog({ title: t('changeRoleTitle', { name: displayName(a) }), confirm: t('changeTo', { role: roleName(pick) }), kind: pick, fixedKind: pick, agency: a.agency || a.enfAgency, acc: a });
       if (r) done(changeRole(u.id, a.id, r.kind, r.agency));
     }
   }
