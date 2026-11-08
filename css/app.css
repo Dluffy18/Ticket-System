@@ -1470,7 +1470,10 @@ a.bkg-cell:hover { filter: brightness(1.15); transform: translateY(-1px); }
 .rv-note, .rv-first { order: 2; }
 .rv-info { order: 3; }
 .rv-main > :not(.rv-first):not(.rv-note) { order: 4; }
-@media (max-width: 999px) { .rv-main > .rv-card.rv-hist:not(.rv-first) { order: 5; } } /* phones: counts before history */
+@media (max-width: 999px) { .rv-main > .rv-card.rv-hist:not(.rv-first) { order: 5; } }
+.rv-side > .rv-hist { order: 5; } /* History under the contact details; last on phones */
+.rv-scroll { max-height: 320px; overflow-y: auto; overscroll-behavior: contain; margin-right: -8px; padding-right: 8px; }
+.rv-scroll:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; } /* phones: counts before history */
 @media (min-width: 1000px) {
   .rv { display: grid; grid-template-columns: minmax(300px, 360px) minmax(0, 1fr); align-items: start; gap: 20px; }
   .rv-col { display: flex; flex-direction: column; gap: 16px; min-width: 0; }

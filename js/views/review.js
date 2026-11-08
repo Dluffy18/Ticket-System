@@ -46,12 +46,13 @@ export const card = (title, body, cls = '') =>
   `<section class="rv-card ${cls}">${title ? `<h2 class="rv-h">${esc(title)}</h2>` : ''}${body}</section>`;
 
 // tools: [[act, label, icon]]; buttons: [[act, label, cls]]; main: cards for the right column, in phone order.
-export function reviewPage({ back, tools = [], a, main, after = '', bar }) {
+// side: extra cards under the contact details.
+export function reviewPage({ back, tools = [], a, main, side = '', after = '', bar }) {
   const toolBtns = tools.map(([act, label, ic]) => `<button type="button" class="btn btn-ghost btn-sm" data-act="${act}">${icon(ic)}<span>${esc(label)}</span></button>`).join('');
   return `${back}
     <div class="rv-head"><h1 class="h1">${esc(t('reviewAccount'))}</h1>${toolBtns ? `<div class="rv-tools">${toolBtns}</div>` : ''}</div>
     <div class="rv">
-      <div class="rv-col rv-side">${idCard(a)}${infoCard(a)}</div>
+      <div class="rv-col rv-side">${idCard(a)}${infoCard(a)}${side}</div>
       <div class="rv-col rv-main">${main}${after}</div>
     </div>
     ${bar && bar.buttons.length ? `<div class="rv-bar">

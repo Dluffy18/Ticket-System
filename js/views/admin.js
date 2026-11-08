@@ -276,7 +276,8 @@ function enforcerDetail(root, ctx, id) {
     root.innerHTML = reviewPage({
       back: `<a class="back" href="#/enforcers">${icon('arrowL')}<span>${esc(t('backToEnforcers'))}</span></a>`,
       tools, a: e,
-      main: `${issued}${inHand}<div class="rv-chart">${dailyChart(own, { title: t('activity30') })}</div>${card(t('history'), historyList(e.history))}`,
+      main: `${issued}${inHand}<div class="rv-chart">${dailyChart(own, { title: t('activity30') })}</div>`,
+      side: card(t('history'), `<div class="rv-scroll" tabindex="0" role="region" aria-label="${esc(t('history'))}">${historyList(e.history)}</div>`, 'rv-hist'),
       bar: { text, buttons },
     });
     root.querySelectorAll('[data-act]').forEach(b => b.addEventListener('click', async () => {
