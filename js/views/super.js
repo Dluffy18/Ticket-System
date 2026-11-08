@@ -278,7 +278,7 @@ function accountDetail(root, ctx, id) {
       <div class="rv-stat"><b>${cits}</b><span>${esc(t('citationsRecorded'))}</span></div></div>` : '';
     root.innerHTML = reviewPage({
       back, tools, a,
-      main: `${note}${roleCards}${card(t('history'), historyList(a.history), can ? 'rv-hist' : 'rv-first')}${stats}`,
+      main: `${note}${roleCards}${stats}${card(t('history'), `<div class="rv-scroll" tabindex="0" role="region" aria-label="${esc(t('history'))}">${historyList(a.history)}</div>`, can ? 'rv-hist' : 'rv-first')}`,
       bar: { text, buttons },
     });
     root.querySelectorAll('[data-act]').forEach(b => b.addEventListener('click', () => act(a, b.dataset.act)));
