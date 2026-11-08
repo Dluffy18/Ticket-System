@@ -57,7 +57,35 @@ export function init(ref) {
   if (sess && findAccount(sess.id)) {
     const acc = findAccount(sess.id);
     if (acc.status === 'active') S.session = { id: acc.id, kind: acc.kind };
+    else { S.signedOutWhy = notActiveMessage(acc); ssSet(SS_SESSION, null); }
   }
+}
+
+// Accounts changed in another tab or window (an Office Admin or the Super Admin made a decision).
+export function reloadAccounts() {
+  S.registrations = lsGet(LS_REG, []);
+  S.statusOverrides = lsGet(LS_STATUS, {});
+  S.roles = lsGet(LS_ROLES, {});
+  S.edits = lsGet(LS_EDITS, {});
+  S.passwords = lsGet(LS_PW, {});
+  S.avatars = lsGet(LS_AVATAR, {});
+  emit('accounts');
+}
+
+// Why someone can't sign in. Enforcers ask their Office Admin; everyone else, the CICT Office.
+export function notActiveMessage(acc) {
+  if (acc.status === 'pending') return t('errPending');
+  if (acc.status === 'rejected') return acc.reason ? t('errRejectedReason', { reason: acc.reason }) : t('errRejected');
+  return t(acc.kind === 'enforcer' ? 'errInactive' : 'errInactiveAdmin');
+}
+
+// Signed in, then set Inactive: sign them out. Returns true when that happened.
+export function signOutIfNotActive() {
+  const u = me();
+  if (!u || u.status === 'active') return false;
+  S.signedOutWhy = notActiveMessage(u);
+  signOut();
+  return true;
 }
 
 // ------------------------------------------------------------------ accounts
@@ -116,9 +144,7 @@ export async function signIn(nameInput, password) {
   const acc = cands[0];
   if (!(await passwordMatches(acc, password))) return { error: t('errNameOrPassword') };
   // Status is only revealed after the password checks out.
-  if (acc.status === 'pending') return { error: t('errPending') };
-  if (acc.status === 'rejected') return { error: acc.reason ? t('errRejectedReason', { reason: acc.reason }) : t('errRejected') };
-  if (acc.status === 'inactive') return { error: t('errInactive') };
+  if (acc.status !== 'active') return { error: notActiveMessage(acc) };
   startSession(acc);
   return { ok: true, account: acc };
 }

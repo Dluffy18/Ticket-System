@@ -48,6 +48,10 @@ _Avoid_: Received, issued (for a Booklet)
 A Violator Record with two or more Done Citations. Cancelled and Voided forms don't count, because no Citation was issued on them.
 _Avoid_: Repeat offender, habitual violator
 
+**Inactive**:
+An approved account that was switched off by its Office Admin or the Super Admin. They can't sign in, and anyone signed in at the time is signed out. Their Citations and Booklets stay on record, and the account can be set Active again.
+_Avoid_: Deleted, suspended
+
 **Super Admin**:
 The one account above every office, held by the CICT Office of the City Government of Mati. Sees every account, gives Office Admin or Verifier access, and can approve, reject, deactivate or reactivate any account. Nobody signs up as a Super Admin.
 _Avoid_: System Admin, root, owner

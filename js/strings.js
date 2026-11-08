@@ -32,7 +32,8 @@ const en = {
   errPending: 'Your account is still being verified. Please try again later.',
   errRejected: 'Your registration was not approved. Please contact your Agency.',
   errRejectedReason: 'Your registration was not approved: {reason}. Please contact your Agency.',
-  errInactive: 'Your account is inactive. Please contact your Agency.',
+  errInactive: 'Your account is inactive. Please contact your Office Admin.',
+  errInactiveAdmin: 'Your account is inactive. Please contact the CICT Office.',
   enterNameAndPassword: 'Enter your full name and password.',
 
   // Registration

@@ -51,6 +51,8 @@ export function signInView(root, ctx) {
   const form = root.querySelector('form');
   const alert = root.querySelector('.alert');
   const btn = form.querySelector('button[type=submit]');
+  // Signed out because the account is no longer Active.
+  if (ctx.signedOutWhy) { alert.hidden = false; alert.textContent = ctx.signedOutWhy; S.signedOutWhy = ''; }
   if (matchMedia('(min-width: 900px)').matches) form.name.focus(); // on phones, don't pop the keyboard over the page
   form.addEventListener('submit', async e => {
     e.preventDefault();

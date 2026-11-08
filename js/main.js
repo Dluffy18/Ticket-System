@@ -1,7 +1,7 @@
 import { t, tn } from './strings.js';
 import { esc, displayName } from './util.js';
 import { loadReference } from './data.js';
-import { S, init, me, signOut, startSession, setOnline, subscribe, activeBooklets, findAccount, enforcer, agencyOf, roleLabel, mustSetPassword } from './store.js';
+import { S, init, me, signOut, startSession, setOnline, subscribe, activeBooklets, findAccount, enforcer, agencyOf, roleLabel, mustSetPassword, signOutIfNotActive, reloadAccounts, notActiveMessage } from './store.js';
 import { icon, toast } from './ui.js';
 import { applyTheme, setTheme, currentTheme } from './views/common.js';
 import { signInView, registerView, setPasswordView } from './views/auth.js';
@@ -113,14 +113,32 @@ function bindCommon(root) {
   }));
 }
 
+// Set Inactive while signed in: out on the next page load, tap or key press,
+// or straight away when the decision is made in another tab.
+function kickIfNotActive(e) {
+  if (!signOutIfNotActive()) return;
+  e?.preventDefault(); e?.stopPropagation();
+  history.replaceState(null, '', '#/signin');
+  render();
+}
+document.addEventListener('pointerdown', kickIfNotActive, true);
+document.addEventListener('keydown', kickIfNotActive, true);
+window.addEventListener('storage', e => {
+  if (!e.key || !e.key.startsWith('vt.')) return;
+  reloadAccounts();
+  kickIfNotActive();
+});
+
 function render() {
   leaveFns.forEach(fn => { try { fn(); } catch { /* ignore */ } });
   leaveFns = [];
+  signOutIfNotActive();
   const parts = (location.hash.replace(/^#\/?/, '') || '').split('/').filter(Boolean).map(decodeURIComponent);
   const u = me();
   const ctx = {
     params: parts.slice(1), go, rerender: render, onLeave: fn => leaveFns.push(fn),
     afterSignIn: msg => go(defaultRoute(me()), msg), bindCommon,
+    signedOutWhy: S.signedOutWhy,
   };
   if (!u) {
     if (parts[0] === 'register') registerView(app, ctx);
@@ -214,7 +232,7 @@ function renderDemo() {
     const acc = findAccount(b.dataset.as);
     if (!acc) return;
     if (acc.status !== 'active') {
-      toast(acc.status === 'inactive' ? t('errInactive') : acc.status === 'pending' ? t('errPending') : t('errRejected'), 'error');
+      toast(notActiveMessage(acc), 'error');
       return;
     }
     startSession(acc);
