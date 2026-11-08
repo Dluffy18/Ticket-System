@@ -1,6 +1,6 @@
 import { t, tn } from '../strings.js';
 import { esc, fullName, displayName, fDate, fDateTime, isToday, isThisMonth, fPhone, normName, downloadCsv, todayKey } from '../util.js';
-import { S, me, allEnforcers, enforcer, changeStatus, personName, subscribe, activeBooklets, bookletSize, ctName, roleLabel, avatarOf } from '../store.js';
+import { S, me, allEnforcers, enforcer, changeStatus, personName, subscribe, activeBooklets, bookletSize, ctName, roleLabel, avatarOf, agencyOf } from '../store.js';
 import { icon, toast, dialog, pager, paginate, emptyState, kv, menuMarkup, bindMenu } from '../ui.js';
 import { kpi, dailyChart, bookletSplit, bookletBar, splitText } from './dash.js';
 import { editDetailsDialog, resetPasswordFlow, removePictureFlow } from './acctools.js';
@@ -34,22 +34,22 @@ const DAY = 86400000;
 const IDLE_DAYS = 7;
 const SPOILED_SHARE = 0.2;
 const SPOILED_MIN_FORMS = 5;
-// Citations of this Agency's Enforcers. Office Admins only ever see counts of these.
-const agencyCitations = ids => S.citations.filter(c => ids.has(c.owner));
+// Citations issued for this Agency, including by people who are no longer Enforcers.
+// Office Admins only ever see counts of these.
+const agencyCitations = agencyId => S.citations.filter(c => agencyOf(c.owner)?.id === agencyId);
 
 export function overviewView(root, ctx) {
   const render = () => {
     const enfs = agencyEnforcers();
-    const ids = new Set(enfs.map(e => e.id));
-    const mine = agencyCitations(ids);
+    const mine = agencyCitations(me().agency);
     const month = mine.filter(c => isThisMonth(c.at));
     const n = (list, s) => list.filter(c => c.status === s).length;
     const waiting = enfs.filter(e => e.status === 'pending').length;
 
     // Top 5 Enforcers by Issued this month
     const per = new Map(enfs.map(e => [e.id, { e, done: 0, cancelled: 0, voided: 0, last: 0 }]));
-    mine.forEach(c => { const r = per.get(c.owner); if (c.at > r.last) r.last = c.at; });
-    month.forEach(c => { per.get(c.owner)[c.status]++; });
+    mine.forEach(c => { const r = per.get(c.owner); if (r && c.at > r.last) r.last = c.at; });
+    month.forEach(c => { const r = per.get(c.owner); if (r) r[c.status]++; });
     const top = [...per.values()].filter(r => r.done).sort((a, b) => b.done - a.done || displayName(a.e).localeCompare(displayName(b.e))).slice(0, 5);
     const topMax = top[0]?.done || 1;
 
@@ -162,7 +162,7 @@ export function enforcersView(root, ctx) {
       return [e.id, k];
     }));
     root.querySelector('[data-table]').innerHTML = `
-      <div class="list-tools"><p class="showing">${esc(pg.n ? t('showingEnf', { a: pg.a, b: pg.b, n: pg.n }) : t('showingEnfNone'))}</p>
+      <div class="list-tools"><p class="showing">${esc(pg.n ? tn('showingEnf', pg.n, { a: pg.a, b: pg.b }) : t('showingEnfNone'))}</p>
         ${pg.n ? `<button type="button" class="btn btn-ghost btn-sm" data-csv>${icon('download')}<span>${esc(t('downloadCsv'))}</span></button>` : ''}</div>
       ${pg.n ? `<div class="table-wrap"><table class="tbl tbl-enf">
         <thead><tr><th scope="col">${esc(t('colName'))}</th><th scope="col">${esc(t('colStatus'))}</th><th scope="col" class="n">${esc(t('colToday'))}</th><th scope="col" class="n">${esc(t('colMonth'))}</th></tr></thead>
@@ -309,7 +309,7 @@ export function registrationsView(root, ctx) {
         <h1 class="h1">${esc(t('registrationsTitle'))}</h1>
         <p class="lead">${esc(tn('registrationsLead', list.length))}</p>
       </div>
-      ${pg.n ? `<p class="showing">${esc(t('showingReg', { a: pg.a, b: pg.b, n: pg.n }))}</p>
+      ${pg.n ? `<p class="showing">${esc(tn('showingReg', pg.n, { a: pg.a, b: pg.b }))}</p>
       <div class="table-wrap"><table class="tbl tbl-reg">
         <thead><tr>
           <th scope="col">${esc(t('colFullName'))}</th><th scope="col">${esc(t('colGender'))}</th><th scope="col">${esc(t('colRank'))}</th>

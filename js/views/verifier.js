@@ -110,7 +110,7 @@ export function vCitationsView(root, ctx) {
     const pg = paginate(list, st.page);
     st.page = pg.page;
     const line = !isFiltered()
-      ? (pg.n ? t('showingAll', { a: pg.a, b: pg.b, n: pg.n }) : t('showingNone'))
+      ? (pg.n ? tn('showingAll', pg.n, { a: pg.a, b: pg.b }) : t('showingNone'))
       : (pg.n ? t('showingMatching', { a: pg.a, b: pg.b, m: pg.n, n: all.length }) : t('showingMatchingNone', { n: all.length }));
     root.querySelector('[data-list]').innerHTML = `
       <div class="list-tools"><p class="showing">${esc(line)}</p>

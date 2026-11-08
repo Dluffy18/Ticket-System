@@ -529,7 +529,7 @@ export function citationsView(root, ctx) {
         ${listState.when === 'day' ? `<div class="field f-day"><label class="lbl" for="f-day">${esc(t('day'))}</label>
           ${dateBox({ id: 'f-day', name: 'day', value: listState.day, clearable: true, attrs: `max="${todayKey()}"` })}</div>` : ''}
       </div>
-      <p class="showing">${esc(pg.n ? t('showing', { a: pg.a, b: pg.b, n: pg.n }) : t('showingNone'))}</p>
+      <p class="showing">${esc(pg.n ? tn('showing', pg.n, { a: pg.a, b: pg.b }) : t('showingNone'))}</p>
       ${pg.n ? `<ul class="rows rows-cit">${pg.slice.map(c => `
         <li><a class="row row-cit" href="#/citations/${c.no}">
           <span class="row-top">${serial(c.no)}<span class="row-type">${esc(S.ct.get(c.ctype).name)}</span>${stamp(c.status)}</span>

@@ -216,7 +216,16 @@ export function validateRegistration(f) {
     const k = normName(fullName(f));
     if (allAccounts().some(a => a.status !== 'rejected' && normName(fullName(a)) === k)) err.first = t('errNameTaken');
   }
+  if (badgeTaken(f.badge, f.agency)) err.badge = t('errBadgeTaken');
   return err;
+}
+
+// A badge number belongs to one person per Agency. Rejected sign-ups don't count.
+const normBadge = b => String(b || '').toUpperCase().replace(/\s+/g, '');
+function badgeTaken(badge, agency, exceptId) {
+  const k = normBadge(badge);
+  if (!k || !agency) return false;
+  return allAccounts().some(a => a.id !== exceptId && a.status !== 'rejected' && (a.agency || a.enfAgency) === agency && normBadge(a.badge) === k);
 }
 
 export async function register(f) {
@@ -360,6 +369,7 @@ export function updateDetails(actorId, accId, f) {
     const k = normName(fullName(v));
     if (allAccounts().some(a => a.id !== acc.id && a.status !== 'rejected' && normName(fullName(a)) === k)) err.first = t('errNameTakenOther');
   }
+  if (normBadge(v.badge) !== normBadge(acc.badge) && badgeTaken(v.badge, acc.agency || acc.enfAgency, acc.id)) err.badge = t('errBadgeTaken');
   if (Object.keys(err).length) return { errors: err };
   const changes = DETAIL_FIELDS.filter(k => (acc[k] || '') !== v[k]).map(k => ({ field: k, from: acc[k] || '', to: v[k] }));
   if (!changes.length) return { error: t('errNoChanges') };
