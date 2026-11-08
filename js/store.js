@@ -376,6 +376,18 @@ export function updateDetails(actorId, accId, f) {
   return { ok: true, message: renamed ? t('msgSavedRenamed', { name: fullName(v) }) : t('msgSaved') };
 }
 
+// Take down someone's profile picture; their initials show instead.
+export function removePicture(actorId, accId) {
+  const actor = findAccount(actorId);
+  const acc = findAccount(accId);
+  if (!canManage(actor, acc)) return { error: t(actor?.kind === 'super' ? 'errNotAllowed' : 'errNotYourAgency') };
+  if (!avatarOf(acc.id)) return { error: t('errNoPicture') };
+  setAvatar(acc.id, null);
+  saveDecision(acc, {}, { action: 'picture', by: actorId, at: Date.now(), reason: '' });
+  emit('accounts');
+  return { ok: true, message: t('msgPictureRemoved', { name: fullName(acc) }) };
+}
+
 // Activity log: every sign-up, and every decision in every account's history, newest first.
 export function activityLog() {
   const out = [];

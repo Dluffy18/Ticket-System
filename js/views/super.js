@@ -5,12 +5,12 @@ import { t, tn } from '../strings.js';
 import { esc, fullName, displayName, fDate, fDateTime, fPhone, normName, isToday, isThisMonth, downloadCsv, todayKey } from '../util.js';
 import {
   S, me, allAccounts, findAccount, changeStatus, approveAs, changeRole, canManage, roleLabel, ROLES,
-  activeBooklets, bookletSize, bookletUsed, subscribe, activityLog, personName,
+  activeBooklets, bookletSize, bookletUsed, subscribe, activityLog, personName, avatarOf,
 } from '../store.js';
 import { icon, toast, dialog, pager, paginate, emptyState } from '../ui.js';
 import { statusTag, historyList, changeLines, STATUS_LABEL } from './admin.js';
 import { kpi } from './dash.js';
-import { editDetailsDialog, resetPasswordFlow } from './acctools.js';
+import { editDetailsDialog, resetPasswordFlow, removePictureFlow } from './acctools.js';
 import { reviewPage, card, roleName, agencyText } from './review.js';
 
 const DAY = 86400000;
@@ -250,7 +250,8 @@ function accountDetail(root, ctx, id) {
     const deciding = ['pending', 'rejected'].includes(a.status);
     const changing = !deciding && pick !== a.kind;
     // Edit details for anyone the Super Admin manages; Reset password once they can sign in.
-    const tools = !can ? [] : [['edit', t('editDetails'), 'pencil'], ...(['active', 'inactive'].includes(a.status) ? [['reset', t('resetPassword'), 'key']] : [])];
+    const tools = !can ? [] : [['edit', t('editDetails'), 'pencil'], ...(['active', 'inactive'].includes(a.status) ? [['reset', t('resetPassword'), 'key']] : []),
+      ...(avatarOf(a.id) ? [['picture', t('removePicture'), 'camera']] : [])];
     const go = deciding ? [['approve', t('approveAsRole', { role: roleName(pick) }), 'btn-go']]
       : changing ? [['role', t('changeTo', { role: roleName(pick) }), a.status === 'active' ? 'btn-go' : 'btn-ghost']] : [];
     const buttons = !can ? [] : {
@@ -299,6 +300,8 @@ function accountDetail(root, ctx, id) {
       if (await editDetailsDialog(u.id, a)) render();
     } else if (what === 'reset') {
       if (await resetPasswordFlow(u.id, a)) render();
+    } else if (what === 'picture') {
+      if (await removePictureFlow(u.id, a)) render();
     } else if (what === 'reject') {
       const r = await dialog({ title: t('rejectTitle', { name: displayName(a) }), confirm: t('reject'), danger: true, textarea: { label: t('rejectReason'), hint: t('rejectReasonHint'), max: 200 } });
       if (r) done(changeStatus(u.id, a.id, 'rejected', r.text));
@@ -325,10 +328,10 @@ function accountDetail(root, ctx, id) {
 }
 
 // ------------------------------------------------------------------ Activity log
-const ACTIONS = ['signup', 'approved', 'rejected', 'role', 'inactive', 'active', 'edited', 'reset'];
+const ACTIONS = ['signup', 'approved', 'rejected', 'role', 'inactive', 'active', 'edited', 'reset', 'picture'];
 const ACTION_LABEL = {
   signup: 'actSignup', approved: 'actApproved', rejected: 'actRejected', role: 'actRole',
-  inactive: 'actInactive', active: 'actActive', edited: 'actEdited', reset: 'actReset',
+  inactive: 'actInactive', active: 'actActive', edited: 'actEdited', reset: 'actReset', picture: 'actPicture',
 };
 const actState = { what: '', who: '', agency: '', when: '', page: 1 };
 const inWhen = at => actState.when === 'today' ? isToday(at) : actState.when === '7d' ? Date.now() - at < 7 * DAY

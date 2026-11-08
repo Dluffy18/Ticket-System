@@ -1,7 +1,7 @@
 // Edit details and Reset password, shared by the Super Admin and Office Admins.
 import { t } from '../strings.js';
 import { esc, displayName, fPhone, SUFFIXES } from '../util.js';
-import { updateDetails, resetPassword } from '../store.js';
+import { updateDetails, resetPassword, removePicture } from '../store.js';
 import { icon, toast, dialog } from '../ui.js';
 
 function openDialog(html, cls = '') {
@@ -64,6 +64,16 @@ export function editDetailsDialog(actorId, acc) {
     });
     f.first.focus();
   });
+}
+
+// Resolves true when the picture was removed.
+export async function removePictureFlow(actorId, acc) {
+  const ok = await dialog({ title: t('removePicTitle', { name: displayName(acc) }), body: t('removePicBody'), confirm: t('removePicture'), danger: true });
+  if (!ok) return false;
+  const res = removePicture(actorId, acc.id);
+  if (res.error) { toast(res.error, 'error'); return false; }
+  toast(res.message);
+  return true;
 }
 
 // Confirm, then show the Temporary password once.

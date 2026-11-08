@@ -1,9 +1,9 @@
 import { t, tn } from '../strings.js';
 import { esc, fullName, displayName, fDate, fDateTime, isToday, isThisMonth, fPhone, normName, downloadCsv, todayKey } from '../util.js';
-import { S, me, allEnforcers, enforcer, changeStatus, personName, subscribe, activeBooklets, bookletSize, ctName, roleLabel } from '../store.js';
+import { S, me, allEnforcers, enforcer, changeStatus, personName, subscribe, activeBooklets, bookletSize, ctName, roleLabel, avatarOf } from '../store.js';
 import { icon, toast, dialog, pager, paginate, emptyState, kv, menuMarkup, bindMenu } from '../ui.js';
 import { kpi, dailyChart, bookletSplit, bookletBar, splitText } from './dash.js';
-import { editDetailsDialog, resetPasswordFlow } from './acctools.js';
+import { editDetailsDialog, resetPasswordFlow, removePictureFlow } from './acctools.js';
 import { reviewPage, card } from './review.js';
 
 export const STATUS_LABEL = { active: 'acActive', pending: 'acPending', rejected: 'acRejected', inactive: 'acInactive' };
@@ -204,7 +204,7 @@ export function changeLines(changes) {
 
 export function historyList(h) {
   if (!h || !h.length) return `<p class="muted">${esc(t('noHistory'))}</p>`;
-  const key = { approved: 'hApproved', rejected: 'hRejected', inactive: 'hInactive', active: 'hActive', edited: 'hEdited', reset: 'hReset' };
+  const key = { approved: 'hApproved', rejected: 'hRejected', inactive: 'hInactive', active: 'hActive', edited: 'hEdited', reset: 'hReset', picture: 'hPicture' };
   return `<ol class="hist">${[...h].reverse().map(x => `<li>
     <span class="hist-what">${esc(x.as ? t(x.action === 'role' ? 'hRole' : 'hApprovedAs', { role: roleLabel(x.as, x.agency), by: personName(x.by) }) : t(key[x.action], { by: personName(x.by) }))}</span>
     <span class="hist-when">${esc(fDateTime(x.at))}</span>
@@ -252,7 +252,8 @@ function enforcerDetail(root, ctx, id) {
       active: [['inactive', t('setInactive'), 'btn-danger-ghost']],
       inactive: [['active', t('setActive'), 'btn-go']],
     }[e.status] || [];
-    const tools = e.status === 'rejected' ? [] : [['edit', t('editDetails'), 'pencil'], ...(['active', 'inactive'].includes(e.status) ? [['reset', t('resetPassword'), 'key']] : [])];
+    const tools = e.status === 'rejected' ? [] : [['edit', t('editDetails'), 'pencil'], ...(['active', 'inactive'].includes(e.status) ? [['reset', t('resetPassword'), 'key']] : []),
+      ...(avatarOf(e.id) ? [['picture', t('removePicture'), 'camera']] : [])];
     const text = e.status === 'pending' ? t('rvPendingAs', { role: t('roleEnforcer') })
       : e.status === 'rejected' ? t('rvRejectedAs', { role: t('roleEnforcer') })
       : e.status === 'active' ? t('rvActive', { role: roleLabel(e.kind, e.agency) }) : t('rvInactive');
@@ -284,6 +285,7 @@ function enforcerDetail(root, ctx, id) {
       const what = b.dataset.act;
       if (what === 'edit') { if (await editDetailsDialog(u.id, e)) render(); }
       else if (what === 'reset') { if (await resetPasswordFlow(u.id, e)) render(); }
+      else if (what === 'picture') { if (await removePictureFlow(u.id, e)) render(); }
       else decide(e, what, render);
     }));
   };
