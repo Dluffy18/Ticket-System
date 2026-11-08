@@ -51,3 +51,11 @@ _Avoid_: Repeat offender, habitual violator
 **Super Admin**:
 The one account above every office, held by the CICT Office of the City Government of Mati. Sees every account, gives Office Admin or Verifier access, and can approve, reject, deactivate or reactivate any account. Nobody signs up as a Super Admin.
 _Avoid_: System Admin, root, owner
+
+**Temporary password**:
+A password made by the app when the Super Admin, or an Enforcer's Office Admin, resets someone's password. It's shown once, and works for one sign-in only: the person must set their own password before doing anything else.
+_Avoid_: Default password, reset code
+
+**Activity log**:
+The Super Admin's list of everything done to accounts: sign-ups, and every decision, role change, detail correction and password reset made by an Office Admin or the Super Admin. People changing their own password aren't in it.
+_Avoid_: Audit trail, history (that's one account's own list)

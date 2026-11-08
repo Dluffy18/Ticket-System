@@ -1,6 +1,6 @@
 import { t } from '../strings.js';
 import { esc, SUFFIXES } from '../util.js';
-import { S, signIn, register, validateRegistration } from '../store.js';
+import { S, signIn, register, validateRegistration, setOwnPassword, signOut } from '../store.js';
 import { icon, menuMarkup, bindMenu, setMenuValue } from '../ui.js';
 
 function brand() {
@@ -157,6 +157,37 @@ export function registerView(root, ctx) {
         <a class="btn btn-primary btn-block btn-lg" href="#/signin">${esc(t('backToSignIn'))}</a>
       </div>`;
     form.scrollIntoView({ block: 'start' });
+  });
+}
+
+// After a Temporary password: set your own before anything else.
+export function setPasswordView(root, ctx) {
+  root.innerHTML = splitPage(`
+    <form class="split-form" novalidate>
+      <h1 class="split-title">${esc(t('setPwTitle'))}</h1>
+      <p class="split-lead">${esc(t('setPwLead'))}</p>
+      <div class="field-pair">
+        ${field('password', t('newPassword'), 'new-password', false, t('phPassword'), 'password')}
+        ${field('confirm', t('confirmPassword'), 'new-password', false, t('phConfirm'), 'password')}
+        <span class="hint">${esc(t('passwordHint'))}</span>
+      </div>
+      <button class="btn btn-primary btn-block btn-lg" type="submit">${esc(t('setPwSave'))}</button>
+      <p class="split-alt"><button type="button" class="split-link" data-out>${esc(t('signOut'))}</button></p>
+    </form>`);
+  const form = root.querySelector('form');
+  form.password.focus();
+  root.querySelector('[data-out]').addEventListener('click', () => { signOut(); ctx.go('#/signin'); });
+  form.addEventListener('submit', async e => {
+    e.preventDefault();
+    const res = await setOwnPassword({ password: form.password.value, confirm: form.confirm.value });
+    form.querySelectorAll('[data-f]').forEach(f => {
+      const msg = res.errors?.[f.dataset.f] || '';
+      const el = f.querySelector('.err');
+      el.hidden = !msg; el.textContent = msg;
+      f.classList.toggle('has-err', !!msg);
+    });
+    if (res.errors) { form.querySelector('.has-err input')?.focus(); return; }
+    ctx.afterSignIn(t('setPwDone'));
   });
 }
 

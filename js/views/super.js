@@ -1,14 +1,19 @@
-// Super Admin: every account in one list. Approve sign-ups as Enforcer, Office Admin or
-// Verifier, change roles, and set accounts Inactive or Active again.
+// Super Admin: Overview, every account in one list, and the Activity log.
+// Approve sign-ups as Enforcer, Office Admin or Verifier, change roles, correct details,
+// reset passwords, and set accounts Inactive or Active again.
 import { t, tn } from '../strings.js';
-import { esc, fullName, displayName, fDate, fPhone, normName } from '../util.js';
+import { esc, fullName, displayName, fDate, fDateTime, fPhone, normName, isToday, isThisMonth, downloadCsv, todayKey } from '../util.js';
 import {
   S, me, allAccounts, findAccount, changeStatus, approveAs, changeRole, canManage, roleLabel, ROLES,
-  activeBooklets, bookletSize, bookletUsed, subscribe,
+  activeBooklets, bookletSize, bookletUsed, subscribe, activityLog, personName,
 } from '../store.js';
 import { icon, toast, dialog, pager, paginate, emptyState, kv } from '../ui.js';
-import { statusTag, historyList, STATUS_LABEL } from './admin.js';
+import { statusTag, historyList, changeLines, STATUS_LABEL } from './admin.js';
+import { kpi } from './dash.js';
+import { editDetailsDialog, resetPasswordFlow } from './acctools.js';
 
+const DAY = 86400000;
+const WAIT_DAYS = 2;
 const ROLE_NAME = { enforcer: 'roleEnforcer', office: 'roleOffice', verifier: 'roleVerifierShort', super: 'roleSuperShort' };
 const roleName = k => t(ROLE_NAME[k]);
 // The Agency column: Verifiers belong to the Treasury Office, the Super Admin to the CICT Office.
@@ -25,7 +30,82 @@ export function accountsView(root, ctx) {
   return accountsList(root, ctx);
 }
 
-// ------------------------------------------------------------------ list
+// ------------------------------------------------------------------ Overview
+// Links carry a filter for the Accounts list: data-acc="role=office&agency=POLICE".
+const accLink = (filter, inner, cls = '') => `<a class="${cls}" href="#/accounts" data-acc="${esc(filter)}">${inner}</a>`;
+function bindAccLinks(root) {
+  root.querySelectorAll('[data-acc]').forEach(a => a.addEventListener('click', () => {
+    const p = new URLSearchParams(a.dataset.acc);
+    Object.assign(accState, { q: '', role: p.get('role') || '', agency: p.get('agency') || '', status: p.get('status') || '', page: 1 });
+  }));
+}
+
+export function superOverviewView(root, ctx) {
+  const render = () => {
+    const all = allAccounts();
+    const active = all.filter(a => a.status === 'active');
+    const pending = all.filter(a => a.status === 'pending');
+    const now = Date.now();
+
+    // Needs attention: an Agency with no active Office Admin, no active Verifier, sign-ups waiting too long.
+    const att = [];
+    S.ref.agencies.forEach(ag => {
+      if (!active.some(a => a.kind === 'office' && a.agency === ag.id)) {
+        att.push({ rank: 0, kind: 'spoiled', icon: 'users', filter: `role=office&agency=${ag.id}`, text: t('attNoOffice', { agency: ag.name }) });
+      }
+    });
+    if (!active.some(a => a.kind === 'verifier')) att.push({ rank: 1, kind: 'spoiled', icon: 'shield', filter: 'role=verifier', text: t('attNoVerifier') });
+    const old = pending.filter(a => a.createdAt && now - a.createdAt > WAIT_DAYS * DAY).length;
+    if (old) att.push({ rank: 2, kind: 'wait', icon: 'inbox', filter: 'status=pending', text: tn('attWaitingLong', old, { d: WAIT_DAYS }) });
+    att.sort((a, b) => a.rank - b.rank);
+
+    // One row per Agency, plus sign-ups with no Agency when there are any.
+    const cnt = (agency, kind, status) => all.filter(a => a.agency === agency && (!kind || a.kind === kind) && a.status === status).length;
+    const num = (n, filter) => n ? accLink(filter, String(n), 'sa-num') : `<span class="muted">0</span>`;
+    const rows = S.ref.agencies.map(ag => `<tr>
+      <th scope="row">${esc(ag.name)}</th>
+      <td class="n" data-label="${esc(t('saActiveEnf'))}">${num(cnt(ag.id, 'enforcer', 'active'), `role=enforcer&status=active&agency=${ag.id}`)}</td>
+      <td class="n" data-label="${esc(t('acPending'))}">${num(cnt(ag.id, '', 'pending'), `status=pending&agency=${ag.id}`)}</td>
+      <td class="n" data-label="${esc(t('acInactive'))}">${num(cnt(ag.id, '', 'inactive'), `status=inactive&agency=${ag.id}`)}</td>
+      <td class="n" data-label="${esc(t('saOfficeAdmins'))}">${num(cnt(ag.id, 'office', 'active'), `role=office&status=active&agency=${ag.id}`)}</td></tr>`).join('');
+    const noAg = pending.filter(a => !S.ag.has(a.agency) && a.kind === 'enforcer').length;
+
+    root.innerHTML = `
+    <div class="sm sa-ov">
+      <header class="sm-head"><div><h1 class="h1 sm-title">${esc(t('overviewTitle'))}</h1></div></header>
+      <div class="kpis st-tiles">
+        ${kpi({ kind: 'waiting', ic: 'inbox', label: t('saPending'), n: pending.length, href: '#/accounts', linkText: t('viewAccounts'), linkAttrs: 'data-acc="status=pending"' })}
+        ${kpi({ kind: 'paid', ic: 'users', label: t('saActiveEnf'), n: active.filter(a => a.kind === 'enforcer').length, href: '#/accounts', linkText: t('viewAccounts'), linkAttrs: 'data-acc="role=enforcer&status=active"' })}
+        ${kpi({ kind: 'unpaid', ic: 'user', label: t('saOfficeAdmins'), n: active.filter(a => a.kind === 'office').length, href: '#/accounts', linkText: t('viewAccounts'), linkAttrs: 'data-acc="role=office&status=active"' })}
+        ${kpi({ kind: 'cancelled', ic: 'shield', label: t('saVerifiers'), n: active.filter(a => a.kind === 'verifier').length, href: '#/accounts', linkText: t('viewAccounts'), linkAttrs: 'data-acc="role=verifier&status=active"' })}
+      </div>
+      <div class="sa-grid">
+        <section class="sm-card">
+          <h2 class="sm-h">${esc(t('needsAttention'))}${att.length ? ` <span class="att-count">(${att.length})</span>` : ''}</h2>
+          ${att.length ? `<ul class="att-list sa-att">${att.map(a => `<li class="att att-${a.kind}">${accLink(a.filter, `${icon(a.icon)}<span>${esc(a.text)}</span>${icon('chevR')}`)}</li>`).join('')}</ul>`
+            : `<p class="att-clear">${icon('check')}<span>${esc(t('allClear'))}</span></p>`}
+        </section>
+        <section class="sm-card">
+          <h2 class="sm-h">${esc(t('saByAgency'))}</h2>
+          <p class="muted small">${esc(t('saByAgencyLead'))}</p>
+          <div class="table-wrap"><table class="tbl tbl-compact tbl-sa">
+            <thead><tr><th scope="col">${esc(t('agency'))}</th><th scope="col" class="n">${esc(t('saActiveEnf'))}</th><th scope="col" class="n">${esc(t('acPending'))}</th>
+              <th scope="col" class="n">${esc(t('acInactive'))}</th><th scope="col" class="n">${esc(t('saOfficeAdmins'))}</th></tr></thead>
+            <tbody>${rows}${noAg ? `<tr><th scope="row">${esc(t('noAgency'))}</th><td class="n" data-label="${esc(t('saActiveEnf'))}"><span class="muted">—</span></td>
+              <td class="n" data-label="${esc(t('acPending'))}">${num(noAg, 'status=pending&agency=-')}</td><td class="n" data-label="${esc(t('acInactive'))}"><span class="muted">—</span></td>
+              <td class="n" data-label="${esc(t('saOfficeAdmins'))}"><span class="muted">—</span></td></tr>` : ''}</tbody>
+          </table></div>
+        </section>
+      </div>
+    </div>`;
+    bindAccLinks(root);
+  };
+  render();
+  const off = subscribe(k => { if (k === 'accounts' && document.body.contains(root)) render(); });
+  ctx.onLeave(off);
+}
+
+// ------------------------------------------------------------------ Accounts list
 const accState = { q: '', role: '', agency: '', status: '', page: 1 };
 
 function accountsList(root, ctx) {
@@ -65,7 +145,8 @@ function accountsList(root, ctx) {
     const pg = paginate(list, accState.page);
     accState.page = pg.page;
     root.querySelector('[data-table]').innerHTML = `
-      <p class="showing">${esc(pg.n ? t('showingAcc', { a: pg.a, b: pg.b, n: pg.n }) : '')}</p>
+      <div class="list-tools"><p class="showing">${esc(pg.n ? t('showingAcc', { a: pg.a, b: pg.b, n: pg.n }) : '')}</p>
+        ${pg.n ? `<button type="button" class="btn btn-ghost btn-sm" data-csv>${icon('download')}<span>${esc(t('downloadCsv'))}</span></button>` : ''}</div>
       ${pg.n ? `<div class="table-wrap"><table class="tbl tbl-reg tbl-acc">
         <thead><tr><th scope="col">${esc(t('colName'))}</th><th scope="col">${esc(t('role'))}</th><th scope="col">${esc(t('agency'))}</th>
           <th scope="col">${esc(t('colStatus'))}</th><th scope="col">${esc(t('colContact'))}</th><th scope="col">${esc(t('colRegistered'))}</th></tr></thead>
@@ -81,6 +162,13 @@ function accountsList(root, ctx) {
       ${pager(pg.page, pg.pages)}`;
     root.querySelectorAll('[data-page]').forEach(b => b.addEventListener('click', () => { accState.page = Number(b.dataset.page); renderTable(); }));
     root.querySelectorAll('.tr-link').forEach(tr => tr.addEventListener('click', e => { if (!e.target.closest('a')) location.hash = tr.dataset.href; }));
+    root.querySelector('[data-csv]')?.addEventListener('click', () => {
+      const header = ['csvName', 'csvRole', 'csvAgency', 'csvStatus', 'csvRank', 'csvBadge', 'csvContact', 'csvAddress', 'csvRegistered'].map(k => t(k));
+      const csvRows = list.map(a => [fullName(a), roleName(a.kind), agencyText(a), t(STATUS_LABEL[a.status]), a.rank || '', a.badge || '',
+        fPhone(a.contact), a.address || '', a.registeredAt ? fDate(a.registeredAt) : t('fromRecords')]);
+      downloadCsv(`accounts-${todayKey()}.csv`, header, csvRows);
+      toast(tn('csvSaved', csvRows.length));
+    });
   };
   root.querySelector('[name=q]').addEventListener('input', e => { accState.q = e.target.value; accState.page = 1; renderTable(); });
   ['role', 'agency', 'status'].forEach(k => root.querySelector(`[name=${k}]`).addEventListener('change', e => {
@@ -91,8 +179,8 @@ function accountsList(root, ctx) {
   ctx.onLeave(off);
 }
 
-// ------------------------------------------------------------------ detail
-// Booklets still in use: "2 Booklets with 31 forms left".
+// ------------------------------------------------------------------ Account detail
+// Booklets still in use: "2 · 31 forms left".
 function bookletsInUse(id) {
   const books = activeBooklets(id);
   return { n: books.length, left: books.reduce((s, b) => s + bookletSize(b) - bookletUsed(b), 0) };
@@ -165,6 +253,8 @@ function accountDetail(root, ctx, id) {
       active: [['inactive', t('setInactive'), 'btn-danger-ghost'], ['role', t('changeRole'), 'btn-primary']],
       inactive: [['role', t('changeRole'), 'btn-ghost'], ['active', t('setActive'), 'btn-primary']],
     }[a.status] || [];
+    // Edit details for anyone the Super Admin manages; Reset password once they can sign in.
+    const tools = !can ? [] : [['edit', t('editDetails'), 'pencil'], ...(['active', 'inactive'].includes(a.status) ? [['reset', t('resetPassword'), 'key']] : [])];
     root.innerHTML = `${back}
       <article class="sheet">
         <header class="sheet-head">
@@ -172,6 +262,7 @@ function accountDetail(root, ctx, id) {
           <div>${statusTag(a.status)}</div>
         </header>
         <div class="perf" aria-hidden="true"></div>
+        ${tools.length ? `<div class="acc-tools">${tools.map(([act, label, ic]) => `<button type="button" class="btn btn-ghost btn-sm" data-act="${act}">${icon(ic)}<span>${esc(label)}</span></button>`).join('')}</div>` : ''}
         <section class="sec">
           ${kv([
             [t('role'), esc(roleName(a.kind))], [t('agency'), esc(agencyText(a))],
@@ -182,7 +273,7 @@ function accountDetail(root, ctx, id) {
           ])}
         </section>
         <section class="sec"><h2 class="h2">${esc(t('history'))}</h2>${historyList(a.history)}</section>
-        ${a.id === u.id ? `<p class="muted">${esc(t('ownAccount'))}</p>` : ''}
+        ${a.id === u.id ? `<p class="muted own-note">${esc(t('ownAccount'))}</p>` : ''}
         ${acts.length ? `<div class="actions-row acc-actions">${acts.map(([act, label, cls]) => `<button type="button" class="btn ${cls} btn-lg" data-act="${act}">${esc(label)}</button>`).join('')}</div>` : ''}
       </article>`;
     root.querySelectorAll('[data-act]').forEach(b => b.addEventListener('click', () => act(a, b.dataset.act)));
@@ -190,7 +281,11 @@ function accountDetail(root, ctx, id) {
 
   const done = res => { if (res.error) toast(res.error, 'error'); else toast(res.message); render(); };
   async function act(a, what) {
-    if (what === 'reject') {
+    if (what === 'edit') {
+      if (await editDetailsDialog(u.id, a)) render();
+    } else if (what === 'reset') {
+      if (await resetPasswordFlow(u.id, a)) render();
+    } else if (what === 'reject') {
       const r = await dialog({ title: t('rejectTitle', { name: displayName(a) }), confirm: t('reject'), danger: true, textarea: { label: t('rejectReason'), hint: t('rejectReasonHint'), max: 200 } });
       if (r) done(changeStatus(u.id, a.id, 'rejected', r.text));
     } else if (what === 'inactive') {
@@ -211,6 +306,75 @@ function accountDetail(root, ctx, id) {
     }
   }
 
+  render();
+  const off = subscribe(k => { if (k === 'accounts' && document.body.contains(root)) render(); });
+  ctx.onLeave(off);
+}
+
+// ------------------------------------------------------------------ Activity log
+const ACTIONS = ['signup', 'approved', 'rejected', 'role', 'inactive', 'active', 'edited', 'reset'];
+const ACTION_LABEL = {
+  signup: 'actSignup', approved: 'actApproved', rejected: 'actRejected', role: 'actRole',
+  inactive: 'actInactive', active: 'actActive', edited: 'actEdited', reset: 'actReset',
+};
+const actState = { what: '', who: '', agency: '', when: '', page: 1 };
+const inWhen = at => actState.when === 'today' ? isToday(at) : actState.when === '7d' ? Date.now() - at < 7 * DAY
+  : actState.when === 'month' ? isThisMonth(at) : true;
+
+// "Approved as Office Admin · Police", "Contact number: … → …", "Reason: …"
+function entryDetail(x) {
+  if (x.as) return `<span class="cell-sub">${esc(roleLabel(x.as, x.agency))}</span>`;
+  if (x.action === 'edited') return changeLines(x.changes);
+  if (x.reason) return `<span class="cell-sub">${esc(t('reason'))}: ${esc(x.reason)}</span>`;
+  return '';
+}
+
+export function activityView(root, ctx) {
+  const render = () => {
+    const log = activityLog();
+    const agencyOfEntry = x => x.acc.agency || x.acc.enfAgency || '';
+    const actors = [...new Set(log.filter(x => x.action !== 'signup').map(x => x.by))]
+      .map(id => ({ id, name: personName(id) })).sort((a, b) => a.name.localeCompare(b.name));
+    const list = log
+      .filter(x => !actState.what || x.action === actState.what)
+      .filter(x => !actState.who || (x.action !== 'signup' && x.by === actState.who))
+      .filter(x => !actState.agency || (actState.agency === '-' ? !S.ag.has(agencyOfEntry(x)) : agencyOfEntry(x) === actState.agency))
+      .filter(x => inWhen(x.at));
+    const pg = paginate(list, actState.page, 20);
+    actState.page = pg.page;
+    const opt = (v, l, cur) => `<option value="${esc(v)}" ${cur === v ? 'selected' : ''}>${esc(l)}</option>`;
+    root.innerHTML = `
+      <div class="page-head">
+        <h1 class="h1">${esc(t('activityTitle'))}</h1>
+        <p class="lead">${esc(t('activityLead'))}</p>
+      </div>
+      <div class="acc-filters act-filters">
+        <label class="field"><span class="lbl">${esc(t('actWhat'))}</span>
+          <select class="input" name="what">${opt('', t('allStatuses'), actState.what)}${ACTIONS.map(k => opt(k, t(ACTION_LABEL[k]), actState.what)).join('')}</select></label>
+        <label class="field"><span class="lbl">${esc(t('actWho'))}</span>
+          <select class="input" name="who">${opt('', t('actAnyone'), actState.who)}${actors.map(a => opt(a.id, a.name, actState.who)).join('')}</select></label>
+        <label class="field"><span class="lbl">${esc(t('agency'))}</span>
+          <select class="input" name="agency">${opt('', t('allAgencies'), actState.agency)}${S.ref.agencies.map(a => opt(a.id, a.name, actState.agency)).join('')}${opt('-', t('noAgency'), actState.agency)}</select></label>
+        <label class="field"><span class="lbl">${esc(t('date'))}</span>
+          <select class="input" name="when">${opt('', t('allDates'), actState.when)}${opt('today', t('today'), actState.when)}${opt('7d', t('last7Days'), actState.when)}${opt('month', t('thisMonth'), actState.when)}</select></label>
+      </div>
+      <p class="showing">${esc(pg.n ? t('showingAct', { a: pg.a, b: pg.b, n: pg.n }) : '')}</p>
+      ${pg.n ? `<div class="table-wrap"><table class="tbl tbl-reg tbl-act">
+        <thead><tr><th scope="col">${esc(t('actAccount'))}</th><th scope="col">${esc(t('actWhat'))}</th><th scope="col">${esc(t('actWho'))}</th><th scope="col">${esc(t('actWhen'))}</th></tr></thead>
+        <tbody>${pg.slice.map(x => `<tr>
+          <th scope="row"><a href="#/accounts/${esc(x.acc.id)}" class="cell-name">${esc(displayName(x.acc))}</a>
+            <span class="cell-sub">${esc(roleLabel(x.acc.kind, x.acc.agency))}</span></th>
+          <td data-label="${esc(t('actWhat'))}"><span class="strong">${esc(t(ACTION_LABEL[x.action]))}</span>${entryDetail(x)}</td>
+          <td data-label="${esc(t('actWho'))}">${esc(x.action === 'signup' ? t('actThemselves') : personName(x.by))}</td>
+          <td data-label="${esc(t('actWhen'))}" class="nowrap">${esc(fDateTime(x.at))}</td></tr>`).join('')}</tbody>
+      </table></div>` : emptyState(t('noActivity'), t('noActivityBody'), 'activity')}
+      ${pager(pg.page, pg.pages)}`;
+    ['what', 'who', 'agency', 'when'].forEach(k => root.querySelector(`[name=${k}]`).addEventListener('change', e => {
+      actState[k] = e.target.value; actState.page = 1; render();
+      root.querySelector(`[name=${k}]`)?.focus();
+    }));
+    root.querySelectorAll('[data-page]').forEach(b => b.addEventListener('click', () => { actState.page = Number(b.dataset.page); render(); }));
+  };
   render();
   const off = subscribe(k => { if (k === 'accounts' && document.body.contains(root)) render(); });
   ctx.onLeave(off);

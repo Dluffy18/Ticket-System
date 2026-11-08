@@ -1,16 +1,16 @@
 import { t, tn } from './strings.js';
 import { esc, displayName } from './util.js';
 import { loadReference } from './data.js';
-import { S, init, me, signOut, startSession, setOnline, subscribe, activeBooklets, findAccount, enforcer, agencyOf, roleLabel } from './store.js';
+import { S, init, me, signOut, startSession, setOnline, subscribe, activeBooklets, findAccount, enforcer, agencyOf, roleLabel, mustSetPassword } from './store.js';
 import { icon, toast } from './ui.js';
 import { applyTheme, setTheme, currentTheme } from './views/common.js';
-import { signInView, registerView } from './views/auth.js';
+import { signInView, registerView, setPasswordView } from './views/auth.js';
 import { homeView, typeView, recordView, citationsView, statsView } from './views/enforcer.js';
 import { profilePage } from './views/profile.js';
 import { overviewView, enforcersView, registrationsView, pendingCount } from './views/admin.js';
 import { vCitationsView, summaryView } from './views/verifier.js';
 import { bookletsView } from './views/booklets.js';
-import { accountsView, superPendingCount } from './views/super.js';
+import { accountsView, superPendingCount, superOverviewView, activityView } from './views/super.js';
 
 const app = document.getElementById('app');
 let leaveFns = [];
@@ -37,7 +37,9 @@ const NAV = {
     ['profile', '#/profile', 'navProfile', 'user'],
   ],
   super: [
+    ['overview', '#/overview', 'navOverview', 'chart'],
     ['accounts', '#/accounts', 'navAccounts', 'users'],
+    ['activity', '#/activity', 'navActivity', 'activity'],
     ['profile', '#/profile', 'navProfile', 'user'],
   ],
 };
@@ -46,14 +48,14 @@ const ROUTES = {
   enforcer: { home: homeView, type: typeView, record: recordView, citations: citationsView, stats: statsView, profile: profilePage },
   office: { overview: overviewView, enforcers: enforcersView, registrations: registrationsView, profile: profilePage },
   verifier: { v: (root, ctx) => vCitationsView(root, { ...ctx, params: ctx.params.slice(1) }), summary: summaryView, booklets: bookletsView, profile: profilePage },
-  super: { accounts: accountsView, profile: profilePage },
+  super: { overview: superOverviewView, accounts: accountsView, activity: activityView, profile: profilePage },
 };
 
 function defaultRoute(u) {
   if (!u) return '#/signin';
   if (u.kind === 'office') return '#/overview';
   if (u.kind === 'verifier') return '#/summary';
-  if (u.kind === 'super') return '#/accounts';
+  if (u.kind === 'super') return '#/overview';
   return activeBooklets(u.id).length ? '#/home' : '#/type';
 }
 
@@ -118,11 +120,13 @@ function render() {
   const u = me();
   const ctx = {
     params: parts.slice(1), go, rerender: render, onLeave: fn => leaveFns.push(fn),
-    afterSignIn: () => go(defaultRoute(me())), bindCommon,
+    afterSignIn: msg => go(defaultRoute(me()), msg), bindCommon,
   };
   if (!u) {
     if (parts[0] === 'register') registerView(app, ctx);
     else { if (parts[0] !== 'signin') { history.replaceState(null, '', '#/signin'); } signInView(app, ctx); }
+  } else if (mustSetPassword(u.id)) {
+    setPasswordView(app, ctx);
   } else {
     const routes = ROUTES[u.kind];
     const key = parts[0];

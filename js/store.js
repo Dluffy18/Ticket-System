@@ -9,6 +9,7 @@ import { t } from './strings.js';
 const LS_REG = 'vt.registrations';
 const LS_STATUS = 'vt.accountStatus';
 const LS_PW = 'vt.passwords';   // accountId -> { salt, hash, changedAt } after a Change password
+const LS_EDITS = 'vt.edits';   // accountId -> corrected details of a JSON account
 const LS_ROLES = 'vt.roles';   // accountId -> { kind, agency, enfAgency } given by the Super Admin
 const LS_AVATAR = 'vt.avatars'; // accountId -> profile picture (JPEG data URL), kept on this device
 const SS_SESSION = 'vt.session';
@@ -22,6 +23,7 @@ export const S = {
   registrations: [],
   statusOverrides: {},
   roles: {},
+  edits: {},
   passwords: {},
   avatars: {},
   online: true,
@@ -46,6 +48,7 @@ export function init(ref) {
   S.registrations = lsGet(LS_REG, []);
   S.statusOverrides = lsGet(LS_STATUS, {});
   S.roles = lsGet(LS_ROLES, {});
+  S.edits = lsGet(LS_EDITS, {});
   S.passwords = lsGet(LS_PW, {});
   S.avatars = lsGet(LS_AVATAR, {});
   S.online = navigator.onLine !== false;
@@ -63,7 +66,7 @@ export function init(ref) {
 function fromJson(a, kind) {
   const o = S.statusOverrides[a.id] || {};
   return {
-    ...a, kind, source: 'json',
+    ...a, ...S.edits[a.id], kind, source: 'json',
     status: o.status || 'active', reason: o.reason || '', history: o.history || [], registeredAt: null,
   };
 }
@@ -125,7 +128,24 @@ export async function signIn(nameInput, password) {
 async function passwordMatches(acc, password) {
   const stored = S.passwords[acc.id] || (acc.source === 'reg' && acc.hash ? acc : null);
   if (!stored) return true;
-  return (await hashPassword(stored.salt, password)) === stored.hash;
+  const typed = stored.temp ? normTemp(password) : password;
+  return (await hashPassword(stored.salt, typed)) === stored.hash;
+}
+const normTemp = s => String(s || '').toUpperCase().replace(/[\s-]/g, '');
+
+// After a reset, the person must set their own password before anything else.
+export function mustSetPassword(id) { return !!S.passwords[id]?.temp; }
+
+export async function setOwnPassword(f) {
+  const acc = me();
+  const err = {};
+  if ((f.password || '').length < 8) err.password = t('errPasswordShort');
+  if (f.password !== f.confirm) err.confirm = t('errPasswordMatch');
+  if (Object.keys(err).length) return { errors: err };
+  const salt = randomSalt();
+  S.passwords[acc.id] = { salt, hash: await hashPassword(salt, f.password), changedAt: Date.now() };
+  lsSet(LS_PW, S.passwords);
+  return { ok: true };
 }
 
 export function passwordChangedAt(id) { return S.passwords[id]?.changedAt || null; }
@@ -272,6 +292,72 @@ export function changeRole(actorId, accId, kind, agency) {
   saveDecision(acc, {}, { action: 'role', as: kind, agency: kind === 'verifier' ? '' : agency, by: actorId, at: Date.now(), reason: '' });
   emit('accounts');
   return { ok: true, message: t('msgRoleChanged', { name: displayName(acc), role: roleLabel(kind, agency) }) };
+}
+
+// Super Admin on anyone but themselves; an Office Admin on their own Enforcers.
+// Returns the Temporary password, shown once: 8 characters with no 0/O or 1/I/L, as XXXX-XXXX.
+const TEMP_CHARS = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+export async function resetPassword(actorId, accId) {
+  const actor = findAccount(actorId);
+  const acc = findAccount(accId);
+  if (!canManage(actor, acc)) return { error: t(actor?.kind === 'super' ? 'errNotAllowed' : 'errNotYourAgency') };
+  const r = crypto.getRandomValues(new Uint32Array(8));
+  const raw = [...r].map(n => TEMP_CHARS[n % TEMP_CHARS.length]).join('');
+  const salt = randomSalt();
+  S.passwords[acc.id] = { salt, hash: await hashPassword(salt, raw), changedAt: Date.now(), temp: true };
+  lsSet(LS_PW, S.passwords);
+  saveDecision(acc, {}, { action: 'reset', by: actorId, at: Date.now(), reason: '' });
+  emit('accounts');
+  return { ok: true, temp: raw.slice(0, 4) + '-' + raw.slice(4) };
+}
+
+export const DETAIL_FIELDS = ['first', 'middle', 'last', 'suffix', 'gender', 'contact', 'address', 'rank', 'badge'];
+
+// Correct someone's details. Every changed field is kept in their history as old → new.
+export function updateDetails(actorId, accId, f) {
+  const actor = findAccount(actorId);
+  const acc = findAccount(accId);
+  if (!canManage(actor, acc)) return { error: t(actor?.kind === 'super' ? 'errNotAllowed' : 'errNotYourAgency') };
+  const v = {
+    first: String(f.first || '').trim(), middle: String(f.middle || '').trim(), last: String(f.last || '').trim(),
+    suffix: SUFFIXES.includes(f.suffix) ? f.suffix : '', gender: f.gender,
+    contact: normPhone(f.contact), address: String(f.address || '').trim(),
+    rank: String(f.rank || '').trim(), badge: String(f.badge || '').trim(),
+  };
+  const err = {};
+  if (!v.first) err.first = t('errFirstRequired');
+  if (!v.last) err.last = t('errLastRequired');
+  if (!['M', 'F'].includes(v.gender)) err.gender = t('errGenderRequired');
+  if (!v.contact) err.contact = t('errContact');
+  if (!v.address && acc.address) err.address = t('errAddress');
+  if (!err.first && !err.last) {
+    const k = normName(fullName(v));
+    if (allAccounts().some(a => a.id !== acc.id && a.status !== 'rejected' && normName(fullName(a)) === k)) err.first = t('errNameTakenOther');
+  }
+  if (Object.keys(err).length) return { errors: err };
+  const changes = DETAIL_FIELDS.filter(k => (acc[k] || '') !== v[k]).map(k => ({ field: k, from: acc[k] || '', to: v[k] }));
+  if (!changes.length) return { error: t('errNoChanges') };
+  const patch = Object.fromEntries(changes.map(c => [c.field, c.to]));
+  if (acc.source === 'json') {
+    S.edits[acc.id] = { ...S.edits[acc.id], ...patch };
+    lsSet(LS_EDITS, S.edits);
+    saveDecision(acc, {}, { action: 'edited', changes, by: actorId, at: Date.now(), reason: '' });
+  } else {
+    saveDecision(acc, patch, { action: 'edited', changes, by: actorId, at: Date.now(), reason: '' });
+  }
+  emit('accounts');
+  const renamed = changes.some(c => ['first', 'middle', 'last', 'suffix'].includes(c.field));
+  return { ok: true, message: renamed ? t('msgSavedRenamed', { name: fullName(v) }) : t('msgSaved') };
+}
+
+// Activity log: every sign-up, and every decision in every account's history, newest first.
+export function activityLog() {
+  const out = [];
+  allAccounts().forEach(a => {
+    if (a.source === 'reg' && a.createdAt) out.push({ action: 'signup', at: a.createdAt, by: a.id, acc: a });
+    (a.history || []).forEach(h => out.push({ ...h, acc: a }));
+  });
+  return out.sort((x, y) => y.at - x.at);
 }
 
 // ------------------------------------------------------------------ reference helpers

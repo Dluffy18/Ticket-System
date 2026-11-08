@@ -685,6 +685,33 @@ a.cell-name:hover { text-decoration: underline; }
 @media (max-width: 599px) { .acc-actions { flex-direction: column-reverse; } .acc-actions .btn { width: 100%; } }
 .dlg-form .alert-warn { margin: 0; }
 
+/* Super Admin: Overview, account tools, Activity log */
+.sa-grid { display: grid; gap: 16px; }
+.sa-att { max-height: none; }
+.tbl-sa .sa-num { font-weight: 700; }
+@media (max-width: 760px) {
+  .tbl-sa thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .tbl-sa tr { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px 10px; padding: 10px 2px; border-bottom: 1px solid var(--rule-2); }
+  .tbl-sa th, .tbl-sa td { display: block; padding: 0; border: 0; background: none; }
+  .tbl-sa tbody th { grid-column: 1 / -1; }
+  .tbl-sa td[data-label]::before { font-size: .6875rem; line-height: 1.2; }
+}
+@media (min-width: 900px) { .sa-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); align-items: start; gap: 20px; } }
+.acc-tools { display: flex; flex-wrap: wrap; gap: 8px; padding: 12px 16px 0; }
+.own-note { padding: 0 16px; }
+.chg { list-style: none; margin: 4px 0 0; padding: 0; display: grid; gap: 2px; font-size: .8125rem; color: var(--ink-2); }
+.chg-k { font-weight: 650; }
+.tbl-act td .strong { display: block; }
+.acc-filters.act-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (max-width: 519px) { .act-filters .field:last-child { grid-column: auto; } }
+@media (min-width: 760px) { .acc-filters.act-filters { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.dlg-edit { width: min(640px, calc(100vw - 32px)); }
+.edit-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 12px; }
+.edit-wide { grid-column: 1 / -1; }
+@media (max-width: 479px) { .edit-grid { grid-template-columns: minmax(0, 1fr); } }
+.temp-pw { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px; border: 1.5px dashed var(--rule-2); border-radius: var(--r); background: var(--sheet-2); }
+.temp-code { font-size: 1.5rem; font-weight: 800; letter-spacing: .08em; font-variant-numeric: tabular-nums; }
+
 /* Tables become stacked records on narrow screens */
 @media (max-width: 760px) {
   .tbl-enf thead, .tbl-cit thead, .tbl-reg thead, .tbl-sum thead, .tbl-bk thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }

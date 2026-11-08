@@ -3,6 +3,7 @@ import { esc, fullName, displayName, fDate, fDateTime, isToday, isThisMonth, fPh
 import { S, me, allEnforcers, enforcer, changeStatus, personName, subscribe, activeBooklets, bookletSize, ctName, roleLabel } from '../store.js';
 import { icon, toast, dialog, pager, paginate, emptyState, kv, menuMarkup, bindMenu } from '../ui.js';
 import { kpi, dailyChart, bookletSplit, bookletBar, splitText } from './dash.js';
+import { editDetailsDialog, resetPasswordFlow } from './acctools.js';
 
 export const STATUS_LABEL = { active: 'acActive', pending: 'acPending', rejected: 'acRejected', inactive: 'acInactive' };
 export const statusTag = s => `<span class="acct acct-${s}">${esc(t(STATUS_LABEL[s]))}</span>`;
@@ -193,13 +194,21 @@ export function enforcersView(root, ctx) {
   ctx.onLeave(off);
 }
 
+// One line per changed field: "Contact number: +63 917 … → +63 917 …"
+const FIELD_LABEL = { first: 'firstName', middle: 'middleName', last: 'lastName', suffix: 'suffix', gender: 'gender', contact: 'contactNumber', address: 'address', rank: 'rankPosition', badge: 'badgeId' };
+const fieldValue = (k, v) => !v ? t('dash') : k === 'gender' ? t(v === 'M' ? 'male' : 'female') : k === 'contact' ? fPhone(v) : v;
+export function changeLines(changes) {
+  return `<ul class="chg">${(changes || []).map(c => `<li><span class="chg-k">${esc(t(FIELD_LABEL[c.field]))}:</span> ${esc(fieldValue(c.field, c.from))} → ${esc(fieldValue(c.field, c.to))}</li>`).join('')}</ul>`;
+}
+
 export function historyList(h) {
   if (!h || !h.length) return `<p class="muted">${esc(t('noHistory'))}</p>`;
-  const key = { approved: 'hApproved', rejected: 'hRejected', inactive: 'hInactive', active: 'hActive' };
+  const key = { approved: 'hApproved', rejected: 'hRejected', inactive: 'hInactive', active: 'hActive', edited: 'hEdited', reset: 'hReset' };
   return `<ol class="hist">${[...h].reverse().map(x => `<li>
     <span class="hist-what">${esc(x.as ? t(x.action === 'role' ? 'hRole' : 'hApprovedAs', { role: roleLabel(x.as, x.agency), by: personName(x.by) }) : t(key[x.action], { by: personName(x.by) }))}</span>
     <span class="hist-when">${esc(fDateTime(x.at))}</span>
-    ${x.reason ? `<span class="hist-reason">${esc(t('reason'))}: ${esc(x.reason)}</span>` : ''}</li>`).join('')}</ol>`;
+    ${x.reason ? `<span class="hist-reason">${esc(t('reason'))}: ${esc(x.reason)}</span>` : ''}
+    ${x.action === 'edited' ? changeLines(x.changes) : ''}</li>`).join('')}</ol>`;
 }
 
 async function decide(e, to, after) {
@@ -250,6 +259,9 @@ function enforcerDetail(root, ctx, id) {
           <div>${statusTag(e.status)}</div>
         </header>
         <div class="perf" aria-hidden="true"></div>
+        ${e.status === 'rejected' ? '' : `<div class="acc-tools">
+          <button type="button" class="btn btn-ghost btn-sm" data-tool="edit">${icon('pencil')}<span>${esc(t('editDetails'))}</span></button>
+          ${['active', 'inactive'].includes(e.status) ? `<button type="button" class="btn btn-ghost btn-sm" data-tool="reset">${icon('key')}<span>${esc(t('resetPassword'))}</span></button>` : ''}</div>`}
         <div class="det-cols">
           <section class="sec">
             ${kv([
@@ -288,6 +300,8 @@ function enforcerDetail(root, ctx, id) {
         ${acts.length ? `<div class="actions-row">${acts.map(([to, label, cls]) => `<button type="button" class="btn ${cls} btn-lg" data-to="${to}">${esc(label)}</button>`).join('')}</div>` : ''}
       </article>`;
     root.querySelectorAll('[data-to]').forEach(b => b.addEventListener('click', () => decide(e, b.dataset.to, render)));
+    root.querySelector('[data-tool=edit]')?.addEventListener('click', async () => { if (await editDetailsDialog(u.id, e)) render(); });
+    root.querySelector('[data-tool=reset]')?.addEventListener('click', async () => { if (await resetPasswordFlow(u.id, e)) render(); });
   };
   render();
 }
