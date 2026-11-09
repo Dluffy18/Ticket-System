@@ -78,12 +78,12 @@ export function superOverviewView(root, ctx) {
         ${kpi({ kind: 'cancelled', ic: 'shield', label: t('saVerifiers'), n: active.filter(a => a.kind === 'verifier').length, href: '#/accounts', linkText: t('viewAccounts'), linkAttrs: 'data-acc="role=verifier&status=active"' })}
       </div>
       <div class="sa-grid">
-        <section class="sm-card">
+        <section class="sm-card sa-att-card">
           <h2 class="sm-h">${esc(t('needsAttention'))}${att.length ? ` <span class="att-count">(${att.length})</span>` : ''}</h2>
           ${att.length ? `<ul class="att-list sa-att">${att.map(a => `<li class="att att-${a.kind}">${accLink(a.filter, `${icon(a.icon)}<span>${esc(a.text)}</span>${icon('chevR')}`)}</li>`).join('')}</ul>`
             : `<p class="att-clear">${icon('check')}<span>${esc(t('allClear'))}</span></p>`}
         </section>
-        <section class="sm-card">
+        <section class="sm-card sa-ag-card">
           <h2 class="sm-h">${esc(t('saByAgency'))}</h2>
           <p class="muted small">${esc(t('saByAgencyLead'))}</p>
           <div class="table-wrap"><table class="tbl tbl-compact tbl-sa">

@@ -23,8 +23,8 @@ colors:
   done-bg: "#E2F0E7"
   cancel: "#555D6E"
   cancel-bg: "#ECEDF1"
-  paid: "#5A3DA8"
-  paid-bg: "#EFEAFA"
+  paid: "#2E6F40"
+  paid-bg: "#EAF3EC"
   pending: "#7A5200"
   pending-bg: "#FBF0D6"
   band-sub: "#C3CADD"
@@ -40,7 +40,7 @@ colors:
   night-canary: "#3A3316"
   night-canary-ink: "#F5DF80"
   night-done: "#74D7A1"
-  night-paid: "#BBA6FF"
+  night-paid: "#7FCB93"
   night-pending: "#F2C463"
 typography:
   serial-display:
@@ -235,7 +235,7 @@ A three-copy carbonless palette (white, pink, canary) printed in navy ink, with 
 
 ### Tertiary
 - **Canary Copy** (canary) with **Canary Rule** (canary-line) and **Canary Ink** (canary-ink): Not synced tags, the offline banner, warnings, unread ID fields, and text selection. Canary always carries canary-ink text.
-- **Stamp-pad inks**, each paired with a pale wash for panels: **Ledger Green** (done / done-bg) for Done and Issued, **Slate Grey** (cancel / cancel-bg) for Cancelled, **Treasury Violet** (paid / paid-bg) for Paid and the payment panel, **Amber Pending** (pending / pending-bg) for pending accounts.
+- **Stamp-pad inks**, each paired with a pale wash for panels: **Ledger Green** (done / done-bg) for Done and Issued, **Slate Grey** (cancel / cancel-bg) for Cancelled, **Receipt Green** (paid / paid-bg), a deep green, for Paid and the payment panel, **Amber Pending** (pending / pending-bg) for pending accounts.
 
 ### Neutral
 - **White Ground** (ground): the page behind every sheet. In light mode it is white, so sheets carry a 1px rule-2 edge (card-edge) to stay distinct; Night keeps its dark ground and drops the edge. Pressed Ground (ground-2) is the deeper ground.
@@ -339,7 +339,7 @@ Heavy and plain, like the ink on the form.
 - **Desktop rail:** white with a right rule-2 border. Items are 10/12px with a 20px icon. The active item fills with Faint Sheet (sheet-2), outlined by a 1px inset ink rule, in weight 700. Sign out sits at the bottom.
 
 ### Outcome Stamps (signature)
-Rubber-stamp marks: a 3px double-ruled border in currentColor with 3px corners, uppercase Archivo 700 at 0.09em tracking. Done/Issued is green, Cancelled grey, Voided red and Paid violet. Unpaid is not a stamp; it is a quiet tag with a rule-2 outline. When a citation is marked Done, the stamp lands (scale 1.8 → 1, rotate −8° → 0, 0.5s) and the next serial rolls up into place (0.6s clip reveal). Both use the house ease `cubic-bezier(.16,1,.3,1)`.
+Rubber-stamp marks: a 3px double-ruled border in currentColor with 3px corners, uppercase Archivo 700 at 0.09em tracking. Done/Issued is Ledger Green, Cancelled grey, Voided red and Paid Receipt Green. Unpaid is not a stamp; it is a quiet tag with a rule-2 outline. When a citation is marked Done, the stamp lands (scale 1.8 → 1, rotate −8° → 0, 0.5s) and the next serial rolls up into place (0.6s clip reveal). Both use the house ease `cubic-bezier(.16,1,.3,1)`.
 
 ### Account Marks
 Account statuses (Active, Pending, Rejected, Inactive) are single-rule marks: a 1px currentColor border, square, 0.8125rem, weight 700. They stay visually lighter than outcome stamps so that a person's status never reads as a Citation outcome.
@@ -348,7 +348,7 @@ Account statuses (Active, Pending, Rejected, Inactive) are single-rule marks: a 
 An 18px strip with one cell per form in the Booklet, 2px apart. Done cells are navy, Cancelled cells are grey diagonal hatching, Voided cells are red, and unused cells are rule-3. The current cell is white with a 2px red inset outline.
 
 ### Box Row and Stat Grid
-Ruled boxes in 1px ink, like the boxes on a printed form. Each box holds a box label over a figure, both centered horizontally. A box row (Used / Forms left on Home) is one joined block with ink dividers. Stat grids are two columns of separate boxes, each with its own 1px ink rule and a 10px gap; the five-cell variant spans its first cell (Issued) across both columns, so Unpaid and Paid below line up with its edges. Enforcer Stats shows a Today card and a This month card, each with four boxes in two rows of two: side by side from 600px, stacked (Today first) on phones. Its boxes are filled solid, with on-ink text: Citations in Ledger Green (done), Violations recorded in navy ink, Cancelled forms in Amber (pending), Voided forms in red (void). The Verifier summary uses the same solid fills: Issued in Ledger Green, Unpaid in navy ink, Paid in Treasury Violet, Cancelled in Amber, Voided in red. Night uses each token's Night ink.
+Ruled boxes in 1px ink, like the boxes on a printed form. Each box holds a box label over a figure, both centered horizontally. A box row (Used / Forms left on Home) is one joined block with ink dividers. Stat grids are two columns of separate boxes, each with its own 1px ink rule and a 10px gap; the five-cell variant spans its first cell (Issued) across both columns, so Unpaid and Paid below line up with its edges. Enforcer Stats shows a Today card and a This month card, each with four boxes in two rows of two: side by side from 600px, stacked (Today first) on phones. Its boxes are filled solid, with on-ink text: Citations in Ledger Green (done), Violations recorded in navy ink, Cancelled forms in Amber (pending), Voided forms in red (void). The Verifier summary uses the same solid fills: Unpaid in navy ink, Paid in Receipt Green, Cancelled in Amber, Voided in red. Night uses each token's Night ink.
 
 ### Ledger Tables
 White, with a 4px ink top rule when standalone, a 1.5px ink rule under the head, rule-3 row dividers and a sheet-2 footer. Numbers are right-aligned and tabular. Serials in tables are red underlined links. Below 760px rows stack into labelled records.

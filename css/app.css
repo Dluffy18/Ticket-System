@@ -40,8 +40,8 @@
   --cancel-bg: #ECEDF1;
   --void: #B3162B;
   --void-bg: #FBE9EB;
-  --paid: #5A3DA8;        /* Treasury violet stamp pad */
-  --paid-bg: #EFEAFA;
+  --paid: #2E6F40;        /* Receipt Green stamp pad (6.1:1 on white) */
+  --paid-bg: #EAF3EC;
   --sync: #7E6200;        /* mustard stamp for Not synced (5.6:1 on white) */
   --pending: #7A5200;
   --pending-bg: #FBF0D6;
@@ -73,7 +73,7 @@
     --serial: #FF8590; --canary: #3A3316; --canary-line: #7C6A20; --canary-ink: #F5DF80;
     --pink: #4A2A33;
     --done: #74D7A1; --done-bg: #163121; --cancel: #AEB5C6; --cancel-bg: #232A3C;
-    --void: #FF8590; --void-bg: #3A1A20; --paid: #BBA6FF; --paid-bg: #2A2346; --sync: #E8C64E;
+    --void: #FF8590; --void-bg: #3A1A20; --paid: #7FCB93; --paid-bg: #1A2B1F; --sync: #E8C64E;
     --pending: #F2C463; --pending-bg: #3A2E12;
     --band: #0A0F1A; --band-ink: #E9ECF4; --band-sub: #9BA5BE; --on-ink: #0E1320;
     --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 6px 18px rgba(0, 0, 0, .25);
@@ -90,7 +90,7 @@
   --serial: #FF8590; --canary: #3A3316; --canary-line: #7C6A20; --canary-ink: #F5DF80;
   --pink: #4A2A33;
   --done: #74D7A1; --done-bg: #163121; --cancel: #AEB5C6; --cancel-bg: #232A3C;
-  --void: #FF8590; --void-bg: #3A1A20; --paid: #BBA6FF; --paid-bg: #2A2346; --sync: #E8C64E;
+  --void: #FF8590; --void-bg: #3A1A20; --paid: #7FCB93; --paid-bg: #1A2B1F; --sync: #E8C64E;
   --pending: #F2C463; --pending-bg: #3A2E12;
   --band: #0A0F1A; --band-ink: #E9ECF4; --band-sub: #9BA5BE; --on-ink: #0E1320;
   --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 6px 18px rgba(0, 0, 0, .25);
@@ -696,7 +696,12 @@ a.cell-name:hover { text-decoration: underline; }
   .tbl-sa tbody th { grid-column: 1 / -1; }
   .tbl-sa td[data-label]::before { font-size: .6875rem; line-height: 1.2; }
 }
-@media (min-width: 900px) { .sa-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); align-items: start; gap: 20px; } }
+/* Wide screens: By Agency on the left (wider, for the table), Needs attention on the right. Phones keep Needs attention first. */
+@media (min-width: 900px) {
+  .sa-grid { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); align-items: start; gap: 20px; }
+  .sa-ag-card { grid-column: 1; grid-row: 1; }
+  .sa-att-card { grid-column: 2; grid-row: 1; }
+}
 .acc-tools { display: flex; flex-wrap: wrap; gap: 8px; padding: 12px 16px 0; }
 .own-note { padding: 0 16px; }
 .chg { list-style: none; margin: 4px 0 0; padding: 0; display: grid; gap: 2px; font-size: .8125rem; color: var(--ink-2); }
@@ -1176,14 +1181,14 @@ body:has(.pf) { background: var(--ground-2); }
 
 /* ------------------------------------------------------------------ Verifier Summary */
 .sm {
-  --s-unpaid: #1F2B4D; --s-paid: #6E4BD0; --s-cancelled: #E0A23A; --s-voided: #D9445A;
+  --s-unpaid: #1F2B4D; --s-paid: #2E6F40; --s-cancelled: #E0A23A; --s-voided: #D9445A;
   --ag-TRAFFIC: #2563C9; --ag-POLICE: #2E9E8C; --ag-PSO: #F08A24; --ag-CSU: #C24A7B;
   --sm-cancel-ink: #9A6400; --sm-cancel-bg: #FCEFD8; --sm-void-ink: #B3162B; --sm-void-bg: #FBE3E6;
   --sm-track: #E8EBF1;
   display: grid; gap: 16px;
 }
 :root[data-theme="dark"] .sm {
-  --s-unpaid: #A5B3DA; --s-paid: #A58BF0; --s-cancelled: #E8B55A; --s-voided: #F07083;
+  --s-unpaid: #A5B3DA; --s-paid: #7FCB93; --s-cancelled: #E8B55A; --s-voided: #F07083;
   --ag-TRAFFIC: #5B8FE8; --ag-POLICE: #45BFA9; --ag-PSO: #F5A04D; --ag-CSU: #DB6A97;
   --sm-cancel-ink: #E8B55A; --sm-cancel-bg: #3A2C12; --sm-void-ink: #FF8590; --sm-void-bg: #3A1A20;
   --sm-track: #242C42;
@@ -1287,14 +1292,14 @@ body:has(.sm) { background: var(--ground-2); }
 
 /* ---------------------------------------------------------------- dashboards (Overview, Booklets) */
 /* Chart colors, also used outside .sm pages (e.g. the Enforcer detail chart). */
-:root { --s-issued: #1F2B4D; --s-cancelled: #E0A23A; --s-voided: #D9445A; --s-paid: #6E4BD0; --s-open: #E8EBF1; --sm-track: #E8EBF1; }
-:root[data-theme="dark"] { --s-issued: #A5B3DA; --s-cancelled: #E8B55A; --s-voided: #F07083; --s-paid: #A58BF0; --s-open: #242C42; --sm-track: #242C42; }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --s-issued: #A5B3DA; --s-cancelled: #E8B55A; --s-voided: #F07083; --s-paid: #A58BF0; --s-open: #242C42; --sm-track: #242C42; } }
+:root { --s-issued: #1F2B4D; --s-cancelled: #E0A23A; --s-voided: #D9445A; --s-paid: #2E6F40; --s-open: #E8EBF1; --sm-track: #E8EBF1; }
+:root[data-theme="dark"] { --s-issued: #A5B3DA; --s-cancelled: #E8B55A; --s-voided: #F07083; --s-paid: #7FCB93; --s-open: #242C42; --sm-track: #242C42; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --s-issued: #A5B3DA; --s-cancelled: #E8B55A; --s-voided: #F07083; --s-paid: #7FCB93; --s-open: #242C42; --sm-track: #242C42; } }
 .sm { --s-issued: #1F2B4D; --s-open: #E8EBF1; }
 :root[data-theme="dark"] .sm { --s-issued: #A5B3DA; --s-open: #242C42; }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) .sm {
-    --s-unpaid: #A5B3DA; --s-paid: #A58BF0; --s-cancelled: #E8B55A; --s-voided: #F07083;
+    --s-unpaid: #A5B3DA; --s-paid: #7FCB93; --s-cancelled: #E8B55A; --s-voided: #F07083;
     --ag-TRAFFIC: #5B8FE8; --ag-POLICE: #45BFA9; --ag-PSO: #F5A04D; --ag-CSU: #DB6A97;
     --sm-cancel-ink: #E8B55A; --sm-cancel-bg: #3A2C12; --sm-void-ink: #FF8590; --sm-void-bg: #3A1A20;
     --sm-track: #242C42; --s-issued: #A5B3DA; --s-open: #242C42;
