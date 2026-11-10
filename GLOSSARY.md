@@ -8,6 +8,14 @@ A numbering ledger proving every Control Number on every paper Citation form has
 The outcome of a Citation that was issued to a Violator. Shown as "Issued" on Office Admin and Verifier pages.
 _Avoid_: Completed, closed
 
+**Cancelled**:
+The outcome of a Done Citation that its Enforcer withdrew after issuing it. Only Unpaid Citations can be Cancelled, at any time, and the date and time of cancelling are kept on the Citation. Not used for spoiled blank forms; those are Voided.
+_Avoid_: Withdrawn, revoked, deleted
+
+**Voided**:
+The outcome of a Control Number retired through an Incident Report: either the number on the paper form didn't match the one the app expected, or the form was spoiled before a Citation was issued on it.
+_Avoid_: Spoiled, scrapped, deleted
+
 **Status**:
 The recorded outcome of one Control Number: Done, Cancelled or Voided. Enforcer pages call it "Status"; Office Admin and Verifier pages head the same thing "Outcome".
 _Avoid_: Result, state
@@ -45,7 +53,7 @@ When the Enforcer entered the Booklet's first and last Control Number in the app
 _Avoid_: Received, issued (for a Booklet)
 
 **Repeat Violator**:
-A Violator Record with two or more Done Citations. Cancelled and Voided forms don't count, because no Citation was issued on them.
+A Violator Record with two or more Done Citations. Cancelled Citations don't count, because they were withdrawn, though they stay listed on the Violator Record. Voided forms don't count either.
 _Avoid_: Repeat offender, habitual violator
 
 **Inactive**:

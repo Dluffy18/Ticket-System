@@ -2,7 +2,7 @@ import { t, tn } from '../strings.js';
 import { esc, fullName, displayName, fDateTime, downloadCsv, isoDateTime, fDayKey, dayKey, monthKey, fMonthKey, todayKey, isToday, isThisMonth, normName } from '../util.js';
 import { S, me, findAccount, agencyOf, ctName, markPaid, setUnpaid, validatePayment, personName, subscribe } from '../store.js';
 import { icon, serial, stamp, toast, dialog, pager, paginate, emptyState, dateBox, bindDateBox } from '../ui.js';
-import { citationDetail, violatorShort } from './citation.js';
+import { citationDetail, violatorShort, whenText } from './citation.js';
 
 const st = { q: '', agency: '', ctype: '', outcome: '', pay: '', age: '', repeat: '', month: '', day: '', page: 1 };
 const clearState = () => Object.assign(st, { q: '', agency: '', ctype: '', outcome: '', pay: '', age: '', repeat: '', month: '', day: '', page: 1 });
@@ -126,7 +126,7 @@ export function vCitationsView(root, ctx) {
             <td data-label="${esc(t('colViolator'))}">${violatorShort(c)}</td>
             <td data-label="${esc(t('colOutcome'))}">${stamp(c.status, { admin: true })}</td>
             <td data-label="${esc(t('colPayment'))}">${c.status !== 'done' ? `<span class="muted">${esc(t('dash'))}</span>` : c.payment ? `<span class="stamp stamp-paid stamp-sm">${esc(t('stPaid'))}</span><span class="cell-sub">${esc(c.payment.orNo)}</span>` : `<span class="tag tag-unpaid">${esc(t('stUnpaid'))}</span>`}</td>
-            <td data-label="${esc(t('colDate'))}" class="nowrap">${esc(fDateTime(c.at))}</td></tr>`;
+            <td data-label="${esc(t('colDate'))}" class="nowrap">${esc(whenText(c))}</td></tr>`;
         }).join('')}</tbody></table></div>` : emptyState(t('emptyFilterTitle'), t('emptyFilterBody'), 'search')}
       ${pager(pg.page, pg.pages)}`;
     root.querySelectorAll('[data-page]').forEach(b => b.addEventListener('click', () => { st.page = Number(b.dataset.page); renderList(); }));
@@ -147,13 +147,13 @@ export function vCitationsView(root, ctx) {
 // Citations as a CSV for reports. Name only: no birthday, address, ID details or photos.
 function citationsCsv(list) {
   const outcome = { done: t('stIssued'), cancelled: t('stCancelled'), voided: t('stVoided') };
-  const header = ['csvNo', 'csvType', 'csvEnforcer', 'csvAgency', 'csvOutcome', 'csvPayment', 'csvOr', 'csvDatePaid', 'csvIssued', 'csvViolator'].map(k => t(k));
+  const header = ['csvNo', 'csvType', 'csvEnforcer', 'csvAgency', 'csvOutcome', 'csvPayment', 'csvOr', 'csvDatePaid', 'csvIssued', 'csvCancelled', 'csvViolator'].map(k => t(k));
   const rows = list.map(c => {
     const e = findAccount(c.owner);
     return [
       c.no, ctName(c.ctype), e ? displayName(e) : c.owner, agencyOf(c.owner)?.name || '', outcome[c.status],
       c.status !== 'done' ? '' : c.payment ? t('stPaid') : t('stUnpaid'),
-      c.payment?.orNo || '', c.payment?.date || '', isoDateTime(c.at), fullName(c.violator || {}),
+      c.payment?.orNo || '', c.payment?.date || '', isoDateTime(c.at), c.cancelledAt ? isoDateTime(c.cancelledAt) : '', fullName(c.violator || {}),
     ];
   });
   downloadCsv(`citations-${todayKey()}.csv`, header, rows);
@@ -199,12 +199,21 @@ function vDetail(root, ctx, no) {
 
   const repeatHtml = () => {
     if (!c.violatorId) return '';
-    const others = S.citations.filter(x => x.violatorId === c.violatorId && x.no !== c.no && x.status === 'done').sort((a, b) => b.at - a.at);
+    // Other Done and Cancelled Citations on the same Violator Record. Only Done ones count, for the
+    // heading and for Repeat Violator; Cancelled ones are listed and counted beside it.
+    const mine = S.citations.filter(x => x.violatorId === c.violatorId && (x.status === 'done' || x.status === 'cancelled'));
+    const others = mine.filter(x => x.no !== c.no).sort((a, b) => b.at - a.at);
     if (!others.length) return '';
+    const doneN = others.filter(x => x.status === 'done').length;
+    const cancN = others.length - doneN;
+    const repeat = mine.filter(x => x.status === 'done').length >= 2;
+    const head = (doneN ? tn('otherCitationsN', doneN) : t('otherCitations0')) + (cancN ? ` · ${t('plusCancelled', { n: cancN })}` : '');
+    const mark = x => x.status === 'cancelled' ? '<span class="stamp stamp-cancelled stamp-sm">' + esc(t('stCancelled')) + '</span>'
+      : x.payment ? `<span class="stamp stamp-paid stamp-sm">${esc(t('stPaid'))}</span>` : `<span class="tag tag-unpaid">${esc(t('stUnpaid'))}</span>`;
     return `
       <section class="sec sec-repeat">
-        <h2 class="h2">${esc(tn('otherCitationsN', others.length))} <span class="tag tag-repeat">${esc(t('repeatViolator'))}</span></h2>
-        <ul class="repeat-list">${others.map(x => `<li><a href="#/v/citations/${x.no}">${serial(x.no)}<span>${esc(ctName(x.ctype))}</span><span class="muted">${esc(fDateTime(x.at))}</span>${x.payment ? `<span class="stamp stamp-paid stamp-sm">${esc(t('stPaid'))}</span>` : `<span class="tag tag-unpaid">${esc(t('stUnpaid'))}</span>`}</a></li>`).join('')}</ul>
+        <h2 class="h2">${esc(head)}${repeat ? ` <span class="tag tag-repeat">${esc(t('repeatViolator'))}</span>` : ''}</h2>
+        <ul class="repeat-list">${others.map(x => `<li><a href="#/v/citations/${x.no}">${serial(x.no)}<span>${esc(ctName(x.ctype))}</span><span class="muted">${esc(fDateTime(x.at))}</span>${mark(x)}</a></li>`).join('')}</ul>
       </section>`;
   };
   const render = () => {

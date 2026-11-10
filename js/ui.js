@@ -147,6 +147,11 @@ export function paginate(items, page, per = 10) {
 // Past the floor the [data-fit-cut] part ends in "…" (CSS); the rest never gets cut.
 const FIT_STEPS = [[100, 14], [87.5, 14], [75, 14], [75, 13], [75, 12]];
 export function fitLines(root) {
+  // Citation rows: stack the Citation Type above the number and stamp only when they don't fit on one line.
+  root.querySelectorAll('.row-top').forEach(el => {
+    el.classList.remove('stacked');
+    if (el.scrollWidth > el.clientWidth) el.classList.add('stacked');
+  });
   root.querySelectorAll('[data-fit]').forEach(el => {
     const cut = el.querySelector('[data-fit-cut]');
     for (const [stretch, px] of FIT_STEPS) {

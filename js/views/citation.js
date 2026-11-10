@@ -38,9 +38,13 @@ export function violationList(ids) {
 
 // One line describing a Citation in a list.
 export function rowSummary(c) {
-  if (c.status === 'done') return esc(c.violations.map(vtName).join(', '));
-  if (c.status === 'cancelled') return c.violations.length ? esc(t('cancelledNames', { names: c.violations.map(vtName).join(', ') })) : esc(t('formCancelled'));
-  return esc(t('paperSaid', { p: c.incident?.paperNo || '' }));
+  if (c.status === 'done' || c.status === 'cancelled') return esc(c.violations.map(vtName).join(', '));
+  return esc(c.incident?.kind === 'spoiled' ? t('incSpoiled') : t('paperSaid', { p: c.incident?.paperNo || '' }));
+}
+
+// The date and time in a list row: when it was issued (or recorded), plus when it was Cancelled.
+export function whenText(c) {
+  return c.cancelledAt ? `${fDateTime(c.at)} · ${t('cancelledOn', { date: fDateTime(c.cancelledAt) })}` : fDateTime(c.at);
 }
 
 export function violatorShort(c) {
@@ -54,9 +58,10 @@ function gpsText(g) {
   return `<a href="https://www.openstreetmap.org/?mlat=${g.lat}&mlon=${g.lng}#map=18/${g.lat}/${g.lng}" target="_blank" rel="noopener">${icon('pin')}${esc(q)}</a>`;
 }
 
-// role: 'enforcer' | 'verifier'
-export function citationDetail(c, { role = 'enforcer', paymentHtml = '' } = {}) {
+// role: 'enforcer' | 'verifier'. footHtml replaces the closing note (the Enforcer's Cancel button).
+export function citationDetail(c, { role = 'enforcer', paymentHtml = '', footHtml = '' } = {}) {
   const admin = role !== 'enforcer';
+  const issued = c.status === 'done' || !!c.cancelledAt; // Cancelled after it was issued
   const e = findAccount(c.owner);
   const ag = agencyOf(c.owner);
   const head = `
@@ -72,7 +77,7 @@ export function citationDetail(c, { role = 'enforcer', paymentHtml = '' } = {}) 
     <section class="sec sec-incident">
       <h2 class="h2">${icon('file')}${esc(t('incidentTitle'))}</h2>
       ${kv([
-        [t('incidentPaperNo'), serial(c.incident.paperNo)],
+        c.incident.kind === 'spoiled' ? [t('incidentReason'), esc(t('incSpoiled'))] : [t('incidentPaperNo'), serial(c.incident.paperNo)],
         [t('whatHappened'), esc(c.incident.text)],
         c.incident.hint ? [t('incidentHint'), esc(c.incident.hint)] : null,
       ])}
@@ -95,13 +100,14 @@ export function citationDetail(c, { role = 'enforcer', paymentHtml = '' } = {}) 
   const when = `
     <section class="sec">
       ${kv([
-        [c.status === 'done' ? t('markedDoneAt') : t('recordedAt'), esc(fDateTime(c.at))],
-        c.status === 'done' ? [t('location'), gpsText(c.gps)] : null,
+        [issued ? t('markedDoneAt') : t('recordedAt'), esc(fDateTime(c.at))],
+        c.cancelledAt ? [t('cancelledAtLbl'), esc(fDateTime(c.cancelledAt))] : null,
+        issued ? [t('location'), gpsText(c.gps)] : null,
       ])}
     </section>`;
 
   const finalNote = c.status === 'done'
-    ? (admin ? t('issuedFinal') : t('doneFinal'))
+    ? t('issuedFinal')
     : t('closedFinal', { what: c.status === 'cancelled' ? t('wordCancelled') : t('wordVoided') });
 
   return `
@@ -110,10 +116,10 @@ export function citationDetail(c, { role = 'enforcer', paymentHtml = '' } = {}) 
       <div class="perf" aria-hidden="true"></div>
       ${incident}
       ${who}
-      ${c.status === 'done' ? body : `<div class="sec-entered">${body}</div>`}
+      ${issued ? body : `<div class="sec-entered">${body}</div>`}
       ${when}
       ${paymentHtml}
-      <p class="final-note">${icon('ban')}${esc(finalNote)}</p>
+      ${footHtml || `<p class="final-note">${icon('ban')}${esc(finalNote)}</p>`}
     </article>`;
 }
 

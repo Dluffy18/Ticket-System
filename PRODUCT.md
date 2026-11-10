@@ -28,7 +28,7 @@ A numbering ledger for paper forms, not a digital ticket. The app only ever offe
 ## Operating Context
 
 - Enforcers receive Booklets (consecutive Control Number ranges per Citation Type) from the Treasury Office and register them in the app.
-- Recording a Citation: pick Violations, take camera-only photos (ticket form, ID unless "No ID", plate for Traffic), Violator Details read from the ID or typed, then Review → Mark Done, Cancel, or Incident Report → Void.
+- Recording a Citation: pick Violations, take camera-only photos (ticket form, ID unless "No ID", plate for Traffic), Violator Details read from the ID or typed, then Review → Mark Done. On Home, under Start citation, an Incident Report Voids the current number (number doesn't match, or the form is spoiled); what was entered stays on the Voided form and the next number starts blank. A Done Citation can later be Cancelled from the Citation itself by its Enforcer, while it's Unpaid and the phone is online; the date and time of cancelling are kept.
 - Works offline; Citations recorded offline are marked Not synced until back online.
 - Prototype: no backend; Booklets, Citations and new Violator Records live in memory; Registrations and account status changes in browser storage; a Demo panel switches users and online/offline.
 - Full functional spec: `BUILD-PROMPT-FUNCTIONAL.md` (supplied by the user; the authority for rules, flows and exact messages).
@@ -50,7 +50,7 @@ Sample reference data (agencies, Citation Types, Violation Types, Enforcers, Adm
 ## Product Principles
 
 1. The number is the point. The current Control Number is always the most legible thing on the Enforcer's screen.
-2. Final means final. Done, Cancelled and Voided can't be edited; the interface never suggests otherwise.
+2. Final means final. Nothing on a Citation can be edited. The one exception: a Done Citation can be Cancelled by its Enforcer while it's Unpaid. Cancelled and Voided are final, and the interface never suggests otherwise.
 3. Never lose work in the field. Offline, interrupted, mid-ID-reading: photos and drafts are kept. Only the Enforcer's own Discard clears a draft, and it asks first.
 4. Say exactly what's missing. Blocks name the item and jump to it.
 5. Each role sees only what it must. Office Admins never see Citation contents; Enforcers never see payment details.

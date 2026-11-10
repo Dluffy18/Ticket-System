@@ -483,6 +483,12 @@ a.row:hover { background: color-mix(in srgb, var(--sheet) 60%, transparent); }
 .row-top { display: flex; align-items: center; gap: 10px; }
 .row-top .stamp { margin-left: auto; }
 .row-type { color: var(--ink-2); font-size: .875rem; font-weight: 600; }
+.row-top .row-type { white-space: nowrap; }
+/* When the Citation Type doesn't fit beside the number and stamp: type on its own line, then number left, stamp right. */
+.row-top.stacked { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 2px 10px; }
+.row-top.stacked .row-type { grid-column: 1 / -1; grid-row: 1; white-space: normal; }
+.row-top.stacked > :first-child { grid-column: 1; grid-row: 2; }
+.row-top.stacked .stamp { grid-column: 2; grid-row: 2; margin-left: 0; }
 .row-what { font-weight: 600; line-height: 1.35; }
 /* Violator | date stays on one line; fitLines() narrows then shrinks it, and only the name may end in "…". */
 .row-bot { display: flex; justify-content: space-between; gap: 12px; font-size: .875rem; color: var(--ink-2); white-space: nowrap; }
@@ -604,6 +610,9 @@ a.row:hover { background: color-mix(in srgb, var(--sheet) 60%, transparent); }
 .sec-incident .h2 .ic { color: var(--void); }
 .sec-entered { padding-top: 14px; }
 .final-note { display: flex; gap: 8px; align-items: center; margin: 4px 16px 14px; padding-top: 12px; border-top: 1px solid var(--rule-3); font-size: .9375rem; color: var(--ink-2); font-weight: 600; }
+/* Enforcer's Cancel on a Done Citation: in place of the closing note. */
+.sec-cancel { display: grid; gap: 10px; margin: 4px 16px 16px; padding-top: 14px; border-top: 1px solid var(--rule-3); }
+.sec-cancel .hint { margin: 0; color: var(--ink-2); }
 .det-cols { display: grid; gap: 0; }
 .det-cols .sec:first-child { padding-top: 16px; }
 @media (min-width: 900px) { .det-cols { grid-template-columns: 1.1fr 1fr; } .det-cols .sec { padding-top: 16px; } }
@@ -916,12 +925,35 @@ a.cell-name:hover { text-decoration: underline; }
 .notes .ic { color: var(--done); }
 .rec-body .sec { padding: 14px 0; border-top: 1px solid var(--rule-2); }
 .actions-final { display: grid; gap: 10px; margin-top: 18px; }
-.incident { margin-top: 18px; background: var(--sheet); border-radius: var(--r); border: 1.5px solid var(--rule-2); }
-.incident summary { display: flex; align-items: center; gap: 10px; padding: 14px 16px; cursor: pointer; min-height: 52px; list-style: none; }
-.incident summary::-webkit-details-marker { display: none; }
-.incident summary strong { text-decoration: underline; text-underline-offset: 3px; }
-.incident[open] summary { border-bottom: 1px solid var(--rule-2); }
+/* Write an Incident Report: a red outlined button under Start citation, with when-to-use text below it. */
+.inc-entry { display: grid; gap: 8px; margin-top: -4px; } /* 10px under Start citation (the sheet adds 14px) */
+.inc-entry .hint { margin: 0; }
+/* Incident Report popup: nearly full width on phones; scrolls inside when the keyboard is up. */
+.dlg.dlg-incident { width: min(520px, calc(100% - 24px)); max-height: calc(100dvh - 24px); overflow-y: auto; overscroll-behavior: contain; }
 .incident-form { display: grid; gap: 14px; padding: 16px; }
+.incident-form .inc-kind { border: 0; margin: 0; padding: 0; min-width: 0; }
+.incident-form .inc-kind .lbl { margin-bottom: 6px; }
+.incident-form .seg { display: flex; width: 100%; }
+.incident-form .seg-opt { display: flex; flex: 1 1 0; min-width: 0; } /* equal halves, each as tall as the row */
+.incident-form .seg-opt span { flex: 1; padding: 6px 10px; white-space: normal; text-align: center; } /* fill covers the whole half */
+/* Both choices take the same space: the number box and the "no number needed" note share one cell, and the
+   one not in use is hidden but still holds its height, so the popup doesn't jump when switching. */
+.inc-slot { display: grid; }
+.inc-slot > * { grid-area: 1 / 1; }
+.inc-slot > [aria-hidden="true"] { visibility: hidden; }
+.inc-none { display: flex; align-items: center; gap: 10px; margin: 0; padding: 12px 14px; border: 1.5px dashed var(--rule-2); border-radius: var(--r); color: var(--ink-2); font-weight: 600; }
+.inc-none .ic { flex: none; }
+/* Close on the left, Submit and Void filling the rest: always one row. */
+.dlg-incident .dlg-actions { display: grid; grid-template-columns: auto 1fr; flex-wrap: nowrap; }
+.dlg-incident .dlg-actions .btn { white-space: nowrap; }
+.dlg-incident .dlg-actions .btn-danger { min-width: 0; padding-inline: 12px; }
+/* Small phones (about 320–360px): a little tighter so the row still fits on one line. */
+@media (max-width: 360px) {
+  .dlg.dlg-incident { width: calc(100% - 16px); }
+  .dlg-incident .dlg-form { padding: 16px; }
+  .dlg-incident .dlg-actions { gap: 8px; }
+  .dlg-incident .dlg-actions .btn { padding-inline: 10px; font-size: .875rem; }
+}
 
 /* ---------------------------------------------------------------- auth */
 .auth { min-height: 100vh; min-height: 100dvh; display: grid; place-items: center; padding: 24px var(--gut) 96px; }

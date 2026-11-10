@@ -3,11 +3,11 @@ import { esc, fullName, fTime, fDateTime, dayKey, todayKey, isToday, isThisMonth
 import {
   S, me, typesFor, agencyOf, ctName, vtName, violationsFor, activeBooklet, bookletSize, bookletUsed, bookletCurrent,
   currentTypeOf, setCurrentType, registerBooklet, bookletFormCount, getDraft, draftHasEntries, discardDraft, requiredPhotos, nextMissingPhoto, setPhoto,
-  setNoId, typeField, missingItems, markDone, cancelForm, incidentCheck, voidForm, subscribe,
+  setNoId, typeField, missingItems, markDone, cancelCitation, incidentCheck, voidForm, subscribe,
 } from '../store.js';
 import { icon, serial, stamp, toast, dialog, pager, paginate, emptyState, kv, unsyncedTag, menuMarkup, bindMenu, setMenuValue, dateBox, bindDateBox, fitLines } from '../ui.js';
 import { takePhoto } from '../camera.js';
-import { citationDetail, rowSummary, violatorShort, photoGrid, violationList, photoWhat } from './citation.js';
+import { citationDetail, rowSummary, whenText, violatorShort, photoGrid, violationList, photoWhat } from './citation.js';
 import { kpi, dailyChart } from './dash.js';
 
 const PHOTO_LABEL = { form: 'photoForm', id: 'photoId', violator: 'photoViolator', plate: 'photoPlate' };
@@ -77,7 +77,7 @@ export function homeView(root, ctx) {
           </div>
           ${left <= 5 ? `<p class="alert alert-warn">${icon('alert')}<span>${esc(tn('lowForms', left))}</span></p>` : ''}
           <a class="btn btn-primary btn-block btn-xl" href="#/record/${started ? (d.step || 1) : 1}">${esc(started ? t('continueCitation') : t('startCitation'))}${started ? `<span class="btn-note">${esc(t('draftKept'))}</span>` : ''}</a>
-          <p class="hint center">${esc(t('startHint'))}</p>
+          <div data-incident></div>
         </div>
       </div>`;
   }
@@ -99,6 +99,8 @@ export function homeView(root, ctx) {
     </section>
   </div>`;
 
+  if (b) incidentBox(root.querySelector('[data-incident]'), b, ctx);
+
   const menu = root.querySelector('[data-menu=type-menu]');
   if (menu) bindMenu(menu, id => {
     if (activeBooklet(u.id, id)) {
@@ -108,6 +110,88 @@ export function homeView(root, ctx) {
       ctx.go('#/type/' + id);
     }
   }, ctx.onLeave);
+}
+
+// Incident Report on Home: a row under Start citation opens it in a popup. It Voids the current number when the
+// paper's number doesn't match or the form is spoiled. What was entered on that number stays on the Voided form;
+// the next number starts blank. Typing is kept if the popup is closed, while the Enforcer stays on Home.
+function incidentBox(host, b, ctx) {
+  const inc = { kind: 'mismatch', paper: '', text: '' };
+  host.innerHTML = `
+    <div class="inc-entry">
+      <button type="button" class="btn btn-danger-ghost btn-block btn-lg incident-open">${icon('file')}<span>${esc(t('writeIncident'))}</span></button>
+      <p class="hint center">${esc(t('numberMismatch'))}</p>
+    </div>`;
+  host.querySelector('.incident-open').addEventListener('click', () => {
+    const no = bookletCurrent(b);
+    const dlg = document.createElement('dialog');
+    dlg.className = 'dlg dlg-incident';
+    dlg.setAttribute('aria-labelledby', 'inc-title');
+    dlg.innerHTML = `<form class="dlg-form incident-form" novalidate></form>`;
+    const f = dlg.querySelector('form');
+
+    const render = () => {
+      const spoiled = inc.kind === 'spoiled';
+      const chk = spoiled ? {} : incidentCheck({ no, bookletId: b.id }, inc.paper);
+      const textOk = inc.text.trim().length >= 15;
+      const canVoid = (spoiled || (!chk.empty && !chk.error)) && textOk;
+      // Re-render keeping focus and caret on the same field.
+      const a = document.activeElement;
+      const keep = a && f.contains(a) && a.name ? { name: a.name, value: a.value, start: a.selectionStart, end: a.selectionEnd, type: a.type } : null;
+      f.innerHTML = `
+        <h2 class="dlg-title" id="inc-title">${esc(t('incidentTitle'))} · <span class="num">#${no}</span></h2>
+        <fieldset class="field inc-kind"><legend class="lbl">${esc(t('incidentKind'))}</legend>
+          <div class="seg">${[['mismatch', t('incMismatch')], ['spoiled', t('incSpoiled')]].map(([k, l]) => `
+            <label class="seg-opt"><input type="radio" name="kind" value="${k}" ${inc.kind === k ? 'checked' : ''}><span>${esc(l)}</span></label>`).join('')}</div>
+        </fieldset>
+        <div class="inc-slot">
+          <p class="dlg-body" ${spoiled ? 'aria-hidden="true"' : ''}>${esc(t('incidentLead', { no }))}</p>
+          <p class="dlg-body" ${spoiled ? '' : 'aria-hidden="true"'}>${esc(t('incidentLeadSpoiled', { no }))}</p>
+        </div>
+        <div class="inc-slot">
+          <label class="field inc-paper ${chk.error ? 'has-err' : ''}" ${spoiled ? 'aria-hidden="true"' : ''}><span class="lbl">${esc(t('paperNo'))}</span>
+            <input class="input input-serial" name="paper" inputmode="numeric" autocomplete="off" value="${esc(inc.paper)}" aria-invalid="${chk.error ? 'true' : 'false'}" ${spoiled ? 'tabindex="-1"' : ''}>
+            ${chk.error ? `<span class="err">${esc(chk.error)}</span>` : `<span class="hint hint-strong">${chk.hint ? esc(chk.hint) : '&nbsp;'}</span>`}</label>
+          <p class="inc-none" ${spoiled ? '' : 'aria-hidden="true"'}>${icon('file')}<span>${esc(t('incNoNumber'))}</span></p>
+        </div>
+        <label class="field ${inc.text && !textOk ? 'has-err' : ''}"><span class="lbl">${esc(t('whatHappened'))}</span>
+          <textarea class="input" name="text" rows="4">${esc(inc.text)}</textarea>
+          <span class="${inc.text && !textOk ? 'err' : 'hint'}">${esc(inc.text && !textOk ? t('errShortText', { n: inc.text.trim().length }) : t('whatHappenedHint'))}</span></label>
+        <div class="dlg-actions">
+          <button type="button" class="btn btn-ghost" data-close>${esc(t('close'))}</button>
+          <button type="submit" class="btn btn-danger" ${canVoid ? '' : 'disabled'}>${esc(t('submitVoid', { no }))}</button>
+        </div>`;
+      if (keep) {
+        const sel = keep.type === 'radio' ? `[name="${keep.name}"][value="${CSS.escape(keep.value)}"]` : `[name="${keep.name}"]`;
+        const el = f.querySelector(sel);
+        if (el) { el.focus({ preventScroll: true }); try { if (keep.start != null) el.setSelectionRange(keep.start, keep.end); } catch { /* not a text field */ } }
+      }
+      f.querySelectorAll('[name=kind]').forEach(r => r.addEventListener('change', () => { inc.kind = r.value; render(); }));
+      f.paper?.addEventListener('input', () => { inc.paper = f.paper.value; render(); });
+      f.text.addEventListener('input', () => { inc.text = f.text.value; render(); });
+      f.querySelector('[data-close]').addEventListener('click', () => dlg.close());
+    };
+
+    let after = null;
+    f.addEventListener('submit', e => {
+      e.preventDefault();
+      const res = voidForm(getDraft(b), inc.kind, inc.paper, inc.text);
+      if (res.error) return;
+      S.justClosed = res.rec.no;
+      after = res.finished ? ['#/type/' + b.ctype, t('bookletFinishedMsg', { done: t('voidedMsgLast', { no: res.rec.no }) })]
+        : ['#/home', t('voidedMsg', { no: res.rec.no, next: res.next })];
+      dlg.close();
+    });
+    dlg.addEventListener('close', () => {
+      dlg.remove();
+      if (after) ctx.go(...after);
+      else host.querySelector('.incident-open')?.focus();
+    });
+    document.body.appendChild(dlg);
+    render();
+    dlg.showModal();
+    f.querySelector('input[name=kind]:checked').focus();
+  });
 }
 
 // ------------------------------------------------------------------ Citation Type
@@ -200,7 +284,6 @@ export function recordView(root, ctx) {
   let step = Math.min(3, Math.max(1, Number(ctx.params[0]) || 1));
   d.step = step;
   let query = '';
-  let incident = { paper: '', text: '', open: false };
   // Photo the Enforcer tapped to take next. Screen-only: leaving the step resets it.
   let picked = null;
 
@@ -314,9 +397,6 @@ export function recordView(root, ctx) {
   const step3 = () => {
     const miss = missingItems(d);
     const fake = { ...d, status: 'draft' };
-    const chk = incidentCheck(d, incident.paper);
-    const textOk = incident.text.trim().length >= 15;
-    const canVoid = !chk.empty && !chk.error && textOk;
     return `
       <h1 class="h1 rec-h">${esc(t('step3'))}</h1>
       ${miss.length ? `
@@ -330,22 +410,7 @@ export function recordView(root, ctx) {
       <section class="sec"><h2 class="h2">${esc(t('reviewViolator'))}</h2>${reviewViolator(fake)}</section>
       <div class="actions-final">
         <button type="button" class="btn btn-primary btn-block btn-xl" data-act="done" ${miss.length ? 'disabled aria-disabled="true"' : ''}>${icon('check')}<span>${esc(t('markDone'))}</span></button>
-        <button type="button" class="btn btn-danger-ghost btn-block btn-lg" data-act="cancel">${icon('ban')}<span>${esc(t('cancelForm'))}</span></button>
-      </div>
-      <details class="incident" ${incident.open ? 'open' : ''}>
-        <summary>${icon('file')}<span>${esc(t('numberMismatch'))} <strong>${esc(t('writeIncident'))}</strong></span></summary>
-        <form class="incident-form" novalidate>
-          <p class="lead">${esc(t('incidentLead', { no: d.no }))}</p>
-          <label class="field ${chk.error ? 'has-err' : ''}"><span class="lbl">${esc(t('paperNo'))}</span>
-            <input class="input input-serial" name="paper" inputmode="numeric" autocomplete="off" value="${esc(incident.paper)}" aria-invalid="${chk.error ? 'true' : 'false'}">
-            <span class="err" ${chk.error ? '' : 'hidden'}>${esc(chk.error || '')}</span>
-            <span class="hint hint-strong" ${chk.hint ? '' : 'hidden'}>${esc(chk.hint || '')}</span></label>
-          <label class="field ${incident.text && !textOk ? 'has-err' : ''}"><span class="lbl">${esc(t('whatHappened'))}</span>
-            <textarea class="input" name="text" rows="4">${esc(incident.text)}</textarea>
-            <span class="${incident.text && !textOk ? 'err' : 'hint'}">${esc(incident.text && !textOk ? t('errShortText', { n: incident.text.trim().length }) : t('whatHappenedHint'))}</span></label>
-          <button type="submit" class="btn btn-danger btn-block btn-lg" ${canVoid ? '' : 'disabled'}>${esc(t('submitVoid', { no: d.no }))}</button>
-        </form>
-      </details>`;
+      </div>`;
   };
 
   const reviewViolator = () => {
@@ -436,25 +501,6 @@ export function recordView(root, ctx) {
         if (res.error) return;
         finishClose(res, res.finished ? t('doneMsgLast', { no: res.rec.no }) : t('doneMsg', { no: res.rec.no, next: res.next }));
       });
-      root.querySelector('[data-act=cancel]').addEventListener('click', async () => {
-        const ok = await dialog({ title: t('cancelTitle', { no: d.no }), body: t('cancelBody', { no: d.no }), confirm: t('cancelConfirm'), cancel: t('keepEditing'), danger: true, typeToConfirm: d.no });
-        if (!ok) return;
-        const res = cancelForm(d);
-        if (res.error) return;
-        finishClose(res, res.finished ? t('cancelledMsgLast', { no: res.rec.no }) : t('cancelledMsg', { no: res.rec.no, next: res.next }));
-      });
-      const det = root.querySelector('.incident');
-      det.addEventListener('toggle', () => { incident.open = det.open; });
-      const f = root.querySelector('.incident-form');
-      f.paper.addEventListener('input', () => { incident.paper = f.paper.value; render(); });
-      f.text.addEventListener('input', () => { incident.text = f.text.value; render(); });
-      f.addEventListener('submit', e => {
-        e.preventDefault();
-        const res = voidForm(d, incident.paper, incident.text);
-        if (res.error) return;
-        if (res.finished) { finishClose(res, t('voidedMsgLast', { no: res.rec.no })); return; }
-        ctx.go('#/record/2', t('voidedMsg', { no: res.rec.no, next: res.next }));
-      });
     }
   };
 
@@ -534,7 +580,7 @@ export function citationsView(root, ctx) {
         <li><a class="row row-cit" href="#/citations/${c.no}">
           <span class="row-top">${serial(c.no)}<span class="row-type">${esc(S.ct.get(c.ctype).name)}</span>${stamp(c.status)}</span>
           <span class="row-what">${rowSummary(c)}</span>
-          <span class="row-bot" data-fit><span class="row-name" data-fit-cut>${violatorShort(c)}</span><span class="row-when">${esc(fDateTime(c.at))}</span></span>
+          <span class="row-bot" data-fit><span class="row-name" data-fit-cut>${violatorShort(c)}</span><span class="row-when">${esc(whenText(c))}</span></span>
           ${!c.synced ? `<span class="row-tags">${unsyncedTag()}</span>` : ''}
         </a></li>`).join('')}</ul>
       <div class="table-wrap cit-table"><table class="tbl">
@@ -545,7 +591,7 @@ export function citationsView(root, ctx) {
           <td>${rowSummary(c)}</td>
           <td class="nowrap">${violatorShort(c)}</td>
           <td><span class="cell-status${!c.synced ? ' two has-sync' : ''}">${stamp(c.status)}${!c.synced ? unsyncedTag() : ''}</span></td>
-          <td class="nowrap">${esc(fDateTime(c.at))}</td></tr>`).join('')}</tbody></table></div>` : empty}
+          <td class="nowrap">${esc(whenText(c))}</td></tr>`).join('')}</tbody></table></div>` : empty}
       ${pager(pg.page, pg.pages)}`;
     root.querySelectorAll('.cit-table .tr-link').forEach(tr => tr.addEventListener('click', e => { if (!e.target.closest('a')) location.hash = tr.dataset.href; }));
 
@@ -583,8 +629,24 @@ function citationDetailView(root, ctx, no) {
   const u = me();
   const c = S.citations.find(x => x.no === no && x.owner === u.id);
   if (!c) { ctx.go('#/citations'); return; }
+  // A Done Citation ends with the Cancel button instead of a closing note. Offline, it's disabled.
+  const footHtml = () => c.status !== 'done' ? '' : `
+    <section class="sec sec-cancel">
+      <p class="hint">${esc(S.online ? t('cancelCitationHint') : t('errCancelOffline'))}</p>
+      <button type="button" class="btn btn-danger-ghost btn-block btn-lg" data-cancel ${S.online ? '' : 'disabled'}>${icon('ban')}<span>${esc(t('cancelCitation'))}</span></button>
+    </section>`;
   const render = () => {
-    root.innerHTML = `<a class="back" href="#/citations">${icon('arrowL')}<span>${esc(t('backToList'))}</span></a>${citationDetail(c, { role: 'enforcer' })}`;
+    root.innerHTML = `<a class="back" href="#/citations">${icon('arrowL')}<span>${esc(t('backToList'))}</span></a>${citationDetail(c, { role: 'enforcer', footHtml: footHtml() })}`;
+    root.querySelector('[data-cancel]')?.addEventListener('click', async () => {
+      // Check first, so a paid or offline Citation is refused before anyone types the number.
+      if (!S.online) { toast(t('errCancelOffline'), 'error'); return; }
+      if (c.payment) { toast(t('errCancelPaid'), 'error'); return; }
+      const ok = await dialog({ title: t('cancelTitle', { no: c.no }), body: t('cancelBody'), confirm: t('cancelConfirm'), cancel: t('keepIt'), danger: true, typeToConfirm: c.no });
+      if (!ok) return;
+      const res = cancelCitation(u.id, c);
+      if (res.error) toast(res.error, 'error'); else toast(res.message);
+      render();
+    });
   };
   render();
   const off = subscribe(k => { if ((k === 'online' || k === 'citations') && document.body.contains(root)) render(); });

@@ -621,7 +621,17 @@ export function markDone(d) {
   return res;
 }
 
-export function cancelForm(d) { return closeForm(d, 'cancelled', {}); }
+// An Enforcer withdraws one of their own Done Citations: Unpaid only, and only online so a payment
+// is never missed. It keeps its issue time (counts stay on that day) and gets the time it was cancelled.
+export function cancelCitation(enfId, c) {
+  if (!c || c.owner !== enfId || c.status !== 'done') return { error: t('errCancelNotDone') };
+  if (!S.online) return { error: t('errCancelOffline') };
+  if (c.payment) return { error: t('errCancelPaid') };
+  c.status = 'cancelled';
+  c.cancelledAt = Date.now();
+  emit('citations');
+  return { ok: true, message: t('cancelledCitationMsg', { no: c.no }) };
+}
 
 export function incidentCheck(d, paperRaw) {
   const p = String(paperRaw ?? '').trim();
@@ -638,17 +648,13 @@ export function incidentCheck(d, paperRaw) {
   return { hint: t('hintOutside', { p: n }) };
 }
 
-export function voidForm(d, paperRaw, text) {
-  const chk = incidentCheck(d, paperRaw);
+// kind: 'mismatch' (the paper's number isn't the one expected) or 'spoiled' (the blank form was spoiled; no number to check).
+export function voidForm(d, kind, paperRaw, text) {
+  const spoiled = kind === 'spoiled';
+  const chk = spoiled ? {} : incidentCheck(d, paperRaw);
   if (chk.error || chk.empty || String(text || '').trim().length < 15) return { error: 'Invalid' };
-  const carry = { violations: [...d.violations], violator: { ...d.violator }, noId: d.noId, marks: { ...d.marks }, typed: { ...d.typed } };
-  const res = closeForm(d, 'voided', { incident: { paperNo: String(paperRaw).trim(), text: String(text).trim(), hint: chk.hint } });
-  if (res.ok && !res.finished) {
-    // Next number starts at step 2 with the same Violations and Violator Details, and no photos.
-    const nd = getDraft(res.booklet);
-    nd.violations = carry.violations; nd.violator = carry.violator; nd.noId = carry.noId;
-    nd.typed = carry.typed; nd.marks = carry.marks;
-  }
+  // What was entered stays on the Voided form; the next number starts blank (closeForm drops the draft).
+  const res = closeForm(d, 'voided', { incident: { kind: spoiled ? 'spoiled' : 'mismatch', paperNo: spoiled ? '' : String(paperRaw).trim(), text: String(text).trim(), hint: chk.hint || '' } });
   return res;
 }
 
@@ -769,7 +775,8 @@ function seed() {
       violator: { first: '', middle: '', last: '', suffix: '', birthday: '', sex: '' },
       violatorId: null, gps: null, incident: null, payment: null, payHistory: [],
     };
-    if (status === 'done') {
+    // A Cancelled sample was issued first, then withdrawn by its Enforcer a little later.
+    if (status === 'done' || status === 'cancelled') {
       const i = doneIdx++;
       const count = 1 + (i % 2);
       rec.violations = Array.from({ length: count }, (_, k) => pool[(i * 3 + k * 5) % pool.length]).filter((v, k, arr) => arr.indexOf(v) === k);
@@ -782,6 +789,7 @@ function seed() {
       rec.photos.violator = samplePhoto('violator', no);
       if (S.ct.get(b.ctype).needsPlatePhoto) rec.photos.plate = samplePhoto('plate', no);
       rec.gps = gpsNear(i);
+      if (status === 'cancelled') rec.cancelledAt = Math.max(at, Math.min(at + 45 * 60000, Date.now() - 60000));
     }
     rec = { ...rec, ...opts };
     S.citations.push(rec);
@@ -821,6 +829,7 @@ function seed() {
     violator: { first: k.first, middle: k.middle, last: k.last, suffix: k.suffix, birthday: k.birthday, sex: k.sex },
     photos: { form: samplePhoto('form', 30215204), id: null, violator: null, plate: null },
     incident: {
+      kind: 'mismatch',
       paperNo: '30215203',
       text: 'The next form in the Booklet is also printed 30215203. I wrote the ticket on it before noticing.',
       hint: t('hintDuplicate', { p: 30215203, status: statusWord('done'), time: fDateTime(r203.at) }),
@@ -985,7 +994,7 @@ function seedHistory(now) {
         violator: { first: '', middle: '', last: '', suffix: '', birthday: '', sex: '' },
         violatorId: null, gps: null, incident: null, payment: null, payHistory: [],
       };
-      if (status === 'done') {
+      if (status === 'done' || status === 'cancelled') {
         const n = rnd() < 0.35 ? 2 : 1;
         rec.violations = [...new Set(Array.from({ length: n }, () => pickOf(pool)))];
         const p = violatorFor();
@@ -997,22 +1006,20 @@ function seedHistory(now) {
         rec.photos.violator = samplePhoto('violator', no);
         if (S.ct.get(ctype).needsPlatePhoto) rec.photos.plate = samplePhoto('plate', no);
         rec.gps = matiGps(rnd);
-        // Older Citations are more likely to be Paid already.
+        // Cancelled: withdrawn up to two days after issue. Older Done Citations are more likely to be Paid already.
         const age = (now - at) / DAY;
-        if (rnd() < (age > 30 ? 0.7 : age > 7 ? 0.5 : 0.25)) {
+        if (status === 'cancelled') rec.cancelledAt = Math.max(at, Math.min(at + Math.floor(rnd() * 2 * DAY), now - 60000));
+        else if (rnd() < (age > 30 ? 0.7 : age > 7 ? 0.5 : 0.25)) {
           const paidTs = Math.min(at + (1 + Math.floor(rnd() * 9)) * DAY, now - 60000);
           const date = dayKey(paidTs);
           const orNo = 'OR-' + orN++;
           rec.payment = { orNo, date };
           rec.payHistory = [{ action: 'paid', orNo, date, by: 'V001', at: paidTs }];
         }
-      } else if (status === 'cancelled') {
-        if (rnd() < 0.5) rec.violations = [pickOf(pool)];
-        rec.photos.form = samplePhoto('form', no);
       } else {
         rec.violations = [pickOf(pool)];
         rec.photos.form = samplePhoto('form', no);
-        rec.incident = { paperNo: String(no), text: pickOf(INCIDENTS), hint: '' };
+        rec.incident = { kind: 'spoiled', paperNo: '', text: pickOf(INCIDENTS), hint: '' };
       }
       S.citations.push(rec);
     });
