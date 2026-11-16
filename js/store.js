@@ -432,6 +432,11 @@ export function bookletActive(b) { return bookletUsed(b) < bookletSize(b); }
 export function activeBooklet(owner, ctype) {
   return S.booklets.find(b => b.owner === owner && b.ctype === ctype && bookletActive(b)) || null;
 }
+// A Citation's Booklet is Used up (liquidated) once every Control Number in it has a Status; its Citations are then final.
+export function citationLocked(c) {
+  const b = S.booklets.find(x => x.id === c.bookletId);
+  return !!b && !bookletActive(b);
+}
 export function activeBooklets(owner) { return S.booklets.filter(b => b.owner === owner && bookletActive(b)); }
 
 export function currentTypeOf(enfId) {
@@ -627,6 +632,7 @@ export function cancelCitation(enfId, c) {
   if (!c || c.owner !== enfId || c.status !== 'done') return { error: t('errCancelNotDone') };
   if (!S.online) return { error: t('errCancelOffline') };
   if (c.payment) return { error: t('errCancelPaid') };
+  if (citationLocked(c)) return { error: t('errCancelUsedUp') };
   c.status = 'cancelled';
   c.cancelledAt = Date.now();
   emit('citations');

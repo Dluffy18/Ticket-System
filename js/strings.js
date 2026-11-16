@@ -244,7 +244,7 @@ const en = {
 
   // Cancel a Done Citation (from the Citation itself)
   cancelCitation: 'Cancel this Citation',
-  cancelCitationHint: 'Issued by mistake? You can cancel it until it’s paid at the Treasury Office.',
+  cancelCitationHint: 'Issued by mistake? You can cancel it until it’s paid at the Treasury Office, or until its Booklet is used up.',
   cancelTitle: 'Cancel Citation #{no}?',
   cancelBody: 'It will show as Cancelled everywhere, with today’s date and time. Everything on it is kept. This can’t be undone.',
   cancelTypeNo: 'Type {no} to confirm',
@@ -252,6 +252,7 @@ const en = {
   keepIt: 'Keep it',
   cancelledCitationMsg: '#{no} Cancelled.',
   errCancelPaid: 'This Citation is already paid, so it can’t be cancelled. Ask the Treasury Office.',
+  errCancelUsedUp: 'This Citation’s Booklet is used up, so it can’t be cancelled.',
   errCancelOffline: 'Connect to the internet to cancel this Citation.',
   errCancelNotDone: 'Only a Done Citation can be cancelled.',
 

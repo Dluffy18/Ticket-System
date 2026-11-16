@@ -9,7 +9,7 @@ The outcome of a Citation that was issued to a Violator. Shown as "Issued" on Of
 _Avoid_: Completed, closed
 
 **Cancelled**:
-The outcome of a Done Citation that its Enforcer withdrew after issuing it. Only Unpaid Citations can be Cancelled, at any time, and the date and time of cancelling are kept on the Citation. Not used for spoiled blank forms; those are Voided.
+The outcome of a Done Citation that its Enforcer withdrew after issuing it. Only the Enforcer who issued it can Cancel it, and only while the Citation is Unpaid and its Booklet isn't Used up. Once the Booklet is Used up, its Citations are final, including the one on its last form. The date and time of cancelling are kept on the Citation. Not used for spoiled blank forms; those are Voided.
 _Avoid_: Withdrawn, revoked, deleted
 
 **Voided**:
@@ -51,6 +51,10 @@ _Avoid_: Pad, stack
 **Registered (Booklet)**:
 When the Enforcer entered the Booklet's first and last Control Number in the app, before using it. Not when the Treasury Office handed it over; that moment isn't recorded.
 _Avoid_: Received, issued (for a Booklet)
+
+**Used up (Booklet)**:
+A Booklet in which every Control Number has a Status. The office calls this "liquidated"; the handover of the finished Booklet to the Treasury Office isn't recorded. A Booklet that still has a number without a Status is "In use".
+_Avoid_: Finished, closed, exhausted
 
 **Repeat Violator**:
 A Violator Record with two or more Done Citations. Cancelled Citations don't count, because they were withdrawn, though they stay listed on the Violator Record. Voided forms don't count either.

@@ -3,7 +3,7 @@ import { esc, fullName, fTime, fDateTime, dayKey, todayKey, isToday, isThisMonth
 import {
   S, me, typesFor, agencyOf, ctName, vtName, violationsFor, activeBooklet, bookletSize, bookletUsed, bookletCurrent,
   currentTypeOf, setCurrentType, registerBooklet, bookletFormCount, getDraft, draftHasEntries, discardDraft, requiredPhotos, nextMissingPhoto, setPhoto,
-  setNoId, typeField, missingItems, markDone, cancelCitation, incidentCheck, voidForm, subscribe,
+  setNoId, typeField, missingItems, markDone, cancelCitation, citationLocked, incidentCheck, voidForm, subscribe,
 } from '../store.js';
 import { icon, serial, stamp, toast, dialog, pager, paginate, emptyState, kv, unsyncedTag, menuMarkup, bindMenu, setMenuValue, dateBox, bindDateBox, fitLines } from '../ui.js';
 import { takePhoto } from '../camera.js';
@@ -630,7 +630,11 @@ function citationDetailView(root, ctx, no) {
   const c = S.citations.find(x => x.no === no && x.owner === u.id);
   if (!c) { ctx.go('#/citations'); return; }
   // A Done Citation ends with the Cancel button instead of a closing note. Offline, it's disabled.
-  const footHtml = () => c.status !== 'done' ? '' : `
+  // Once its Booklet is Used up, the Citation is final: a note replaces the button.
+  const footHtml = () => c.status !== 'done' ? '' : citationLocked(c) ? `
+    <section class="sec sec-cancel">
+      <p class="hint">${esc(t('errCancelUsedUp'))}</p>
+    </section>` : `
     <section class="sec sec-cancel">
       <p class="hint">${esc(S.online ? t('cancelCitationHint') : t('errCancelOffline'))}</p>
       <button type="button" class="btn btn-danger-ghost btn-block btn-lg" data-cancel ${S.online ? '' : 'disabled'}>${icon('ban')}<span>${esc(t('cancelCitation'))}</span></button>
